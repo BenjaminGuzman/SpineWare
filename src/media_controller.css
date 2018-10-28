@@ -1,0 +1,22 @@
+.button{
+    -fx-background-image: url("/manuals/pause.png");
+    -fx-background-position: center;
+    -fx-background-size: cover;
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: transparent;
+}
+.slider{
+    -fx-control-inner-background: #555555;
+    -fx-color: #333333;
+    -fx-shadow-highlight-color: #777777;
+    -fx-text-box-border: #777777;
+}
+.thumb{
+    -fx-focus-color: #000000;
+}
+.thumb:focused, .thumb:selected, .thumb:pressed{
+    -fx-color: #000000;
+}
+.thumb:hover{
+    -fx-color: #111111;
+}
