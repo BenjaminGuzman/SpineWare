@@ -1,0 +1,19 @@
+# SpineWare
+
+A Java application to take care of you while you're using the computer.
+
+## Main features
+
+- Timer to let you know you've been working hard and need a small break or call it a day.
+- Pomodoro timer.
+- Recommendations and small workout routines to do between breaks.
+- Computer Vision program to check if you're getting too close to the screen.
+- Scheduler and timer to keep track on all the activities you should complete.
+
+Main contributors are [Benjamín Guzmán](https://github.com/BenjaminGuzman) and [Mauricio Montaño](https://github.com/Mauswoosh) who as developers we are concerned about our physical health, so we developed SpineWare to help us and want to share it with others.
+
+## Contribute
+
+This software is under the GPLv3 License, thus you're free to modify and improve the code.
+
+We love Open Source Software and GNU/Linux so most of the code is tested in this platform, but we believe is part of the freedom of the user to choose what software to use and in which platform, therefore **all help to bring SpineWare to Windows and MacOS users is welcome**. A great advantage is that SpineWare is written in Java.
