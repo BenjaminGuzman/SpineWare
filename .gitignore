@@ -1,0 +1,3 @@
+# ignore md backups
+*.md.backup
+./**/*.md.backup
