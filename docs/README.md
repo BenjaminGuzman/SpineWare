@@ -21,6 +21,8 @@ SCREENSHOT HERE
 SCREENSHOT HERE
 
 
+Check the [Requirements document](requirements) to see a full list of main features.
+
 ## Contribute
 
 Main contributors are [Benjamín Guzmán](https://github.com/BenjaminGuzman) and [Mauricio Montaño](https://github.com/Mauswoosh) who as developers we are concerned about our physical health, so we developed SpineWare to help us and want to share it with others.
