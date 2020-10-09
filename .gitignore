@@ -1,3 +1,16 @@
-# ignore md backups
+# md backups
 *.md.backup
 ./**/*.md.backup
+
+# out files
+target/
+
+# gradle stuff
+.gradle/
+
+# editor configurations
+.idea/
+.vscode/
+
+# IntelliJ Idea config
+*.iml
