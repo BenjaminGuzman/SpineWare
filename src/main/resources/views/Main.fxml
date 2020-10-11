@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="400.0" minWidth="720.0" prefHeight="400.0" prefWidth="720.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.fos.controllers.MainController" fx:id="rootBorderPane">
+    <!--Menu-->
+    <left>
+        <VBox alignment="TOP_CENTER" maxWidth="120.0" minWidth="120.0" prefHeight="200.0" prefWidth="120.0" stylesheets="@../styles/menu.css">
+            <!--Spineware logo image-->
+            <ImageView fitHeight="72.0" fitWidth="75.0" pickOnBounds="true" preserveRatio="true" styleClass="spineware-image">
+                <Image url="@../media/SW_white.png" />
+                <VBox.margin>
+                    <Insets bottom="10.0" top="10.0" />
+                </VBox.margin>
+            </ImageView>
+
+            <!--Breaks button-->
+            <Button mnemonicParsing="false" styleClass="menu-button" onAction="#onClickChangeMainView" fx:id="breaksMenuButton">
+                <graphic>
+                    <ImageView fitHeight="18" fitWidth="18" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../media/timer_white_18dp.png" />
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <!--Schedule button-->
+            <Button mnemonicParsing="false" styleClass="menu-button" onAction="#onClickChangeMainView" fx:id="scheduleMenuButton">
+                <graphic>
+                    <ImageView fitHeight="18" fitWidth="18" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../media/schedule_white_18dp.png" />
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <!--Posture button-->
+            <Button mnemonicParsing="false" styleClass="menu-button" onAction="#onClickChangeMainView" fx:id="postureMenuButton">
+                <graphic>
+                    <ImageView fitHeight="18" fitWidth="18" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../media/seat_white_18dp.png" />
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <!--Tips button-->
+            <Button mnemonicParsing="false" styleClass="menu-button" onAction="#onClickChangeMainView" fx:id="tipsMenuButton">
+                <graphic>
+                    <ImageView fitHeight="18" fitWidth="18" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../media/self_improvement_white_18dp.png" />
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <!--Help button-->
+            <Button mnemonicParsing="false" styleClass="menu-button" onAction="#onClickChangeMainView" fx:id="helpMenuButton">
+                <graphic>
+                    <ImageView fitHeight="18" fitWidth="18" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../media/help_white_18dp.png" />
+                    </ImageView>
+                </graphic>
+            </Button>
+        </VBox>
+    </left>
+</BorderPane>
