@@ -1,0 +1,13 @@
+.root {
+    -fx-background-color: #232323;
+    -fx-base: #232323;
+    -fx-default-button: #AEAEAE;
+    -fx-focus-color: #5200a2;
+    -fx-faint-focus-color: rgba(0, 178, 234, 0.13);
+}
+.success-text {
+    -fx-text-fill: rgb(54, 214, 78);
+}
+.fail-text {
+    -fx-text-fill: rgb(255, 48, 48);
+}
