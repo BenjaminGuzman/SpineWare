@@ -1,13 +1,15 @@
 # SpineWare
 
+![SpineWare image](../media/SpineWare.png)
+
 A Java application to take care of you while you're using the computer.
 
 ## Main features
 
-- **Timer to let you know you've been working hard and need a small break or call it a day**:
+- **Timer to let you know you've been working hard and need a small break or stop working**:
 	+ The program has 3 breaks:
 		* To relax the eyes and move a little. Sometimes while you're working you have to blink, believe it or not.
-		* To stretch your muscles: You need to move from time to time to avoid atrophy your muscular and bone structure.
+		* To stretch your muscles: You need to move from time to time to avoid atrophying your muscular and bone structure.
 		* To stop working: It is good you are passionate about your job but still, you have to rest a little bit.
 
 SCREENSHOT HERE
@@ -30,3 +32,5 @@ Main contributors are [Benjamín Guzmán](https://github.com/BenjaminGuzman) and
 This software is under the GPLv3 License, thus you're free to modify and improve the code.
 
 We love Open Source Software and GNU/Linux so most of the code is tested in this platform, but we believe is part of the freedom of the user to choose what software to use and in which platform, therefore **all help to bring SpineWare to Windows and MacOS users is welcome**. A great advantage is that SpineWare is written in Java.
+
+Also, **translations** are welcomed.
