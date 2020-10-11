@@ -1,6 +1,6 @@
 # SpineWare
 
-![SpineWare image](../media/SpineWare.png)
+![SpineWare image](media/SpineWare.png)
 
 A Java application to take care of you while you're using the computer.
 
