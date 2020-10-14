@@ -6,123 +6,102 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
+
+<?import org.fos.controls.TimeInput?>
 <ScrollPane fitToHeight="true" fitToWidth="true" minHeight="400.0" minWidth="700.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" stylesheets="@../styles/breaks.css" fx:controller="org.fos.controllers.BreaksController">
     <GridPane hgap="5.0" vgap="5.0">
         <columnConstraints>
             <!-- Col for break names & field names -->
             <ColumnConstraints minWidth="200.0" hgrow="SOMETIMES" />
 
-            <!-- Col for break description & input field -->
-            <ColumnConstraints maxWidth="200.0" minWidth="100.0" hgrow="SOMETIMES" />
-
-            <!-- Col for spacing, this col will be shared by the description and the checkbox -->
-            <ColumnConstraints maxWidth="300.0" minWidth="200.0" hgrow="SOMETIMES" />
+            <!-- Col for break description -->
+            <ColumnConstraints minWidth="250.0" hgrow="SOMETIMES" />
 
             <!-- Col for enabled checkbox -->
-            <ColumnConstraints maxWidth="250.0" minWidth="150.0" hgrow="SOMETIMES" />
+            <ColumnConstraints maxWidth="200.0" minWidth="150.0" hgrow="NEVER" />
         </columnConstraints>
         <rowConstraints>
-            <!-- Row for small breaks description -->
-            <RowConstraints maxHeight="60.0" minHeight="30.0" vgrow="SOMETIMES" />
-            <!-- Row for small breaks time between breaks -->
-            <RowConstraints maxHeight="50.0" minHeight="30.0" vgrow="SOMETIMES" />
-            <!-- Row for small breaks duration breaks -->
-            <RowConstraints maxHeight="50.0" minHeight="30.0" vgrow="SOMETIMES" />
+            <!-- Small breaks description -->
+            <RowConstraints maxHeight="30.0" minHeight="20.0" vgrow="SOMETIMES" />
+            <!-- Small breaks full description -->
+            <RowConstraints maxHeight="30.0" minHeight="20.0" vgrow="SOMETIMES" />
+            <!-- Small breaks time between breaks -->
+            <RowConstraints maxHeight="100.0" minHeight="70.0" vgrow="SOMETIMES" />
+            <!-- Small breaks, breaks duration -->
+            <RowConstraints maxHeight="100.0" minHeight="70.0" vgrow="SOMETIMES" />
 
             <!-- Separator row -->
             <RowConstraints maxHeight="10.0" minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
 
-            <!-- Row for stretch breaks description -->
-            <RowConstraints maxHeight="60.0" minHeight="30.0" vgrow="SOMETIMES" />
-            <!-- Row for stretch breaks time between breaks -->
-            <RowConstraints maxHeight="50.0" minHeight="30.0" vgrow="SOMETIMES" />
-            <!-- Row for stretch breaks duration breaks -->
-            <RowConstraints maxHeight="50.0" minHeight="30.0" vgrow="SOMETIMES" />
+            <!-- Stretch breaks description -->
+            <RowConstraints maxHeight="30.0" minHeight="20.0" vgrow="SOMETIMES" />
+            <!-- Stretch breaks full description -->
+            <RowConstraints maxHeight="30.0" minHeight="20.0" vgrow="SOMETIMES" />
+            <!-- Stretch breaks time between breaks -->
+            <RowConstraints maxHeight="100.0" minHeight="70.0" vgrow="SOMETIMES" />
+            <!-- Stretch breaks, breaks duration -->
+            <RowConstraints maxHeight="100.0" minHeight="70.0" vgrow="SOMETIMES" />
 
             <!-- Separator row -->
             <RowConstraints maxHeight="10.0" minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
 
-            <!-- Row for day break description -->
-            <RowConstraints maxHeight="60.0" minHeight="30.0" vgrow="SOMETIMES" />
-            <!-- Row for day break work hours/day input -->
-            <RowConstraints maxHeight="50.0" minHeight="30.0" vgrow="SOMETIMES" />
+            <!-- Day break description -->
+            <RowConstraints maxHeight="30.0" minHeight="20.0" vgrow="SOMETIMES" />
+            <!-- Day break full description -->
+            <RowConstraints maxHeight="30.0" minHeight="20.0" vgrow="SOMETIMES" />
+            <!-- Day break max hours of continuous work -->
+            <RowConstraints maxHeight="100.0" minHeight="70.0" vgrow="SOMETIMES" />
 
             <!-- Row for save button -->
             <RowConstraints maxHeight="50.0" minHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
 
         <!-- Small break -->
-        <Label GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.valignment="CENTER" GridPane.halignment="CENTER" styleClass="break-title" text="Small breaks" />
-        <BorderPane GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="2">
-            <top>
-                <Label styleClass="break-small-description" text="Move your eyes, blink a little, move your hands" />
-            </top>
-            <bottom>
-                <Label styleClass="break-full-description" text="SpineWare will remind you to blink and look at something else other than your monitor" />
-            </bottom>
-        </BorderPane>
-        <CheckBox GridPane.rowIndex="0" GridPane.columnIndex="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" mnemonicParsing="false" text="Feature enabled" />
+        <Label fx:id="smallBreaksTitleLabel" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.valignment="CENTER" GridPane.halignment="CENTER" styleClass="break-title" />
+        <Label fx:id="smallBreaksDescriptionLabel" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" styleClass="break-small-description" />
+        <CheckBox fx:id="smallBreaksEnabledCheckBox" onAction="#onClickEnable" GridPane.rowIndex="0" GridPane.columnIndex="2" GridPane.valignment="CENTER" GridPane.halignment="CENTER" mnemonicParsing="false" />
 
-        <Label GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.halignment="RIGHT" textAlignment="RIGHT" text="Minutes between breaks" />
-        <Spinner GridPane.rowIndex="1" GridPane.columnIndex="1" />
-        <Label GridPane.rowIndex="1" GridPane.columnIndex="2" GridPane.columnSpan="2" text="10 minutes is recommended"/>
+        <Label fx:id="smallBreaksFullDescriptionLabel" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" styleClass="break-full-description" />
 
-        <Label GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.halignment="RIGHT" textAlignment="RIGHT" text="Break duration" />
-        <Spinner GridPane.rowIndex="2" GridPane.columnIndex="1" />
-        <Label GridPane.rowIndex="2" GridPane.columnIndex="2" GridPane.columnSpan="2" text="2 minutes is recommended"/>
+        <TimeInput fx:id="smallBreaksWorkingTimeInput" GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" />
+
+        <TimeInput fx:id="smallBreaksBreakTimeInput" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" />
 
         <!-- Separator -->
-        <Separator GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="4" />
+        <Separator GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="3" />
 
         <!-- Stretch break -->
-        <Label GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.valignment="CENTER" GridPane.halignment="CENTER" styleClass="break-title" text="Stretch breaks" />
-        <BorderPane GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.columnSpan="2">
-            <top>
-                <Label styleClass="break-small-description" text="Stretch your muscles, go for a walk" />
-            </top>
-            <bottom>
-                <Label styleClass="break-full-description" text="SpineWare will remind you to move your body to avoid atrophying your muscular and bone structure" />
-            </bottom>
-        </BorderPane>
-        <CheckBox GridPane.rowIndex="4" GridPane.columnIndex="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" mnemonicParsing="false" text="Feature enabled" />
+        <Label fx:id="stretchBreaksTitleLabel" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.valignment="CENTER" GridPane.halignment="CENTER" styleClass="break-title" />
+        <Label fx:id="stretchBreaksDescriptionLabel" GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" styleClass="break-small-description" />
+        <CheckBox fx:id="stretchBreaksEnabledCheckBox" onAction="#onClickEnable" GridPane.rowIndex="5" GridPane.columnIndex="2" GridPane.valignment="CENTER" GridPane.halignment="CENTER" mnemonicParsing="false" />
 
-        <Label GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.halignment="RIGHT" textAlignment="RIGHT" text="Minutes between breaks" />
-        <Spinner GridPane.rowIndex="5" GridPane.columnIndex="1" />
-        <Label GridPane.rowIndex="5" GridPane.columnIndex="2" GridPane.columnSpan="2" text="180 minutes (3 hrs) is recommended"/>
+        <Label fx:id="stretchBreaksFullDescriptionLabel" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" styleClass="break-full-description" />
 
-        <Label GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.halignment="RIGHT" textAlignment="RIGHT" text="Break duration" />
-        <Spinner GridPane.rowIndex="6" GridPane.columnIndex="1" />
-        <Label GridPane.rowIndex="6" GridPane.columnIndex="2" GridPane.columnSpan="2" text="30 minutes is recommended"/>
+        <TimeInput fx:id="stretchBreaksWorkingTimeInput" GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" />
+
+        <TimeInput fx:id="stretchBreaksBreakTimeInput" GridPane.rowIndex="8" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" />
 
         <!-- Separator -->
-        <Separator GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="4" />
+        <Separator GridPane.rowIndex="9" GridPane.columnIndex="0" GridPane.columnSpan="3" />
 
         <!-- Working time -->
-        <Label GridPane.rowIndex="8" GridPane.columnIndex="0" GridPane.valignment="CENTER" GridPane.halignment="CENTER" styleClass="break-title" text="Day break" />
-        <BorderPane GridPane.rowIndex="8" GridPane.columnIndex="1" GridPane.columnSpan="2">
-            <top>
-                <Label styleClass="break-small-description" text="You gotta stop working" />
-            </top>
-            <bottom>
-                <Label styleClass="break-full-description" text="SpineWare will remind you to rest when you have been continuously working hard for a certain amount of time" />
-            </bottom>
-        </BorderPane>
-        <CheckBox GridPane.rowIndex="8" GridPane.columnIndex="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" mnemonicParsing="false" text="Feature enabled" />
+        <Label fx:id="dayBreakTitleLabel" GridPane.rowIndex="10" GridPane.columnIndex="0" GridPane.valignment="CENTER" GridPane.halignment="CENTER" styleClass="break-title" />
+        <Label fx:id="dayBreakDescriptionLabel" GridPane.rowIndex="10" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER"  styleClass="break-small-description" />
+        <CheckBox fx:id="dayBreakEnabledCheckBox" onAction="#onClickEnable" GridPane.rowIndex="10" GridPane.columnIndex="2" GridPane.valignment="CENTER" GridPane.halignment="CENTER" mnemonicParsing="false" />
 
-        <Label GridPane.rowIndex="9" GridPane.columnIndex="0" GridPane.halignment="RIGHT" textAlignment="RIGHT" text="Max hours of continuous work" />
-        <Spinner GridPane.rowIndex="9" GridPane.columnIndex="1" />
-        <Label GridPane.rowIndex="9" GridPane.columnIndex="2" GridPane.columnSpan="2" text="8 hrs is recommended"/>
+        <Label fx:id="dayBreakFullDescriptionLabel" GridPane.rowIndex="11" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" styleClass="break-full-description" />
+
+        <TimeInput fx:id="dayBreakWorkingTimeInput" GridPane.rowIndex="12" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.valignment="CENTER" GridPane.halignment="CENTER" />
 
         <!-- Save button -->
-        <HBox GridPane.rowIndex="10" GridPane.columnIndex="0" GridPane.columnSpan="4" alignment="CENTER" spacing="10.0">
-            <Button mnemonicParsing="false" text="Save changes">
+        <HBox GridPane.rowIndex="13" GridPane.columnIndex="0" GridPane.columnSpan="4" alignment="CENTER" spacing="10.0">
+            <Button fx:id="saveChangesButton" onAction="#onClickSaveChanges" mnemonicParsing="false">
                 <graphic>
                     <ImageView fitHeight="18" fitWidth="18" pickOnBounds="true" preserveRatio="true">
                         <Image url="@../media/save_white_18dp.png" />
                     </ImageView>
                 </graphic>
             </Button>
-            <Label /> <!-- label to show if save operation was successful or failed -->
         </HBox>
     </GridPane>
 

@@ -31,6 +31,11 @@ Main contributors are [Benjamín Guzmán](https://github.com/BenjaminGuzman) and
 
 This software is under the GPLv3 License, thus you're free to modify and improve the code.
 
-We love Open Source Software and GNU/Linux so most of the code is tested in this platform, but we believe is part of the freedom of the user to choose what software to use and in which platform, therefore **all help to bring SpineWare to Windows and MacOS users is welcome**. A great advantage is that SpineWare is written in Java.
+There are three main areas where you can contribute:
 
-Also, **translations** are welcomed.
+- **Help to bring SpineWare to Windows and MacOS**: We love free software and mainly used GNU/Linux to run and test SpineWare, but we believe is part of the freedom of the user to choose what software to use and in which platform. A great advantage is that SpineWare is written in Java.
+- **Translations**: Currently SpineWare is available only in 2 languages: English and Spanish.
+
+## Future ideas
+
+- Migrate the project to 100% free software. (OpenJFX is not 100% free. It has license GPLv2 with Classpath exception, so it contains some `com.sun` packages with a different license). Maybe use C++ with QT?

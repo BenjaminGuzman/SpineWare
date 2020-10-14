@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
+import org.fos.I18nable;
 import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.alerts.SWAlert;
@@ -18,7 +19,7 @@ import java.util.HashMap;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 
-public class MainController implements Initializable {
+public class MainController implements Initializable, I18nable {
     // Menu buttons
     @FXML
     private Button breaksMenuButton;
@@ -72,7 +73,7 @@ public class MainController implements Initializable {
         if (this.changeMainView("Breaks"))
             this.changeActiveMenuButton(this.breaksMenuButton);
 
-        this.setMenuButtonsText();
+        this.setTextAccordingToLanguage();
     }
 
     /**
@@ -97,7 +98,7 @@ public class MainController implements Initializable {
         if (this.activeViewStr.equals(newActiveViewStr))
             return false;
 
-        Parent newParent = this.getParent(newActiveViewStr);
+        Parent newParent = this.getView(newActiveViewStr);
         if (newParent == null) {
             SWAlert alert = new SWAlert(Alert.AlertType.ERROR);
             alert.setHeaderText("Error while loading the pane: " + newActiveViewStr);
@@ -120,10 +121,10 @@ public class MainController implements Initializable {
      * @param viewName the name of the view to get, JUST the name without extension
      * @return the view (parent)
      */
-    private Parent getParent(final String viewName) {
+    private Parent getView(final String viewName) {
         // if the pane has not been loaded
         if (!this.viewsMap.containsKey(viewName))
-            this.loadParent(viewName);
+            this.loadView(viewName);
 
         return this.viewsMap.get(viewName);
     }
@@ -133,7 +134,7 @@ public class MainController implements Initializable {
      * @param viewName, the name of the view (parent) to load WITHOUT extension or path
      *                  e. g. if you wanna load the Help view, the argument must be "Help" only
      */
-    private void loadParent(final String viewName) {
+    private void loadView(final String viewName) {
         String viewURLStr = "/resources/views/" + viewName + ".fxml";
         URL viewURL = this.getClass().getResource(viewURLStr);
 
@@ -155,7 +156,8 @@ public class MainController implements Initializable {
     /**
      * Sets the buttons text with the loaded messages bundle (i18n)
      */
-    public void setMenuButtonsText() {
+    @Override
+    public void setTextAccordingToLanguage() {
         this.breaksMenuButton.setText(SWMain.messagesBundle.getString("menu_breaks"));
         this.scheduleMenuButton.setText(SWMain.messagesBundle.getString("menu_schedule"));
         this.postureMenuButton.setText(SWMain.messagesBundle.getString("menu_posture"));
