@@ -2,10 +2,12 @@ package org.fos;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.fos.alerts.SWAlert;
 
@@ -37,16 +39,17 @@ public class SWMain extends Application {
             alert.setContentText(SWMain.messagesBundle.getString("default_error_message"));
             alert.showAndWait();
 
+            primaryStage.close();
             return;
         }
 
         SWMain.addGeneralStyleSheet(mainScene);
 
         primaryStage.setTitle("SpineWare");
-        primaryStage.setAlwaysOnTop(true);
-        primaryStage.setMinWidth(850.0);
-        primaryStage.setMinHeight(500.0);
         primaryStage.getIcons().add(new Image(SWMain.class.getResource("/resources/media/SW_white.min.png").toExternalForm()));
+
+        primaryStage.setMinWidth(1000.0);
+        primaryStage.setMinHeight(500.0);
 
         primaryStage.setScene(mainScene);
         primaryStage.show();
