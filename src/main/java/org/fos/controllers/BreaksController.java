@@ -9,6 +9,7 @@ import org.fos.I18nable;
 import org.fos.SWMain;
 import org.fos.alerts.SWAlert;
 import org.fos.controls.TimeInput;
+import org.fos.core.TimersManager;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -58,10 +59,10 @@ public class BreaksController implements I18nable, Initializable {
      *
      * day break working time: int
      */
-    private Preferences preferences;
+    private final Preferences preferences;
 
     public BreaksController() {
-        this.preferences = Preferences.userNodeForPackage(this.getClass());
+        this.preferences = Preferences.userNodeForPackage(TimersManager.class);
     }
 
     @Override
@@ -80,13 +81,13 @@ public class BreaksController implements I18nable, Initializable {
         ///////////////////////
         // small break stuff //
         //////////////////////
-        int small_breaks_working_time_s = this.preferences.getInt("small breaks working time", 0);
+        int small_breaks_working_time_s = this.preferences.getInt(TimersManager.PREF_KEY_SMALL_BREAKS_WORKING_TIME, 0);
         this.smallBreaksWorkingTimeInput.setHoursMinutesSecondsFromSeconds(small_breaks_working_time_s);
 
-        int small_breaks_break_time_s = this.preferences.getInt("small breaks break time", 0);
+        int small_breaks_break_time_s = this.preferences.getInt(TimersManager.PREF_KEY_SMALL_BREAKS_BREAK_TIME, 0);
         this.smallBreaksBreakTimeInput.setHoursMinutesSecondsFromSeconds(small_breaks_break_time_s);
 
-        boolean small_breaks_enabled = !this.preferences.getBoolean("small breaks disabled", false);
+        boolean small_breaks_enabled = !this.preferences.getBoolean(TimersManager.PREF_KEY_SMALL_BREAKS_DISABLED, false);
         this.smallBreaksEnabledCheckBox.setSelected(small_breaks_enabled);
         this.smallBreaksWorkingTimeInput.setDisable(!small_breaks_enabled);
         this.smallBreaksBreakTimeInput.setDisable(!small_breaks_enabled);
@@ -94,13 +95,13 @@ public class BreaksController implements I18nable, Initializable {
         /////////////////////////
         // stretch break stuff //
         /////////////////////////
-        int stretch_breaks_working_time_s = this.preferences.getInt("stretch breaks working time", 0);
+        int stretch_breaks_working_time_s = this.preferences.getInt(TimersManager.PREF_KEY_STRETCH_BREAKS_WORKING_TIME, 0);
         this.stretchBreaksWorkingTimeInput.setHoursMinutesSecondsFromSeconds(stretch_breaks_working_time_s);
 
-        int stretch_breaks_break_time_s = this.preferences.getInt("stretch breaks break time", 0);
+        int stretch_breaks_break_time_s = this.preferences.getInt(TimersManager.PREF_KEY_STRETCH_BREAKS_BREAK_TIME, 0);
         this.stretchBreaksBreakTimeInput.setHoursMinutesSecondsFromSeconds(stretch_breaks_break_time_s);
 
-        boolean stretch_breaks_enabled = !this.preferences.getBoolean("stretch breaks disabled", false);
+        boolean stretch_breaks_enabled = !this.preferences.getBoolean(TimersManager.PREF_KEY_STRETCH_BREAKS_DISABLED, false);
         this.stretchBreaksEnabledCheckBox.setSelected(stretch_breaks_enabled);
         this.stretchBreaksBreakTimeInput.setDisable(!stretch_breaks_enabled);
         this.stretchBreaksWorkingTimeInput.setDisable(!stretch_breaks_enabled);
@@ -108,10 +109,10 @@ public class BreaksController implements I18nable, Initializable {
         /////////////////////////
         // stretch break stuff //
         /////////////////////////
-        int day_break_working_time_s = this.preferences.getInt("day break working time", 0);
+        int day_break_working_time_s = this.preferences.getInt(TimersManager.PREF_KEY_DAY_BREAK_WORKING_TIME, 0);
         this.dayBreakWorkingTimeInput.setHoursMinutesSecondsFromSeconds(day_break_working_time_s);
 
-        boolean day_break_enabled = !this.preferences.getBoolean("day break disabled", false);
+        boolean day_break_enabled = !this.preferences.getBoolean(TimersManager.PREF_KEY_DAY_BREAKS_DISABLED, false);
         this.dayBreakEnabledCheckBox.setSelected(day_break_enabled);
         this.dayBreakWorkingTimeInput.setDisable(!day_break_enabled);
     }
@@ -196,13 +197,13 @@ public class BreaksController implements I18nable, Initializable {
             is_time_ok = is_time_ok & this.smallBreaksBreakTimeInput.isTimeOk();
 
             if (is_time_ok) {
-                this.saveTimePref("small breaks working time", this.smallBreaksBreakTimeInput);
-                this.saveTimePref("small breaks break time", this.smallBreaksBreakTimeInput);
+                this.saveTimePref(TimersManager.PREF_KEY_SMALL_BREAKS_WORKING_TIME, this.smallBreaksBreakTimeInput);
+                this.saveTimePref(TimersManager.PREF_KEY_SMALL_BREAKS_BREAK_TIME, this.smallBreaksBreakTimeInput);
             }
 
-            this.preferences.putBoolean("small breaks disabled", false);
+            this.preferences.putBoolean(TimersManager.PREF_KEY_SMALL_BREAKS_DISABLED, false);
         } else
-            this.preferences.putBoolean("small breaks disabled", true);
+            this.preferences.putBoolean(TimersManager.PREF_KEY_SMALL_BREAKS_DISABLED, true);
 
         all_times_are_ok = all_times_are_ok & is_time_ok;
         is_time_ok = true;
@@ -216,12 +217,12 @@ public class BreaksController implements I18nable, Initializable {
             is_time_ok = is_time_ok & this.stretchBreaksBreakTimeInput.isTimeOk();
 
             if (is_time_ok) {
-                this.saveTimePref("stretch breaks working time", this.stretchBreaksWorkingTimeInput);
-                this.saveTimePref("stretch breaks break time", this.stretchBreaksBreakTimeInput);
+                this.saveTimePref(TimersManager.PREF_KEY_STRETCH_BREAKS_WORKING_TIME, this.stretchBreaksWorkingTimeInput);
+                this.saveTimePref(TimersManager.PREF_KEY_STRETCH_BREAKS_BREAK_TIME, this.stretchBreaksBreakTimeInput);
             }
-            this.preferences.putBoolean("stretch breaks disabled", false);
+            this.preferences.putBoolean(TimersManager.PREF_KEY_STRETCH_BREAKS_DISABLED, false);
         } else
-            this.preferences.putBoolean("stretch breaks disabled", true);
+            this.preferences.putBoolean(TimersManager.PREF_KEY_STRETCH_BREAKS_DISABLED, true);
 
         all_times_are_ok = all_times_are_ok & is_time_ok;
 
@@ -230,15 +231,18 @@ public class BreaksController implements I18nable, Initializable {
             this.dayBreakWorkingTimeInput.isTimeOkWarning(8 * 60 * 60 /* 8 hours */, 16 * 60 * 60 /* 16 hours */);
 
             if (all_times_are_ok = all_times_are_ok & this.dayBreakWorkingTimeInput.isTimeOk())
-                this.saveTimePref("day break working time", this.dayBreakWorkingTimeInput);
+                this.saveTimePref(TimersManager.PREF_KEY_DAY_BREAK_WORKING_TIME, this.dayBreakWorkingTimeInput);
+
+            this.preferences.putBoolean(TimersManager.PREF_KEY_DAY_BREAKS_DISABLED, false);
         } else
-            this.preferences.putBoolean("day break disabled", true);
+            this.preferences.putBoolean(TimersManager.PREF_KEY_DAY_BREAKS_DISABLED, true);
 
         if (all_times_are_ok) {
             SWAlert alert = new SWAlert(Alert.AlertType.INFORMATION, SWMain.messagesBundle.getString("changes_saved_extra_text"), ButtonType.OK);
             alert.setHeaderText(SWMain.messagesBundle.getString("changes_saved"));
             alert.showAndWait();
-            // TODO: restart timers
+            SWMain.timersManager.killAllTimers();
+            SWMain.timersManager.createExecutorsFromPreferences(); // preferences should now be updated
         }
     }
 

@@ -18,3 +18,6 @@
 .warning-text {
     -fx-text-fill: rgb(253, 255, 91);
 }
+.box-shadow {
+    -fx-effect: dropshadow(three-pass-box, mediumpurple, 10.0, 0.0, 0.0, 0.0);
+}
