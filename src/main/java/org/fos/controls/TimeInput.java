@@ -117,7 +117,7 @@ public class TimeInput extends GridPane implements Initializable, I18nable {
      * @param h_m_s_as_seconds the hours minutes and seconds as seconds
      * @return an array of ints of length 3, index 0 -> hours, index 1 -> minutes, index 2 -> seconds
      */
-    private int[] seconds2HoursMinutesSeconds(int h_m_s_as_seconds) {
+    public static int[] seconds2HoursMinutesSeconds(int h_m_s_as_seconds) {
         int seconds = h_m_s_as_seconds % 60;
         int hours_and_minutes_as_seconds = h_m_s_as_seconds - seconds;
 
@@ -127,6 +127,21 @@ public class TimeInput extends GridPane implements Initializable, I18nable {
         int hours = hours_as_seconds / 60 / 60; // no modulus because it should be less than 24, also no need to call Math.floor
 
         return new int[] {hours, minutes, seconds};
+    }
+
+    public static String seconds2HoursMinutesSecondsAsString(int h_m_s_as_seconds) {
+        int[] h_m_s_time = TimeInput.seconds2HoursMinutesSeconds(h_m_s_as_seconds);
+
+        StringBuilder msgBuilder = new StringBuilder(30);
+
+        if (h_m_s_time[0] != 0)
+            msgBuilder.append(h_m_s_time[0]).append(' ').append("h"); // TODO: i18n
+        if (h_m_s_time[1] != 0)
+            msgBuilder.append(' ').append(h_m_s_time[1]).append(' ').append("m"); // TODO: i18n
+        if (h_m_s_time[2] != 0)
+            msgBuilder.append(' ').append(h_m_s_time[2]).append(' ').append("s"); // TODO: i18n
+
+        return msgBuilder.toString().trim();
     }
 
     /**
@@ -161,15 +176,12 @@ public class TimeInput extends GridPane implements Initializable, I18nable {
 
         boolean is_ok = true;
         StringBuilder msgBuilder = new StringBuilder(50);
-        int[] h_m_s_time = null;
 
         if (time_as_seconds < min_time_seconds) {
             is_ok = false;
-            h_m_s_time = this.seconds2HoursMinutesSeconds(min_time_seconds);
             msgBuilder.append("Time is recommended to be greater than or equal to"); // TODO: i18n
         } else if (time_as_seconds > max_time_seconds) {
             is_ok = false;
-            h_m_s_time = this.seconds2HoursMinutesSeconds(min_time_seconds);
             msgBuilder.append("Time is recommended to be less than or equal to"); // TODO: i18n
         } else
             this.setSmallMessageLabelToDefault();
@@ -177,12 +189,8 @@ public class TimeInput extends GridPane implements Initializable, I18nable {
         if (is_ok)
             return true;
 
-        if (h_m_s_time[0] != 0)
-            msgBuilder.append(' ').append(h_m_s_time[0]).append(' ').append("hours");
-        if (h_m_s_time[1] != 0)
-            msgBuilder.append(' ').append(h_m_s_time[1]).append(' ').append("minutes");
-        if (h_m_s_time[2] != 0)
-            msgBuilder.append(' ').append(h_m_s_time[2]).append(' ').append("seconds");
+        String seconds_as_string = TimeInput.seconds2HoursMinutesSecondsAsString(time_as_seconds);
+        msgBuilder.append(" ").append(seconds_as_string);
 
         this.setSmallMessageLabelText(msgBuilder.toString(), TimeInput.MESSAGE_TYPE.WARNING);
 
@@ -235,7 +243,7 @@ public class TimeInput extends GridPane implements Initializable, I18nable {
      *                         2 * 60 * 60 + 3 * 60 + 4 = 7384
      */
     public void setHoursMinutesSecondsFromSeconds(int h_m_s_as_seconds) {
-        int[] h_m_s = this.seconds2HoursMinutesSeconds(h_m_s_as_seconds);
+        int[] h_m_s = TimeInput.seconds2HoursMinutesSeconds(h_m_s_as_seconds);
         this.setHours(h_m_s[0]);
         this.setMinutes(h_m_s[1]);
         this.setSeconds(h_m_s[2]);
