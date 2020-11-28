@@ -1,10 +1,23 @@
+/*
+ * Copyright © 2020 Benjamín Guzmán
+ * Author: Benjamín Guzmán <9benjaminguzman@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.fos.controllers;
 
-import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+/*
 import org.fos.I18nable;
 import org.fos.SWMain;
 import org.fos.alerts.SWAlert;
@@ -58,7 +71,7 @@ public class BreaksController implements I18nable, Initializable {
      * stretch breaks break time: int
      *
      * day break working time: int
-     */
+     *//*
     private final Preferences preferences;
 
     public BreaksController() {
@@ -76,7 +89,7 @@ public class BreaksController implements I18nable, Initializable {
      * if they exist, those values are set
      * if not, the default values are set
      * Timer inputs are modified as well as checkboxs
-     */
+     *//*
     private void setInputsDefaults() {
         ///////////////////////
         // small break stuff //
@@ -171,7 +184,7 @@ public class BreaksController implements I18nable, Initializable {
      * @param prefKey the preference key for the preferences object
      * @param timeInput the time input form which the time will be obtained
      * @return true if changes were successfully saved
-     */
+     *//*
     private boolean saveTimePref(String prefKey, TimeInput timeInput) {
         int time_as_seconds = timeInput.getHoursMinutesSecondsAsSeconds();
 
@@ -182,7 +195,7 @@ public class BreaksController implements I18nable, Initializable {
     /**
      * Saves the preferences
      * But, before doing that it checks all times are ok
-     */
+     *//*
     @FXML
     private void onClickSaveChanges() {
         boolean all_times_are_ok = true;
@@ -190,8 +203,8 @@ public class BreaksController implements I18nable, Initializable {
 
         // small breaks stuff
         if (this.smallBreaksEnabledCheckBox.isSelected()) {
-            this.smallBreaksWorkingTimeInput.isTimeOkWarning(2 * 60 /* 2 minutes */, 15 * 60 /* 15 minutes */);
-            this.smallBreaksBreakTimeInput.isTimeOkWarning(5 /* 5 s */, 60 /* 60 s */);
+            this.smallBreaksWorkingTimeInput.isTimeOkWarning(2 * 60 /* 2 minutes *//*, 15 * 60 /* 15 minutes *//*);*/
+            /*this.smallBreaksBreakTimeInput.isTimeOkWarning(5 /* 5 s *//*, 60 /* 60 s *//*);
 
             is_time_ok = is_time_ok & this.smallBreaksWorkingTimeInput.isTimeOk();
             is_time_ok = is_time_ok & this.smallBreaksBreakTimeInput.isTimeOk();
@@ -210,8 +223,8 @@ public class BreaksController implements I18nable, Initializable {
 
         // stretch breaks stuff
         if (this.stretchBreaksEnabledCheckBox.isSelected()) {
-            this.stretchBreaksWorkingTimeInput.isTimeOkWarning(30 * 60 /* 30 m */, 5 * 60 * 60 /* 5 h */);
-            this.stretchBreaksBreakTimeInput.isTimeOkWarning(15 * 60 /* 15 m */, 50 * 60 /* 50 m */);
+            this.stretchBreaksWorkingTimeInput.isTimeOkWarning(30 * 60 /* 30 m *//*, 5 * 60 * 60 /* 5 h *//*);
+            this.stretchBreaksBreakTimeInput.isTimeOkWarning(15 * 60 /* 15 m *//*, 50 * 60 /* 50 m *//*);
 
             is_time_ok = is_time_ok & this.stretchBreaksWorkingTimeInput.isTimeOk();
             is_time_ok = is_time_ok & this.stretchBreaksBreakTimeInput.isTimeOk();
@@ -228,7 +241,7 @@ public class BreaksController implements I18nable, Initializable {
 
         // day break stuff
         if (this.dayBreakEnabledCheckBox.isSelected()) {
-            this.dayBreakWorkingTimeInput.isTimeOkWarning(8 * 60 * 60 /* 8 hours */, 16 * 60 * 60 /* 16 hours */);
+            this.dayBreakWorkingTimeInput.isTimeOkWarning(8 * 60 * 60 /* 8 hours *//*, 16 * 60 * 60 /* 16 hours *//*);
 
             if (all_times_are_ok = all_times_are_ok & this.dayBreakWorkingTimeInput.isTimeOk())
                 this.saveTimePref(TimersManager.PREF_KEY_DAY_BREAK_WORKING_TIME, this.dayBreakWorkingTimeInput);
@@ -261,3 +274,4 @@ public class BreaksController implements I18nable, Initializable {
         }
     }
 }
+*/
