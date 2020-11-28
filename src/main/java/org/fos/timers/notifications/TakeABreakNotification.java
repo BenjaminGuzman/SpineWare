@@ -1,13 +1,23 @@
+/*
+ * Copyright © 2020 Benjamín Guzmán
+ * Author: Benjamín Guzmán <bg@benjaminguzman.dev>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+/*
 package org.fos.timers.notifications;
 
-import javafx.animation.*;
-import javafx.application.Platform;
-import javafx.embed.swing.JFXPanel;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.util.Duration;
 import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.controllers.TimeForABreakNotificationController;
@@ -23,138 +33,138 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 
 public class TakeABreakNotification extends JDialog {
-    private final int WIDTH = 275, HEIGHT=125;
+	private final int WIDTH = 275, HEIGHT=125;
 
-    private boolean will_take_break = true;
+	private boolean will_take_break = false;
 
-    // this countdown latch should be decremented when the dialog ends (its closed or "take a break" is clicked)
-    private final CountDownLatch countDownLatch;
+	// this countdown latch should be decremented when the dialog ends (its closed or "take a break" is clicked)
+	private final CountDownLatch countDownLatch;
 
-    private Timer closeTimer;
+	private Timer closeTimer;
 
-    private Scene jfxScene;
-    private JFXPanel jfxPanel;
-    private Parent jfxRoot;
+	private Scene jfxScene;
+	private JFXPanel jfxPanel;
+	private Parent jfxRoot;
 
-    public TakeABreakNotification(final String timeForABreakMessage, final CountDownLatch countDownLatch) {
-        super();
-        //System.out.println(Thread.currentThread().getName() + " should be SWING");
+	public TakeABreakNotification(final String timeForABreakMessage, final CountDownLatch countDownLatch) {
+		super();
+		//System.out.println(Thread.currentThread().getName() + " should be SWING");
 
-        this.countDownLatch = countDownLatch;
+		this.countDownLatch = countDownLatch;
 
-        // load the FXML
-        FXMLLoader loader = SWMain.loadFXML("/resources/views/TakeABreakNotification.fxml");
-        if (loader == null)
-            return;
+		// load the FXML
+		FXMLLoader loader = SWMain.loadFXML("/resources/views/TakeABreakNotification.fxml");
+		if (loader == null)
+			return;
 
-        try {
-            jfxRoot = loader.load();
-        } catch (IOException e) {
-            Loggers.errorLogger.log(Level.SEVERE, "Error while loading an FXML", e);
-            return;
-        }
+		try {
+			jfxRoot = loader.load();
+		} catch (IOException e) {
+			Loggers.errorLogger.log(Level.SEVERE, "Error while loading an FXML", e);
+			return;
+		}
 
-        // configure the controller for the fxml
-        TimeForABreakNotificationController controller = loader.getController();
-        controller.setTimeForABreakMessage(timeForABreakMessage);
-        controller.setOnDismissBreakAction(this::onDismissBreak);
-        controller.setOnTakeBreakAction(this::onTakeBreak);
+		// configure the controller for the fxml
+		TimeForABreakNotificationController controller = loader.getController();
+		controller.setTimeForABreakMessage(timeForABreakMessage);
+		controller.setOnDismissBreakAction(this::onDismissBreak);
+		controller.setOnTakeBreakAction(this::onTakeBreak);
 
-        this.jfxPanel = new JFXPanel();
-        this.jfxScene = new Scene(this.jfxRoot);
-        this.jfxPanel.setOpaque(false);
+		this.jfxPanel = new JFXPanel();
+		this.jfxScene = new Scene(this.jfxRoot);
+		this.jfxPanel.setOpaque(false);
 
-        this.setContentPane(jfxPanel);
-        this.setPreferredSize(new Dimension(this.WIDTH, this.HEIGHT));
-        this.setMinimumSize(new Dimension(this.WIDTH, this.HEIGHT));
-        this.setModal(true);
-        this.setModalityType(ModalityType.APPLICATION_MODAL);
+		this.setContentPane(jfxPanel);
+		this.setPreferredSize(new Dimension(this.WIDTH, this.HEIGHT));
+		this.setMinimumSize(new Dimension(this.WIDTH, this.HEIGHT));
+		this.setModal(true);
+		this.setModalityType(ModalityType.APPLICATION_MODAL);
 
-        // set style
-        this.setFocusable(false);
-        this.setResizable(false);
-        this.setUndecorated(true);
-        this.getRootPane().setOpaque(false);
-        this.setType(Type.POPUP);
-        this.setAlwaysOnTop(true);
+		// set style
+		this.setFocusable(false);
+		this.setResizable(false);
+		this.setUndecorated(true);
+		this.getRootPane().setOpaque(false);
+		this.setType(Type.POPUP);
+		this.setAlwaysOnTop(true);
 
-        this.pack();
-    }
+		this.pack();
+	}
 
-    /**
-     * Shows the animation of the notification dialog
-     * sliding from right to left at the bottom-right of the screen
-     * This will call setVisible which will block until the dialog is disposed
-     */
-    public void showWithAnimation() {
-        // put the dialog to the bottom right of the screen
-        Dimension screenDimension = Toolkit.getDefaultToolkit().getScreenSize();
-        final int x_pos = screenDimension.width - this.WIDTH;
-        final int y_pos = screenDimension.height - 2 * this.HEIGHT;
+	/**
+	 * Shows the animation of the notification dialog
+	 * sliding from right to left at the bottom-right of the screen
+	 * This will call setVisible which will block until the dialog is disposed
+	 */
+/*
+	public void showWithAnimation() {
+		// put the dialog to the bottom right of the screen
+		Dimension screenDimension = Toolkit.getDefaultToolkit().getScreenSize();
+		final int x_pos = screenDimension.width - this.WIDTH;
+		final int y_pos = screenDimension.height - 2 * this.HEIGHT;
 
-        this.setLocation(x_pos, y_pos);
+		this.setLocation(x_pos, y_pos);
 
-        Platform.runLater(() -> {
-            this.jfxPanel.setScene(this.jfxScene);
+		Platform.runLater(() -> {
+			this.jfxPanel.setScene(this.jfxScene);
 
-            FadeTransition transition = new FadeTransition(Duration.seconds(1), this.jfxRoot);
+			FadeTransition transition = new FadeTransition(Duration.seconds(1), this.jfxRoot);
 
-            transition.setFromValue(0.75);
-            transition.setToValue(1.0);
-            transition.setCycleCount(5);
-            transition.setAutoReverse(true);
+			transition.setFromValue(0.75);
+			transition.setToValue(1.0);
+			transition.setCycleCount(5);
+			transition.setAutoReverse(true);
 
-            transition.play();
-        });
+			transition.play();
+		});
 
-        this.closeTimer = new Timer(true);
-        this.closeTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Loggers.debugLogger.fine("No response received, disposing the dialog");
-                SwingUtilities.invokeLater(TakeABreakNotification.this::dispose);
-            }
-        }, 10_000); // close the dialog if no response is received after 10 seconds
+		this.closeTimer = new Timer(true);
+		this.closeTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				System.out.println("No response received, disposing the dialog");
+				SwingUtilities.invokeLater(TakeABreakNotification.this::dispose);
+			}
+		}, 10_000); // close the dialog if no response is received after 10 seconds
 
-        this.setVisible(true);
-    }
+		//this.setVisible(true);
+	}
 
-    /**
-     * Method to execute when the user clicks take a break
-     * This method will be invoked in the javafx application thread
-     * @param evt the click event
-     */
-    public void onTakeBreak(ActionEvent evt) {
-        this.will_take_break = true;
-        SwingUtilities.invokeLater(this::dispose);
-    }
+	/**
+	 * Method to execute when the user clicks take a break
+	 * This method will be invoked in the javafx application thread
+	 * @param evt the click event
+	 *//*
+	public void onTakeBreak(ActionEvent evt) {
+		this.will_take_break = true;
+		SwingUtilities.invokeLater(this::dispose);
+	}
 
-    /**
-     * Method to execute when the user clicks dismiss break
-     * This method will be invoked in the javafx application thread
-     * @param evt the click event
-     */
-    public void onDismissBreak(ActionEvent evt) {
-        this.will_take_break = false;
-        SwingUtilities.invokeLater(this::dispose);
-    }
+	/**
+	 * Method to execute when the user clicks dismiss break
+	 * This method will be invoked in the javafx application thread
+	 * @param evt the click event
+	 *//*
+	public void onDismissBreak(ActionEvent evt) {
+		this.will_take_break = false;
+		SwingUtilities.invokeLater(this::dispose);
+	}
 
-    public boolean willUserTakeTheBreak() {
-        return this.will_take_break;
-    }
+	public boolean willUserTakeTheBreak() {
+		return this.will_take_break;
+	}
 
-    @Override
-    public void dispose() {
-        super.dispose();
+	@Override
+	public void dispose() {
+		super.dispose();
 
-        if (this.closeTimer != null)
-            this.closeTimer.cancel();
+		if (this.closeTimer != null)
+			this.closeTimer.cancel();
 
-        this.countDownLatch.countDown();
-        Loggers.debugLogger.fine("Disposing the dialog and counting down... Count down latch updated value: " + this.countDownLatch.getCount());
-    }
+		this.countDownLatch.countDown();
+	}
 }
-
+*/
 
 /*public class TimeForABreakNotification extends Dialog<Boolean> {
     private final double WIDTH = 275, HEIGHT=125;
