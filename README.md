@@ -38,4 +38,4 @@ There are three main areas where you can contribute:
 
 ## Future ideas
 
-- Migrate the project to 100% free software. (OpenJFX is not 100% free. It has license GPLv2 with Classpath exception, so it contains some `com.sun` packages with a different license). Maybe use C++ with QT?
+- Migrate the project to C++ and QT
