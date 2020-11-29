@@ -17,9 +17,6 @@
  */
 package org.fos;
 
-//import org.fos.core.TimersManager;
-//import com.formdev.flatlaf.FlatDarkLaf;
-
 import org.fos.panels.BreaksPanel;
 
 import javax.imageio.ImageIO;
@@ -32,8 +29,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import java.awt.AWTException;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -95,8 +92,7 @@ public class SWMain extends JFrame {
 		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 
-		Dimension minComputedSize = this.getSize();
-		this.setMinimumSize(minComputedSize);
+		this.setMinimumSize(new Dimension(600, 600));
 	}
 
 	/**
@@ -106,7 +102,6 @@ public class SWMain extends JFrame {
 	 */
 	public JPanel createMainPanel() {
 		this.mainContentPanel = new JPanel(new BorderLayout());
-		mainContentPanel.setBackground(Color.RED);
 
 		// menu panel
 		mainContentPanel.add(this.createMenuPanel(), BorderLayout.WEST);
@@ -121,8 +116,9 @@ public class SWMain extends JFrame {
 	 * @return the JPanel that contains all this element
 	 */
 	public JPanel createMenuPanel() {
+		final Font buttonFont = new Font(Font.SANS_SERIF, Font.PLAIN, 14);
+
 		JPanel menuPanel = new JPanel(new GridBagLayout());
-		menuPanel.setBackground(Color.PINK);
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
 		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
@@ -142,7 +138,7 @@ public class SWMain extends JFrame {
 			e.printStackTrace();
 		}
 
-		JLabel swLogoImageLabel = null;
+		JLabel swLogoImageLabel;
 		if (swLogoImageIcon != null)
 			swLogoImageLabel = new JLabel(swLogoImageIcon);
 		else
@@ -171,6 +167,8 @@ public class SWMain extends JFrame {
 			} catch (IOException e) {
 				Loggers.errorLogger.log(Level.WARNING, "Error while setting icon for button", e);
 			}
+
+			button.setFont(buttonFont);
 
 			++gridBagConstraints.gridy;
 			button.setMargin(buttonInsets);
@@ -257,9 +255,9 @@ public class SWMain extends JFrame {
 			return;
 		}
 
-		SysTrayMenu sysTrayMenu = new SysTrayMenu(this, (java.awt.event.ActionEvent evt) -> {
-			this.exit();
-		}, (java.awt.event.ActionEvent evt) -> {
+		SysTrayMenu sysTrayMenu = new SysTrayMenu(this,
+		(java.awt.event.ActionEvent evt) -> this.exit(),
+		(java.awt.event.ActionEvent evt) -> {
 			this.setAlwaysOnTop(true);
 			if (!this.isVisible())
 				this.setVisible(true);
