@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Benjamín Guzmán
+ * Copyright (c) 2020. Benjamín Guzmán
  * Author: Benjamín Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,28 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.fos.controllers;
-/*
 
-public class BreakCountDownController {
-    @FXML
-    public Label breakTimeLabel;
-    @FXML
-    public ProgressBar progressBar;
-    @FXML
-    public Label remainingTimeLabel;
+package org.fos;
 
-    public BreakCountDownController() {
+import java.awt.Font;
 
-    }
-
-    public void setBreakTimeMessage(final String message) {
-        this.breakTimeLabel.setText(message);
-    }
-
-    public void updateRemainingSeconds(final int remaining_s, final double progress) {
-        this.remainingTimeLabel.setText("Remaining time: " + remaining_s + " s");
-        this.progressBar.setProgress(progress);
-    }
+public class Fonts {
+	public static Font SANS_SERIF_BOLD_15 = new Font(Font.SANS_SERIF, Font.BOLD, 15);
+	public static Font SANS_SERIF_BOLD_12 = new Font(Font.SANS_SERIF, Font.BOLD, 12);
 }
-*/
