@@ -17,59 +17,129 @@
  */
 package org.fos.timers;
 
-/*
-import java.lang.reflect.InvocationTargetException;
+
+import org.fos.Loggers;
+import org.fos.timers.notifications.BreakCountDown;
+import org.fos.timers.notifications.TakeABreakNotification;
+
+import javax.swing.SwingUtilities;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 public class WorkingTimeTimer implements Runnable {
-	private final int working_time_s;
-	private final int break_time_s;
+	private final TimerSettings workingTimerSettings;
+	private final TimerSettings breakTimerSettings;
+	private final String takeABreakMessage;
+	private final String breakName;
+	private final boolean add_take_break_option;
+
+	private final AtomicReference<TakeABreakNotification> notificationRef = new AtomicReference<>();
+	private final AtomicReference<BreakCountDown> breakCountDownRef = new AtomicReference<>();
+
+	private CountDownLatch notificationCountDownLatch, breakCountDownLatch;
 
 	private ScheduledExecutorService executorService;
-	private BreakTimeTimer breakTimeTimer;
 
-	private final Class<? extends BreakTimeTimer> BreakTimeTimerClass;
+	public WorkingTimeTimer(final TimerSettings workingTimerSettings, final TimerSettings breakTimerSettings, String takeABreakMessage, String breakName) {
+		this(workingTimerSettings, breakTimerSettings, takeABreakMessage, breakName, true);
+	}
 
-	public WorkingTimeTimer(final int working_time_s, int break_time_s, Class<? extends BreakTimeTimer> BreakTimeTimerClass) {
-		this.working_time_s = working_time_s;
-		this.break_time_s = break_time_s;
-		this.BreakTimeTimerClass = BreakTimeTimerClass;
+	public WorkingTimeTimer(final TimerSettings workingTimerSettings, final TimerSettings breakTimerSettings, String takeABreakMessage, String breakName, boolean add_take_break_option) {
+		this.workingTimerSettings = workingTimerSettings;
+		this.breakTimerSettings = breakTimerSettings;
+		this.takeABreakMessage = takeABreakMessage;
+		this.breakName = breakName;
+		this.add_take_break_option = add_take_break_option;
 	}
 
 	public void init() {
 		this.executorService = Executors.newSingleThreadScheduledExecutor();
-		executorService.schedule(this, this.working_time_s, TimeUnit.SECONDS);
+		this.scheduleWorkingTimeExecutor();
 	}
 
 	public void destroy() {
 		this.executorService.shutdownNow();
-		// TODO: also destroy the breakTimeTimer
-		//this.breakTimeTimer.
+
+		BreakCountDown breakCountDown = this.breakCountDownRef.get();
+		if (breakCountDown != null)
+			breakCountDown.dispose();
+
+		TakeABreakNotification notification = this.notificationRef.get();
+		if (notification != null)
+			notification.dispose();
 	}
 
 	/**
 	 * This will start the break timer, wait for a response
 	 * and set a timer for itself (to start working again)
-	 *//*
+	 * This method is meant to be executed once the working time has passed
+	 * <p>
+	 * This method will show a notification to the user indicating it is time to take a break
+	 * If the user decides to take the break, a countdown will start
+	 * If the user decides to dismiss the notification, no countdown will start
+	 * <p>
+	 * Either way, at the end, the executorService will restart to repeat the process
+	 */
 	@Override
 	public void run() {
-		System.out.println("Entering the run method to create a new scheduler: " + Thread.currentThread().getName());
-		// TODO: block other timers when this is executed
-		// create the break timer and send count down latch to the break timer
+		this.notificationCountDownLatch = new CountDownLatch(1);
+		SwingUtilities.invokeLater(() -> notificationRef.set(
+			new TakeABreakNotification(
+				this.takeABreakMessage,
+				this.notificationCountDownLatch,
+				this.add_take_break_option
+			)
+		));
+
 		try {
-			this.breakTimeTimer = this.BreakTimeTimerClass.getDeclaredConstructor(int.class).newInstance(this.break_time_s);
-			this.breakTimeTimer.init();
-		} catch (InstantiationException|IllegalAccessException|InvocationTargetException|NoSuchMethodException e) {
-			Loggers.errorLogger.log(Level.SEVERE, "Error while creating an object instance of class: " + this.BreakTimeTimerClass.getCanonicalName(), e);
+			this.notificationCountDownLatch.await();
+		} catch (InterruptedException e) {
+			Loggers.errorLogger.log(Level.WARNING, "The count down latch for the notification was interrupted", e);
 		}
 
-		System.out.println("Creating a new executor!!! " + Thread.currentThread().getName());
-		this.executorService = Executors.newSingleThreadScheduledExecutor();
-		executorService.schedule(this, working_time_s, TimeUnit.SECONDS); // once the break finished, get to work again
+		if (!notificationRef.get().willTakeBreak()) {
+			// the user will not take the break and will keep working, so start the working timer again
+			this.scheduleWorkingTimeExecutor();
+			return;
+		}
+
+		if (this.breakTimerSettings == null) { // the day break does not have break time
+			this.scheduleWorkingTimeExecutor();
+			return;
+		}
+
+		this.breakCountDownLatch = new CountDownLatch(1);
+		SwingUtilities.invokeLater(() -> this.breakCountDownRef.set(
+			new BreakCountDown(
+				this.breakName,
+				this.breakTimerSettings,
+				this.breakCountDownLatch
+			)
+		));
+
+		try {
+			this.breakCountDownLatch.await();
+		} catch (InterruptedException e) {
+			Loggers.errorLogger.log(Level.WARNING, "The count down latch for the break count down was interrupted", e);
+		}
+
+		this.scheduleWorkingTimeExecutor();
+	}
+
+	private void scheduleWorkingTimeExecutor() {
+		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+		LocalDateTime now = LocalDateTime.now();
+		Loggers.debugLogger.info(
+			"Break notification will appear in: "
+				+ this.workingTimerSettings.getHMSAsString()
+				+ " from now (" + dateTimeFormatter.format(now) + ")"
+		);
+		this.executorService.schedule(this, this.workingTimerSettings.getHMSAsSeconds(), TimeUnit.SECONDS);
 	}
 }
-*/

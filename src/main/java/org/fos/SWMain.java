@@ -17,6 +17,7 @@
  */
 package org.fos;
 
+import org.fos.core.TimersManager;
 import org.fos.panels.BreaksPanel;
 
 import javax.imageio.ImageIO;
@@ -52,24 +53,13 @@ import java.util.logging.Level;
 
 public class SWMain extends JFrame {
 	public static ResourceBundle messagesBundle;
+	public static TimersManager timersManager;
 
-	//public static TimersManager timersManager;
 	private final JComponent[] mainPanelContentCaches = new JComponent[1];
 	private JComponent activeContentPanel = null;
 	private JPanel mainContentPanel = null;
 
 	private static final short BREAKS_PANEL_CACHE_IDX = 0;
-
-	public static void main(String[] args) {
-		Loggers.init();
-		SWMain.changeMessagesBundle(Locale.getDefault());
-		//SWMain.timersManager = new TimersManager();
-		//SWMain.timersManager.createExecutorsFromPreferences();
-		com.formdev.flatlaf.FlatDarkLaf.install();
-
-		SwingUtilities.invokeLater(SWMain::new);
-		System.setProperty("awt.useSystemAAFontSettings", "on");
-	}
 
 	public SWMain() {
 		super("SpineWare");
@@ -89,15 +79,26 @@ public class SWMain extends JFrame {
 
 		this.pack();
 		this.setLocationRelativeTo(null);
-		this.setVisible(true);
+		//this.setVisible(true); // do not show the jframe on start
 		this.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 
 		this.setMinimumSize(new Dimension(600, 600));
 	}
 
+	public static void main(String[] args) {
+		Loggers.init();
+		SWMain.changeMessagesBundle(Locale.getDefault());
+		com.formdev.flatlaf.FlatDarkLaf.install();
+
+		SWMain.timersManager = new TimersManager();
+		SwingUtilities.invokeLater(SWMain::new);
+		System.setProperty("awt.useSystemAAFontSettings", "on"); // use font antialiasing
+	}
+
 	/**
 	 * Creates the main panel, which contains to the left the main menu
 	 * and to the right the current active panel
+	 *
 	 * @return the panel that contains both panels
 	 */
 	public JPanel createMainPanel() {
@@ -128,7 +129,7 @@ public class SWMain extends JFrame {
 		gridBagConstraints.anchor = GridBagConstraints.NORTH;
 
 		// SpineWare logo image
-		InputStream inputStreamSWLogo = SWMain.getImageAsStream("/resources/media/SpineWare.png");
+		InputStream inputStreamSWLogo = SWMain.getImageAsStream("/resources/media/SpineWare_white.png");
 		ImageIcon swLogoImageIcon = null;
 		try {
 			Image img = ImageIO.read(inputStreamSWLogo);
@@ -232,10 +233,6 @@ public class SWMain extends JFrame {
 	 * Configures and sets the system tray
 	 * this method will also set the jframe icon once it was read
 	 * therefore, if you call this method you will NOT need to read and set the JFrame icon image
-	 *
-	 * This will also set the shortcut to open the JFrame. The shortcut is ctrl+shift+s
-	 * TODO: work on the GUI, make it look prettier. Add a mouse listener to show not the popupMenu
-	 * TODO: but a new customized JDialog
 	 */
 	private void configSysTray() {
 		if (!SystemTray.isSupported()) {
@@ -256,8 +253,7 @@ public class SWMain extends JFrame {
 		}
 
 		SysTrayMenu sysTrayMenu = new SysTrayMenu(this,
-		(java.awt.event.ActionEvent evt) -> this.exit(),
-		(java.awt.event.ActionEvent evt) -> {
+			(java.awt.event.ActionEvent evt) -> this.exit(), (java.awt.event.ActionEvent evt) -> {
 			this.setAlwaysOnTop(true);
 			if (!this.isVisible())
 				this.setVisible(true);
@@ -279,6 +275,7 @@ public class SWMain extends JFrame {
 			private final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 			private final Dimension menuSize = sysTrayMenu.getSize();
 			private final Dimension menuLocationOffsetDim = new Dimension(5, 5);
+
 			@Override
 			public void mousePressed(MouseEvent e) {
 				/// if the pop up menu is shown, hide it
@@ -302,20 +299,30 @@ public class SWMain extends JFrame {
 				sysTrayMenu.setLocation(menuLocation);
 				sysTrayMenu.setVisible(true);
 			}
+
 			@Override
-			public void mouseClicked(MouseEvent e) {}
+			public void mouseClicked(MouseEvent e) {
+			}
+
 			@Override
-			public void mouseReleased(MouseEvent e) {}
+			public void mouseReleased(MouseEvent e) {
+			}
+
 			@Override
-			public void mouseEntered(MouseEvent e) {}
+			public void mouseEntered(MouseEvent e) {
+			}
+
 			@Override
-			public void mouseExited(MouseEvent e) {}
+			public void mouseExited(MouseEvent e) {
+			}
 		});
+
+		// start the timers
+		SWMain.timersManager.createExecutorsFromPreferences();
 	}
 
 	public void exit() {
-		//Platform.exit();
-		// TODO: kill all timers
+		SWMain.timersManager.killAllTimers();
 		Loggers.debugLogger.log(Level.INFO, "Shutting down...");
 		this.dispose();
 		System.exit(0);
