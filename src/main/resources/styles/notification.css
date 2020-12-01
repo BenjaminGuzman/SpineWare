@@ -1,6 +1,0 @@
-.button {
-    -fx-effect: dropshadow(three-pass-box, mediumpurple, 10.0, 0.0, 0.0, 0.0);
-}
-.progress-bar {
-    -fx-accent: #663399;
-}
