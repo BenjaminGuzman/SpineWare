@@ -32,7 +32,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
-public class TimeInputPanel extends JPanel {
+public class TimeInputPanel extends JPanel
+{
 	private final JSpinner hoursSpinner;
 	private final JSpinner minutesSpinner;
 	private final JSpinner secondsSpinner;
@@ -47,7 +48,8 @@ public class TimeInputPanel extends JPanel {
 		final TimerSettings minRecommendedTime,
 		final TimerSettings maxRecommendedTime,
 		final TimerSettings preferredTime
-	) {
+	)
+	{
 		this(minRecommendedTime, maxRecommendedTime, preferredTime, false);
 	}
 
@@ -56,20 +58,25 @@ public class TimeInputPanel extends JPanel {
 	 * (three spinners)
 	 * and adding a label to each input
 	 *
-	 * @param minRecommendedTime the minimum recommended time for this input
-	 * @param maxRecommendedTime the maximum recommended time for this input
-	 * @param preferredTime      the preferred time for this input, this is obtained from the user preferences
-	 *                           if this is null, the preferences does not exists
-	 * @param use_hard_limits if true, the min and max recommended times will not be treated as a nice to have
-	 *                        but as a MUST have, therefore, if this is true error messages will appear instead
-	 *                        of warning messages
+	 * @param minRecommendedTime
+	 * 	the minimum recommended time for this input
+	 * @param maxRecommendedTime
+	 * 	the maximum recommended time for this input
+	 * @param preferredTime
+	 * 	the preferred time for this input, this is obtained from the user preferences
+	 * 	if this is null, the preferences does not exists
+	 * @param use_hard_limits
+	 * 	if true, the min and max recommended times will not be treated as a nice to have
+	 * 	but as a MUST have, therefore, if this is true error messages will appear instead
+	 * 	of warning messages
 	 */
 	public TimeInputPanel(
 		final TimerSettings minRecommendedTime,
 		final TimerSettings maxRecommendedTime,
 		final TimerSettings preferredTime,
 		final boolean use_hard_limits
-	) {
+	)
+	{
 		super();
 
 		int[] preferred_hms = new int[]{0, 0, 0};
@@ -130,7 +137,8 @@ public class TimeInputPanel extends JPanel {
 	 * Checks if the current values of he input is inside the given bounds
 	 * if not, a warning is shown
 	 */
-	public boolean checkInputValidity() {
+	public boolean checkInputValidity()
+	{
 		int max_recommended_value = this.maxRecommendedTime.getHMSAsSeconds();
 		int min_recommended_value = this.minRecommendedTime.getHMSAsSeconds();
 		int selected_value = this.getTime();
@@ -144,10 +152,10 @@ public class TimeInputPanel extends JPanel {
 		if (this.use_hard_limits) {
 			if (selected_value > max_recommended_value)
 				this.warningLabel.setText(this.maxRecommendedTime.getHMSAsSeconds()
-					+ " " + SWMain.messagesBundle.getString("is_the_maximum"));
+								  + " " + SWMain.messagesBundle.getString("is_the_maximum"));
 			else if (selected_value < min_recommended_value)
 				this.warningLabel.setText(this.minRecommendedTime.getHMSAsSeconds()
-					+ " " + SWMain.messagesBundle.getString("is_the_minimum"));
+								  + " " + SWMain.messagesBundle.getString("is_the_minimum"));
 			this.warningLabel.setForeground(Colors.RED);
 			return false;
 		}
@@ -163,9 +171,11 @@ public class TimeInputPanel extends JPanel {
 	/**
 	 * Sets the enabled param on all the inputs
 	 *
-	 * @param enabled same param that will be passed to javax.swing.JComponent#setEnabled
+	 * @param enabled
+	 * 	same param that will be passed to javax.swing.JComponent#setEnabled
 	 */
-	public void setEnabled(boolean enabled) {
+	public void setEnabled(boolean enabled)
+	{
 		this.hoursSpinner.setEnabled(enabled);
 		this.minutesSpinner.setEnabled(enabled);
 		this.secondsSpinner.setEnabled(enabled);
@@ -174,11 +184,15 @@ public class TimeInputPanel extends JPanel {
 	/**
 	 * Sets the given values as params in the corresponding spinners
 	 *
-	 * @param hours   hours to put in the hoursSpinner
-	 * @param minutes minutes to put in the minutesSpinner
-	 * @param seconds seconds to put in the secondsSpinner
+	 * @param hours
+	 * 	hours to put in the hoursSpinner
+	 * @param minutes
+	 * 	minutes to put in the minutesSpinner
+	 * @param seconds
+	 * 	seconds to put in the secondsSpinner
 	 */
-	public void setValues(final byte hours, final byte minutes, final byte seconds) {
+	public void setValues(final byte hours, final byte minutes, final byte seconds)
+	{
 		this.hoursSpinner.setValue((int) hours); // the spinner expects integers, that's why cast is needed
 		this.minutesSpinner.setValue((int) minutes);
 		this.secondsSpinner.setValue((int) seconds);
@@ -187,9 +201,11 @@ public class TimeInputPanel extends JPanel {
 	/**
 	 * Sets the text for the warningLabel
 	 *
-	 * @param show_upper_bound if true, then the warning will show the preferred upper bound
+	 * @param show_upper_bound
+	 * 	if true, then the warning will show the preferred upper bound
 	 */
-	public void showRecommendedValueWarning(boolean show_upper_bound) {
+	public void showRecommendedValueWarning(boolean show_upper_bound)
+	{
 		TimerSettings timerSettings = show_upper_bound ? this.maxRecommendedTime : this.minRecommendedTime;
 		this.warningLabel.setText(timerSettings.getHMSAsString() + " " + SWMain.messagesBundle.getString("is_recommended"));
 	}
@@ -197,7 +213,8 @@ public class TimeInputPanel extends JPanel {
 	/**
 	 * sets the warning label to null
 	 */
-	public void clearWarning() {
+	public void clearWarning()
+	{
 		this.warningLabel.setForeground(Color.YELLOW);
 		this.warningLabel.setText(null);
 	}
@@ -208,28 +225,32 @@ public class TimeInputPanel extends JPanel {
 	 *
 	 * @return the number of seconds
 	 */
-	public int getTime() {
+	public int getTime()
+	{
 		return this.getSeconds() + this.getMinutes() * 60 + this.getHours() * 60 * 60;
 	}
 
 	/**
 	 * @return the value as int of the hoursSpinner at the time this method is invoked
 	 */
-	public int getHours() {
+	public int getHours()
+	{
 		return (int) this.hoursSpinner.getModel().getValue();
 	}
 
 	/**
 	 * @return the value as int of the minutesSpinner at the time this method is invoked
 	 */
-	public int getMinutes() {
+	public int getMinutes()
+	{
 		return (int) this.minutesSpinner.getModel().getValue();
 	}
 
 	/**
 	 * @return the value as int of the secondsSpinner at the time this method is invoked
 	 */
-	public int getSeconds() {
+	public int getSeconds()
+	{
 		return (int) this.secondsSpinner.getModel().getValue();
 	}
 }

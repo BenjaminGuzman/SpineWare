@@ -24,8 +24,10 @@ import org.fos.SWMain;
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
 
-public class StartUpNotification extends Notification {
-	public StartUpNotification() {
+public class StartUpNotification extends Notification
+{
+	public StartUpNotification()
+	{
 		super(4_000, Notification.NOTIFICATION_LOCATION_BOTTOM_RIGHT);
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
