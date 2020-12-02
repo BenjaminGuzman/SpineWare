@@ -1,5 +1,7 @@
 package org.fos;
 
+import org.fos.timers.WorkingTimeTimer;
+
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -51,6 +53,11 @@ public class SysTrayMenu extends JDialog {
 		});
 	}
 
+	/**
+	 * Creates the menu components
+	 * this method will handle all the GUI stuff
+	 * @return the panel containing all the elements the menu should have
+	 */
 	public JPanel initComponents() {
 		JPanel mainPanel = new JPanel(new GridBagLayout());
 
@@ -63,7 +70,7 @@ public class SysTrayMenu extends JDialog {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		JLabel swLogoImageLabel = null;
+		JLabel swLogoImageLabel;
 		if (swLogoImageIcon != null)
 			swLogoImageLabel = new JLabel(swLogoImageIcon);
 		else
@@ -97,6 +104,29 @@ public class SysTrayMenu extends JDialog {
 		gridBagConstraints.gridy = 2;
 		mainPanel.add(openButton, gridBagConstraints);
 
+		// TODO: add 3 progress bars to show the remaining time for each break
+
 		return mainPanel;
+	}
+
+	@Override
+	public void setVisible(boolean b) {
+		super.setVisible(b);
+
+		WorkingTimeTimer smallBreakTimer = SWMain.timersManager.getSmallBreaksWorkingTimer();
+		WorkingTimeTimer stretchBreakTimer = SWMain.timersManager.getStretchBreaksWorkingTimer();
+		WorkingTimeTimer dayBreakTimer = SWMain.timersManager.getDayBreakWorkingTimer();
+
+		if (smallBreakTimer != null) {
+			long remaining_s_for_notification = smallBreakTimer.getNotificationShouldBeShownAt()
+				- System.currentTimeMillis() / 1_000;
+			if (remaining_s_for_notification <= 0) {
+				// TODO: show that the notification is already shown
+			} else {
+				// TODO: show in the progress bar the remaining seconds
+				// TODO: update the value each 2 seconds until the notification is shown
+			}
+		}
+
 	}
 }

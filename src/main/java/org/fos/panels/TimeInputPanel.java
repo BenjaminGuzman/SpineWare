@@ -18,6 +18,7 @@
 
 package org.fos.panels;
 
+import org.fos.Colors;
 import org.fos.Fonts;
 import org.fos.SWMain;
 import org.fos.timers.TimerSettings;
@@ -40,6 +41,15 @@ public class TimeInputPanel extends JPanel {
 
 	private final TimerSettings minRecommendedTime;
 	private final TimerSettings maxRecommendedTime;
+	private final boolean use_hard_limits; // check the constructor for details
+
+	public TimeInputPanel(
+		final TimerSettings minRecommendedTime,
+		final TimerSettings maxRecommendedTime,
+		final TimerSettings preferredTime
+	) {
+		this(minRecommendedTime, maxRecommendedTime, preferredTime, false);
+	}
 
 	/**
 	 * Constructs the time input panel by adding the corresponding inputs
@@ -50,11 +60,15 @@ public class TimeInputPanel extends JPanel {
 	 * @param maxRecommendedTime the maximum recommended time for this input
 	 * @param preferredTime      the preferred time for this input, this is obtained from the user preferences
 	 *                           if this is null, the preferences does not exists
+	 * @param use_hard_limits if true, the min and max recommended times will not be treated as a nice to have
+	 *                        but as a MUST have, therefore, if this is true error messages will appear instead
+	 *                        of warning messages
 	 */
 	public TimeInputPanel(
 		final TimerSettings minRecommendedTime,
 		final TimerSettings maxRecommendedTime,
-		final TimerSettings preferredTime
+		final TimerSettings preferredTime,
+		final boolean use_hard_limits
 	) {
 		super();
 
@@ -65,6 +79,7 @@ public class TimeInputPanel extends JPanel {
 			preferred_hms[2] = preferredTime.getSeconds();
 		}
 
+		this.use_hard_limits = use_hard_limits;
 		this.minRecommendedTime = minRecommendedTime;
 		this.maxRecommendedTime = maxRecommendedTime;
 
@@ -121,8 +136,19 @@ public class TimeInputPanel extends JPanel {
 		int selected_value = this.getTime();
 
 		if (selected_value < 5) {
-			this.warningLabel.setForeground(Color.RED);
+			this.warningLabel.setForeground(Colors.RED);
 			this.warningLabel.setText(SWMain.messagesBundle.getString("must_be_greater_than"));
+			return false;
+		}
+
+		if (this.use_hard_limits) {
+			if (selected_value > max_recommended_value)
+				this.warningLabel.setText(this.maxRecommendedTime.getHMSAsSeconds()
+					+ " " + SWMain.messagesBundle.getString("is_the_maximum"));
+			else if (selected_value < min_recommended_value)
+				this.warningLabel.setText(this.minRecommendedTime.getHMSAsSeconds()
+					+ " " + SWMain.messagesBundle.getString("is_the_minimum"));
+			this.warningLabel.setForeground(Colors.RED);
 			return false;
 		}
 
