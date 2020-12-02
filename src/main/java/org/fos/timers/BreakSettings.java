@@ -24,7 +24,8 @@ package org.fos.timers;
  * break settings
  * and a boolean value to indicate if the break is enabled or not
  */
-public class BreakSettings {
+public class BreakSettings
+{
 	private TimerSettings workTimerSettings;
 	private TimerSettings breakTimerSettings;
 	private TimerSettings postponeTimerSettings;
@@ -35,7 +36,8 @@ public class BreakSettings {
 		final TimerSettings breakTimerSettings,
 		final TimerSettings postponeTimerSettings,
 		final boolean is_enabled
-	) {
+	)
+	{
 		this.workTimerSettings = workTimerSettings;
 		this.breakTimerSettings = breakTimerSettings;
 		this.postponeTimerSettings = postponeTimerSettings;
@@ -46,39 +48,48 @@ public class BreakSettings {
 		final TimerSettings workTimerSettings,
 		final TimerSettings breakTimerSettings,
 		final TimerSettings postponeTimerSettings
-	) {
+	)
+	{
 		this(workTimerSettings, breakTimerSettings, postponeTimerSettings, true);
 	}
 
-	public TimerSettings getWorkTimerSettings() {
+	public TimerSettings getWorkTimerSettings()
+	{
 		return workTimerSettings;
 	}
 
-	public TimerSettings getBreakTimerSettings() {
-		return breakTimerSettings;
-	}
-
-	public void setWorkTimerSettings(TimerSettings workTimerSettings) {
+	public void setWorkTimerSettings(TimerSettings workTimerSettings)
+	{
 		this.workTimerSettings = workTimerSettings;
 	}
 
-	public TimerSettings getPostponeTimerSettings() {
-		return this.postponeTimerSettings;
+	public TimerSettings getBreakTimerSettings()
+	{
+		return breakTimerSettings;
 	}
 
-	public void setPostponeTimerSettings(TimerSettings postponeTimerSettings) {
-		this.postponeTimerSettings = postponeTimerSettings;
-	}
-
-	public void setBreakTimerSettings(TimerSettings breakTimerSettings) {
+	public void setBreakTimerSettings(TimerSettings breakTimerSettings)
+	{
 		this.breakTimerSettings = breakTimerSettings;
 	}
 
-	public boolean isEnabled() {
+	public TimerSettings getPostponeTimerSettings()
+	{
+		return this.postponeTimerSettings;
+	}
+
+	public void setPostponeTimerSettings(TimerSettings postponeTimerSettings)
+	{
+		this.postponeTimerSettings = postponeTimerSettings;
+	}
+
+	public boolean isEnabled()
+	{
 		return this.is_enabled;
 	}
 
-	public void setEnabled(final boolean is_enabled) {
+	public void setEnabled(final boolean is_enabled)
+	{
 		this.is_enabled = is_enabled;
 	}
 }

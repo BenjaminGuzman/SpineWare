@@ -39,8 +39,10 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 
-public class HelpPanel extends JScrollPane {
-	public HelpPanel() {
+public class HelpPanel extends JScrollPane
+{
+	public HelpPanel()
+	{
 		super();
 
 		JPanel mainPanel = new JPanel();
@@ -117,7 +119,8 @@ public class HelpPanel extends JScrollPane {
 		this.getVerticalScrollBar().setUnitIncrement(16);
 	}
 
-	private void onClickHyperLink(HyperlinkEvent evt) {
+	private void onClickHyperLink(HyperlinkEvent evt)
+	{
 		if (evt.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
 			if (Desktop.isDesktopSupported()) {
 				try {

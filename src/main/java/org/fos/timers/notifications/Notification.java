@@ -39,27 +39,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 
-public class Notification extends JDialog {
+public class Notification extends JDialog
+{
 	public static byte NOTIFICATION_LOCATION_BOTTOM_RIGHT = 0;
 	public static byte NOTIFICATION_LOCATION_BOTTOM_LEFT = 1;
 	public static byte NOTIFICATION_LOCATION_TOP_RIGHT = 2;
 	public static byte NOTIFICATION_LOCATION_TOP_LEFT = 3;
 
 	protected static ImageIcon swIcon; // static to avoid reading the image each time the notification is shown
-
-	protected JLabel swIconLabel; // icon that contains the SW image
-	protected JPanel mainPanel; // panel that will contain everything in the JDialog
-
-	private Timer timeoutTimer; // timer to automatically dispose the dialog
-
 	private final int dispose_timeout_ms;
 	private final byte notification_location;
+	protected JLabel swIconLabel; // icon that contains the SW image
+	protected JPanel mainPanel; // panel that will contain everything in the JDialog
+	private Timer timeoutTimer; // timer to automatically dispose the dialog
 
-	public Notification() {
+	public Notification()
+	{
 		this(20_000, Notification.NOTIFICATION_LOCATION_BOTTOM_RIGHT);
 	}
 
-	public Notification(byte notification_location) {
+	public Notification(byte notification_location)
+	{
 		this(20_000, notification_location);
 	}
 
@@ -67,11 +67,15 @@ public class Notification extends JDialog {
 	 * Creates the notification with the given dispose timeout
 	 * this will set the main panel with a new grid bag layout and new empty border
 	 * this will also load the SW icon
-	 * @param dispose_timeout_ms number of milliseconds to wait before the dialog is automatically disposed
-	 *                           if this is less than or equal to 0, the notification will be never dismissed
-	 * @param notification_location this tells where to put the notification, check this class static constants for details
+	 *
+	 * @param dispose_timeout_ms
+	 * 	number of milliseconds to wait before the dialog is automatically disposed
+	 * 	if this is less than or equal to 0, the notification will be never dismissed
+	 * @param notification_location
+	 * 	this tells where to put the notification, check this class static constants for details
 	 */
-	public Notification(int dispose_timeout_ms, byte notification_location) {
+	public Notification(int dispose_timeout_ms, byte notification_location)
+	{
 		super();
 		assert SwingUtilities.isEventDispatchThread();
 
@@ -94,7 +98,8 @@ public class Notification extends JDialog {
 	 * Method all derived classes should call once they've added content to the main panel
 	 * this method will pack, show the notification and set the timer to automatically dismiss the notification
 	 */
-	protected void showJDialog() {
+	protected void showJDialog()
+	{
 		this.setContentPane(this.mainPanel);
 		this.setUndecorated(true);
 		this.setResizable(false);
@@ -119,7 +124,8 @@ public class Notification extends JDialog {
 	/**
 	 * Load the SW icon, if it is loaded, this method will do nothing
 	 */
-	private void loadSWIcon() {
+	private void loadSWIcon()
+	{
 		if (Notification.swIcon != null)
 			return;
 
@@ -137,7 +143,8 @@ public class Notification extends JDialog {
 		Notification.swIcon = new ImageIcon(icon);
 	}
 
-	private Point getNotificationPointLocation() {
+	private Point getNotificationPointLocation()
+	{
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		Dimension notificationSize = this.getSize();
 
@@ -160,14 +167,17 @@ public class Notification extends JDialog {
 	 * Get the dispose timeout of this notification
 	 * The dispose timeout is in milliseconds
 	 * After that time, the notification will be automatically disposed
+	 *
 	 * @return the dispose timeout
 	 */
-	public int getDisposeTimeout() {
+	public int getDisposeTimeout()
+	{
 		return this.dispose_timeout_ms;
 	}
 
 	@Override
-	public void dispose() {
+	public void dispose()
+	{
 		super.dispose();
 		if (this.timeoutTimer != null)
 			this.timeoutTimer.stop();

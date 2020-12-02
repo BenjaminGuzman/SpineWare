@@ -18,7 +18,8 @@
 
 package org.fos.timers;
 
-public class TimerSettings {
+public class TimerSettings
+{
 	private byte hours;
 	private byte minutes;
 	private byte seconds;
@@ -29,11 +30,15 @@ public class TimerSettings {
 	 * Constructs a ne TimerSettings object with the given arguments
 	 * and the default is_enabled as true
 	 *
-	 * @param hours   configured hours
-	 * @param minutes configured minutes
-	 * @param seconds configured seconds
+	 * @param hours
+	 * 	configured hours
+	 * @param minutes
+	 * 	configured minutes
+	 * @param seconds
+	 * 	configured seconds
 	 */
-	public TimerSettings(final byte hours, final byte minutes, final byte seconds) {
+	public TimerSettings(final byte hours, final byte minutes, final byte seconds)
+	{
 		this.hours = hours < 0 ? 1 : hours;
 		this.minutes = minutes < 0 ? 5 : minutes;
 		this.seconds = seconds < 0 ? 10 : seconds;
@@ -42,10 +47,12 @@ public class TimerSettings {
 	/**
 	 * Creates a new timer object with the given arguments
 	 *
-	 * @param h_m_s_as_seconds stands for Hours Minutes Seconds, therefore in this variable should be stored
-	 *                         the number of hours, minutes and seconds
+	 * @param h_m_s_as_seconds
+	 * 	stands for Hours Minutes Seconds, therefore in this variable should be stored
+	 * 	the number of hours, minutes and seconds
 	 */
-	public TimerSettings(final int h_m_s_as_seconds) {
+	public TimerSettings(final int h_m_s_as_seconds)
+	{
 		byte[] h_m_s = this.seconds2HoursMinutesSeconds(h_m_s_as_seconds);
 		this.hours = h_m_s[0] < 0 ? 1 : h_m_s[0];
 		this.minutes = h_m_s[1] < 0 ? 5 : h_m_s[1];
@@ -55,9 +62,11 @@ public class TimerSettings {
 	/**
 	 * Copy constructor
 	 *
-	 * @param timerSettings the original object
+	 * @param timerSettings
+	 * 	the original object
 	 */
-	public TimerSettings(final TimerSettings timerSettings) {
+	public TimerSettings(final TimerSettings timerSettings)
+	{
 		this(timerSettings.getHours(), timerSettings.getMinutes(), timerSettings.getSeconds());
 		this.hms_cache = timerSettings.hms_cache;
 	}
@@ -65,11 +74,13 @@ public class TimerSettings {
 	/**
 	 * Converts the given amount of seconds to hours, minutes and seconds
 	 *
-	 * @param h_m_s_as_seconds the hours minutes and seconds as seconds
+	 * @param h_m_s_as_seconds
+	 * 	the hours minutes and seconds as seconds
 	 *
 	 * @return an array of ints of length 3, index 0 -> hours, index 1 -> minutes, index 2 -> seconds
 	 */
-	public byte[] seconds2HoursMinutesSeconds(final int h_m_s_as_seconds) {
+	public byte[] seconds2HoursMinutesSeconds(final int h_m_s_as_seconds)
+	{
 		int seconds = h_m_s_as_seconds % 60;
 		int hours_and_minutes_as_seconds = h_m_s_as_seconds - seconds;
 
@@ -85,7 +96,8 @@ public class TimerSettings {
 	 * @return the hours minutes and seconds
 	 * as seconds (all summed up)
 	 */
-	public int getHMSAsSeconds() {
+	public int getHMSAsSeconds()
+	{
 		if (this.hms_cache == -1) // avoid computing this many times
 			this.hms_cache = this.seconds + this.minutes * 60 + this.hours * 60 * 60;
 		return this.hms_cache;
@@ -96,7 +108,8 @@ public class TimerSettings {
 	 * <hours>h <minutes>m <seconds>s
 	 * if the hours, minutes or seconds are 0, they're omitted from the string
 	 */
-	public String getHMSAsString() {
+	public String getHMSAsString()
+	{
 		StringBuilder builder = new StringBuilder(20);
 
 		if (this.hours != 0)
@@ -114,11 +127,13 @@ public class TimerSettings {
 	 * This method will subtract n_seconds to the internal hours, minutes and seconds
 	 * If the total number of seconds is 0 already, this method will do nothing and return false
 	 *
-	 * @param n_seconds number of seconds to subtract
+	 * @param n_seconds
+	 * 	number of seconds to subtract
 	 *
 	 * @return true if the subtraction could be done, false otherwise
 	 */
-	public boolean subtractSeconds(byte n_seconds) {
+	public boolean subtractSeconds(byte n_seconds)
+	{
 		int new_hms_as_seconds = this.getHMSAsSeconds() - n_seconds;
 		if (new_hms_as_seconds < 0)
 			return false;
@@ -133,15 +148,18 @@ public class TimerSettings {
 		return true;
 	}
 
-	public byte getHours() {
+	public byte getHours()
+	{
 		return hours;
 	}
 
-	public byte getMinutes() {
+	public byte getMinutes()
+	{
 		return minutes;
 	}
 
-	public byte getSeconds() {
+	public byte getSeconds()
+	{
 		return seconds;
 	}
 }

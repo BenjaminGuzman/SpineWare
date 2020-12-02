@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Benjamín Guzmán
+ * Copyright (c) 2020. Benjamín Guzmán
  * Author: Benjamín Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -43,7 +43,8 @@ import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 
-public class BreakCountDown extends JDialog {
+public class BreakCountDown extends JDialog
+{
 	private static ImageIcon spineWareIcon; // static to avoid reading the image each time the dialog is shown
 
 	private final TimerSettings breakSettings;
@@ -53,7 +54,8 @@ public class BreakCountDown extends JDialog {
 
 	private final Timer timerCountDown;
 
-	public BreakCountDown(final String breakMessage, final TimerSettings breakSettings, final CountDownLatch countDownLatch) {
+	public BreakCountDown(final String breakMessage, final TimerSettings breakSettings, final CountDownLatch countDownLatch)
+	{
 		super();
 		assert !SwingUtilities.isEventDispatchThread();
 
@@ -74,8 +76,10 @@ public class BreakCountDown extends JDialog {
 			spineWareIconLabel.setText("SW");
 
 		// create break time message label
-		JLabel breakMessageLabel = new JLabel(breakMessage + " (" + breakSettings.getHMSAsString() + ")",
-			SwingConstants.CENTER);
+		JLabel breakMessageLabel = new JLabel(
+			breakMessage + " (" + breakSettings.getHMSAsString() + ")",
+			SwingConstants.CENTER
+		);
 		breakMessageLabel.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 16));
 
 		// create remaining time message label
@@ -162,7 +166,8 @@ public class BreakCountDown extends JDialog {
 		this.timerCountDown.start();
 	}
 
-	public void countDown() {
+	public void countDown()
+	{
 		if (!this.breakSettings.subtractSeconds((byte) 1)) { // if the subtraction could not be done because timer is at 0
 			this.dispose();
 			return;
@@ -177,7 +182,8 @@ public class BreakCountDown extends JDialog {
 	 * If the image icon has been already loaded, this will simply do nothing
 	 * If it hasn't been loaded, it tries to load it and stores it in the swIcon static member
 	 */
-	private void loadSpineWareIcon() {
+	private void loadSpineWareIcon()
+	{
 		if (BreakCountDown.spineWareIcon != null)
 			return;
 
@@ -201,7 +207,8 @@ public class BreakCountDown extends JDialog {
 	 * it will also stop the timer that handles the countdown in the GUI
 	 */
 	@Override
-	public void dispose() {
+	public void dispose()
+	{
 		this.timerCountDown.stop();
 		this.countDownLatch.countDown();
 		super.dispose();

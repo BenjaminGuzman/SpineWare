@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Benjamín Guzmán
+ * Copyright (c) 2020. Benjamín Guzmán
  * Author: Benjamín Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,8 @@ import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-public class TimersManager {
+public class TimersManager
+{
 	private byte notification_location_pref = 0;
 
 	private Preferences prefs;
@@ -39,11 +40,13 @@ public class TimersManager {
 	/**
 	 * Loads settings from the preferences
 	 *
-	 * @param breakName name of the timer, this could be small breaks, stretch breaks, or day break
+	 * @param breakName
+	 * 	name of the timer, this could be small breaks, stretch breaks, or day break
 	 *
 	 * @return a TimerSettings object constructed from the preferences values
 	 */
-	private BreakSettings loadBreakSettings(final String breakName) {
+	private BreakSettings loadBreakSettings(final String breakName)
+	{
 		String _breakName = this.normalizeBreakName(breakName);
 
 		boolean is_enabled = this.prefs.getBoolean(_breakName + " enabled", false);
@@ -72,7 +75,8 @@ public class TimersManager {
 	 *
 	 * @return the loaded breaks
 	 */
-	public BreakSettings[] loadBreaksSettings() {
+	public BreakSettings[] loadBreaksSettings()
+	{
 		this.loadPreferences();
 
 		String[] breaksNames = new String[]{"small breaks", "stretch breaks", "day break"};
@@ -89,10 +93,13 @@ public class TimersManager {
 	/**
 	 * Saves the break settings in the user preferences
 	 *
-	 * @param breakName     the break name
-	 * @param breakSettings the break settings to be saved
+	 * @param breakName
+	 * 	the break name
+	 * @param breakSettings
+	 * 	the break settings to be saved
 	 */
-	private void saveBreakSettings(final String breakName, final BreakSettings breakSettings) {
+	private void saveBreakSettings(final String breakName, final BreakSettings breakSettings)
+	{
 		this.prefs.putBoolean(breakName + " enabled", breakSettings.isEnabled());
 
 		if (!breakSettings.isEnabled())
@@ -113,9 +120,11 @@ public class TimersManager {
 	 * 1 -> stretch breaks
 	 * 2 -? day break
 	 *
-	 * @param breaksSettings the array of settings
+	 * @param breaksSettings
+	 * 	the array of settings
 	 */
-	public void saveBreaksSettings(final BreakSettings[] breaksSettings) {
+	public void saveBreaksSettings(final BreakSettings[] breaksSettings)
+	{
 		this.loadPreferences();
 
 		this.saveBreakSettings("small breaks", breaksSettings[0]);
@@ -131,11 +140,13 @@ public class TimersManager {
 	/**
 	 * Checks if the breakName is a valid and calls String.toLowerCase
 	 *
-	 * @param breakName name of the break
+	 * @param breakName
+	 * 	name of the break
 	 *
 	 * @return the normalized break name
 	 */
-	private String normalizeBreakName(final String breakName) {
+	private String normalizeBreakName(final String breakName)
+	{
 		String _breakName = breakName.toLowerCase();
 		if (!_breakName.equals("small breaks") && !_breakName.equals("stretch breaks") & !_breakName.equals("day break"))
 			throw new IllegalArgumentException("Argument timerName with value \"" + breakName + "\" is not valid");
@@ -148,12 +159,17 @@ public class TimersManager {
 	 * Otherwise, it reads the preferences for this package and tries to sync them
 	 * to have updated values
 	 */
-	private void loadPreferences() {
+	private void loadPreferences()
+	{
 		if (this.prefs != null) {
 			try {
 				this.prefs.sync(); // ensure we read updated values
 			} catch (BackingStoreException e) {
-				Loggers.errorLogger.log(Level.SEVERE, "Couldn't sync preferences for package " + TimersManager.class, e);
+				Loggers.errorLogger.log(
+					Level.SEVERE,
+					"Couldn't sync preferences for package " + TimersManager.class,
+					e
+				);
 			}
 			return;
 		}
@@ -169,7 +185,8 @@ public class TimersManager {
 	/**
 	 * Creates all the timers for the breaks if enabled
 	 */
-	public void createExecutorsFromPreferences() {
+	public void createExecutorsFromPreferences()
+	{
 		this.killAllTimers();
 		BreakSettings[] breaksSettings = this.loadBreaksSettings();
 
@@ -218,22 +235,28 @@ public class TimersManager {
 
 	}
 
-	public void saveNotificationPrefLocation(byte location) {
+	public void saveNotificationPrefLocation(byte location)
+	{
 		this.loadPreferences();
 
 		this.prefs.putInt("notification location", location);
 	}
 
-	public byte getNotificationPrefLocation() {
+	public byte getNotificationPrefLocation()
+	{
 		return this.getNotificationPrefLocation(false);
 	}
 
 	/**
 	 * Gets the notification location preference
-	 * @param reload if true, this method will try to reload the loaded preferences
+	 *
+	 * @param reload
+	 * 	if true, this method will try to reload the loaded preferences
+	 *
 	 * @return the notification location preference
 	 */
-	public byte getNotificationPrefLocation(boolean reload) {
+	public byte getNotificationPrefLocation(boolean reload)
+	{
 		if (reload) {
 			this.loadPreferences();
 			this.notification_location_pref = (byte) this.prefs.getInt("notification location", 0);
@@ -246,7 +269,8 @@ public class TimersManager {
 	 * shutdowns all timers and resets the timers array
 	 * leaving the object as it were "brand-new" or recently instantiated
 	 */
-	public void killAllTimers() {
+	public void killAllTimers()
+	{
 		if (this.smallBreaksWorkingTimer != null)
 			this.smallBreaksWorkingTimer.destroy();
 
@@ -261,15 +285,18 @@ public class TimersManager {
 		this.dayBreakWorkingTimer = null;
 	}
 
-	public WorkingTimeTimer getSmallBreaksWorkingTimer() {
+	public WorkingTimeTimer getSmallBreaksWorkingTimer()
+	{
 		return smallBreaksWorkingTimer;
 	}
 
-	public WorkingTimeTimer getStretchBreaksWorkingTimer() {
+	public WorkingTimeTimer getStretchBreaksWorkingTimer()
+	{
 		return stretchBreaksWorkingTimer;
 	}
 
-	public WorkingTimeTimer getDayBreakWorkingTimer() {
+	public WorkingTimeTimer getDayBreakWorkingTimer()
+	{
 		return dayBreakWorkingTimer;
 	}
 }

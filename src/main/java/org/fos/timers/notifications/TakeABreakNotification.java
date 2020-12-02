@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Benjamín Guzmán
+ * Copyright (c) 2020. Benjamín Guzmán
  * Author: Benjamín Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,25 +31,24 @@ import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.util.concurrent.CountDownLatch;
 
-public class TakeABreakNotification extends Notification {
-	private boolean break_dismissed = true; // default behaviour is dismissed
-	private boolean break_postponed = false;
-
+public class TakeABreakNotification extends Notification
+{
 	// this countdown latch should be decremented when the dialog ends (its closed or "take a break" is clicked)
 	private final CountDownLatch countDownLatch;
-
 	private final Timer countDownTimer;
-
 	private final JProgressBar progressBarCountDown;
-	private int remaining_seconds;
 	private final int few_remaining_seconds_thresh;
+	private boolean break_dismissed = true; // default behaviour is dismissed
+	private boolean break_postponed = false;
+	private int remaining_seconds;
 
 	public TakeABreakNotification(
 		final String takeABreakMessage,
 		final CountDownLatch countDownLatch,
 		final boolean is_not_day_limit_notification,
 		final byte notification_location
-	) {
+	)
+	{
 		super(is_not_day_limit_notification ? 15_000 : -1, notification_location);
 
 		this.countDownLatch = countDownLatch;
@@ -132,9 +131,11 @@ public class TakeABreakNotification extends Notification {
 	 * Invoked when the user clicks the take break button
 	 * This will set the break_dismissed and break_postponed properties to false
 	 *
-	 * @param evt event
+	 * @param evt
+	 * 	event
 	 */
-	private void onClickTakeBreak(ActionEvent evt) {
+	private void onClickTakeBreak(ActionEvent evt)
+	{
 		this.break_dismissed = false;
 		this.break_postponed = false;
 		this.dispose();
@@ -144,9 +145,11 @@ public class TakeABreakNotification extends Notification {
 	 * Invoked when the user clicks the dismiss button
 	 * This will set the break_dismissed property to false
 	 *
-	 * @param evt event
+	 * @param evt
+	 * 	event
 	 */
-	private void onClickDismiss(ActionEvent evt) {
+	private void onClickDismiss(ActionEvent evt)
+	{
 		this.break_dismissed = true;
 		this.dispose();
 	}
@@ -155,9 +158,11 @@ public class TakeABreakNotification extends Notification {
 	 * Invoked when the user clicks the postpone button
 	 * This will set the break_postponed property to false
 	 *
-	 * @param evt event
+	 * @param evt
+	 * 	event
 	 */
-	private void onClickPostpone(ActionEvent evt) {
+	private void onClickPostpone(ActionEvent evt)
+	{
 		this.break_postponed = true;
 		this.dispose();
 	}
@@ -167,7 +172,8 @@ public class TakeABreakNotification extends Notification {
 	 * If this method is invoked before the user makes the choice, this method will return true
 	 * That is the default behaviour, if the user does not decide, the notification will be dismissed
 	 */
-	public boolean breakWasDismissed() {
+	public boolean breakWasDismissed()
+	{
 		return this.break_dismissed;
 	}
 
@@ -175,12 +181,14 @@ public class TakeABreakNotification extends Notification {
 	 * @return true or false depending on what the user chose
 	 * If this method is invoked before the user makes the choice, this method has undefined behaviour
 	 */
-	public boolean breakWasPostponed() {
+	public boolean breakWasPostponed()
+	{
 		return this.break_postponed;
 	}
 
 	@Override
-	public void dispose() {
+	public void dispose()
+	{
 		super.dispose();
 		this.countDownTimer.stop();
 		this.countDownLatch.countDown();

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Benjamín Guzmán
+ * Copyright (c) 2020. Benjamín Guzmán
  * Author: Benjamín Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,26 +33,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
-public class WorkingTimeTimer implements Runnable {
+public class WorkingTimeTimer implements Runnable
+{
+	private final static byte MAX_N_DISMISSES = 3;
+	private final static byte MAX_N_POSTPONED = 4;
 	private final TimerSettings workingTimerSettings;
 	private final TimerSettings breakTimerSettings;
 	private final TimerSettings postponeTimerSettings;
 	private final String takeABreakMessage;
 	private final String breakName;
 	private final boolean add_take_break_option;
-
-	private long last_time_timer_was_set_s;
-	private long notification_should_be_shown_at_s;
-
-	private byte n_dismisses = 0;
-	private final static byte MAX_N_DISMISSES = 3;
-
-	private byte n_postponed = 0;
-	private final static byte MAX_N_POSTPONED = 4;
-
 	private final AtomicReference<TakeABreakNotification> notificationRef = new AtomicReference<>();
 	private final AtomicReference<BreakCountDown> breakCountDownRef = new AtomicReference<>();
-
+	private long last_time_timer_was_set_s;
+	private long notification_should_be_shown_at_s;
+	private byte n_dismisses = 0;
+	private byte n_postponed = 0;
 	private CountDownLatch notificationCountDownLatch, breakCountDownLatch;
 
 	private ScheduledExecutorService executorService;
@@ -63,7 +59,8 @@ public class WorkingTimeTimer implements Runnable {
 		final TimerSettings postponeTimerSettings,
 		final String takeABreakMessage,
 		final String breakName
-	) {
+	)
+	{
 		this(
 			workingTimerSettings,
 			breakTimerSettings,
@@ -81,7 +78,8 @@ public class WorkingTimeTimer implements Runnable {
 		final String takeABreakMessage,
 		final String breakName,
 		final boolean add_take_break_option
-	) {
+	)
+	{
 		this.workingTimerSettings = workingTimerSettings;
 		this.breakTimerSettings = breakTimerSettings;
 		this.postponeTimerSettings = postponeTimerSettings;
@@ -93,7 +91,8 @@ public class WorkingTimeTimer implements Runnable {
 	/**
 	 * Initiates the executor (the timer)
 	 */
-	public void init() {
+	public void init()
+	{
 		this.executorService = Executors.newSingleThreadScheduledExecutor();
 		this.scheduleWorkingTimeExecutor();
 	}
@@ -102,7 +101,8 @@ public class WorkingTimeTimer implements Runnable {
 	 * Shutdowns the executor (timer)
 	 * and disposes all active notification or count down
 	 */
-	public void destroy() {
+	public void destroy()
+	{
 		this.executorService.shutdownNow();
 
 		BreakCountDown breakCountDown = this.breakCountDownRef.get();
@@ -126,7 +126,8 @@ public class WorkingTimeTimer implements Runnable {
 	 * Either way, at the end, the executorService will restart to repeat the process
 	 */
 	@Override
-	public void run() {
+	public void run()
+	{
 		if (this.n_dismisses >= WorkingTimeTimer.MAX_N_DISMISSES
 			|| this.n_postponed >= WorkingTimeTimer.MAX_N_POSTPONED) {
 			this.showBreakCountDown();
@@ -177,7 +178,8 @@ public class WorkingTimeTimer implements Runnable {
 	 * This method WILL ALSO SCHEDULE AGAIN THE WORKING TIMER
 	 * so you don't have to call scheduleWorkingTimeExecutor
 	 */
-	private void showBreakCountDown() {
+	private void showBreakCountDown()
+	{
 		this.breakCountDownLatch = new CountDownLatch(1);
 		SwingUtilities.invokeLater(() -> this.breakCountDownRef.set(
 			new BreakCountDown(
@@ -196,7 +198,8 @@ public class WorkingTimeTimer implements Runnable {
 		this.scheduleWorkingTimeExecutor();
 	}
 
-	private void schedulePostponedExecutor() {
+	private void schedulePostponedExecutor()
+	{
 		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 		LocalDateTime now = LocalDateTime.now();
 		Loggers.debugLogger.info(
@@ -211,7 +214,8 @@ public class WorkingTimeTimer implements Runnable {
 			+ this.postponeTimerSettings.getHMSAsSeconds();
 	}
 
-	private void scheduleWorkingTimeExecutor() {
+	private void scheduleWorkingTimeExecutor()
+	{
 		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 		LocalDateTime now = LocalDateTime.now();
 		Loggers.debugLogger.info(
@@ -228,7 +232,8 @@ public class WorkingTimeTimer implements Runnable {
 	/**
 	 * @return the last time in seconds the working timer was set
 	 */
-	public long getLastTimeTimerWasSet() {
+	public long getLastTimeTimerWasSet()
+	{
 		return this.last_time_timer_was_set_s;
 	}
 
@@ -236,7 +241,8 @@ public class WorkingTimeTimer implements Runnable {
 	 * @return the time in seconds the notification should be shown
 	 * if the time is in the past, then the notification was already shown or is been shown
 	 */
-	public long getNotificationShouldBeShownAt() {
+	public long getNotificationShouldBeShownAt()
+	{
 		return this.notification_should_be_shown_at_s;
 	}
 }
