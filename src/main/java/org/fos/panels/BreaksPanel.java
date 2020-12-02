@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Benjamín Guzmán
+ * Copyright (c) 2020. Benjamín Guzmán
  * Author: Benjamín Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,8 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.logging.Level;
 
-public class BreaksPanel extends JScrollPane {
+public class BreaksPanel extends JScrollPane
+{
 	private final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 24);
 	private final Font FULL_DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
 	private final Font DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 16);
@@ -77,8 +78,8 @@ public class BreaksPanel extends JScrollPane {
 		new TimerSettings((byte) 0, (byte) 5, (byte) 0), // max break time for the small break
 		new TimerSettings((byte) 1, (byte) 0, (byte) 0), // max break time for the stretch break
 	};
-	private final TimerSettings minRequiredPostponeTime = new TimerSettings((byte)0, (byte)0, (byte)5);
-	private final TimerSettings maxRequiredPostponeTime = new TimerSettings((byte)0, (byte)30, (byte)0);
+	private final TimerSettings minRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 0, (byte) 5);
+	private final TimerSettings maxRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 30, (byte) 0);
 	private final byte SMALL_BREAKS_IDX = 0;
 	private final byte STRETCH_BREAKS_IDX = 1;
 	private final byte DAY_BREAK_IDX = 2;
@@ -87,7 +88,8 @@ public class BreaksPanel extends JScrollPane {
 	// configuration stuff
 	private JComboBox<String> notificationLocationCombobox;
 
-	public BreaksPanel() {
+	public BreaksPanel()
+	{
 		super();
 
 		this.changesSavedStatusLabel = new JLabel();
@@ -140,15 +142,17 @@ public class BreaksPanel extends JScrollPane {
 	 * - working time input
 	 * - break time input (if the break is not a day break, in which case this will not be displayed)
 	 *
-	 * @param break_idx the break index, this is important to avoid writing so much code, each break has an index
-	 *                  small break is 0
-	 *                  stretch break is 1
-	 *                  day break is 2
-	 *                  with that index this method can customize the parameters of the inputs and text
+	 * @param break_idx
+	 * 	the break index, this is important to avoid writing so much code, each break has an index
+	 * 	small break is 0
+	 * 	stretch break is 1
+	 * 	day break is 2
+	 * 	with that index this method can customize the parameters of the inputs and text
 	 *
 	 * @return the JPanel containing all the elements mentioned above
 	 */
-	private JPanel createBreakPanel(final byte break_idx) {
+	private JPanel createBreakPanel(final byte break_idx)
+	{
 		String breakPrefix;
 		if (break_idx == this.SMALL_BREAKS_IDX)
 			breakPrefix = "small_breaks";
@@ -176,8 +180,10 @@ public class BreaksPanel extends JScrollPane {
 		this.featureEnabledCheckBoxes[break_idx].setSelected(this.preferredBreakSettings[break_idx].isEnabled());
 
 		// second row working time input for hours, minutes, seconds
-		JLabel workingTimeLabel = new JLabel(SWMain.messagesBundle.getString(breakPrefix + "_working_time_label"),
-			SwingConstants.RIGHT);
+		JLabel workingTimeLabel = new JLabel(
+			SWMain.messagesBundle.getString(breakPrefix + "_working_time_label"),
+			SwingConstants.RIGHT
+		);
 		this.workingTimeInputs[break_idx] = new TimeInputPanel(
 			this.minWorkRecommendedTimes[break_idx],
 			this.maxWorkRecommendedTimes[break_idx],
@@ -190,8 +196,10 @@ public class BreaksPanel extends JScrollPane {
 		JLabel postponeTimeLabel = null;
 		TimeInputPanel breakTimeInput = null;
 		if (break_idx != this.DAY_BREAK_IDX) { // the day break doesn't have break time inputs, only working time inputs
-			breakTimeLabel = new JLabel(SWMain.messagesBundle.getString("break_time_label"),
-				SwingConstants.RIGHT);
+			breakTimeLabel = new JLabel(
+				SWMain.messagesBundle.getString("break_time_label"),
+				SwingConstants.RIGHT
+			);
 			this.breaksTimeInputs[break_idx] = new TimeInputPanel(
 				this.minBreakRecommendedTimes[break_idx],
 				this.maxBreakRecommendedTimes[break_idx],
@@ -200,8 +208,10 @@ public class BreaksPanel extends JScrollPane {
 			breakTimeInput = this.breaksTimeInputs[break_idx];
 			breakTimeInput.setEnabled(this.preferredBreakSettings[break_idx].isEnabled());
 
-			postponeTimeLabel = new JLabel(SWMain.messagesBundle.getString("postpone_time_label"),
-				SwingConstants.RIGHT);
+			postponeTimeLabel = new JLabel(
+				SWMain.messagesBundle.getString("postpone_time_label"),
+				SwingConstants.RIGHT
+			);
 			this.postponeTimeInputs[break_idx] = new TimeInputPanel(
 				this.minRequiredPostponeTime,
 				this.maxRequiredPostponeTime,
@@ -295,14 +305,16 @@ public class BreaksPanel extends JScrollPane {
 	/**
 	 * This will create the options panel
 	 * currently containing only the notification location option
+	 *
 	 * @return the panel containing all elements for configuration
 	 */
-	private JPanel createOptionsPanel() {
+	private JPanel createOptionsPanel()
+	{
 		JPanel panel = new JPanel(new GridBagLayout());
 
 		JLabel locationLabel = new JLabel(SWMain.messagesBundle.getString("notification_location"));
 
-		String[] locationOptions = new String[] {
+		String[] locationOptions = new String[]{
 			SWMain.messagesBundle.getString("notification_location_bottom_right"),
 			SWMain.messagesBundle.getString("notification_location_bottom_left"),
 			SWMain.messagesBundle.getString("notification_location_top_right"),
@@ -329,7 +341,8 @@ public class BreaksPanel extends JScrollPane {
 	 *
 	 * @return the panel created
 	 */
-	private JPanel createActionsPanel() {
+	private JPanel createActionsPanel()
+	{
 		JPanel panel = new JPanel(new GridBagLayout());
 
 		// save button
@@ -368,9 +381,11 @@ public class BreaksPanel extends JScrollPane {
 	/**
 	 * Method invoked when the users clicks the save button
 	 *
-	 * @param evt event
+	 * @param evt
+	 * 	event
 	 */
-	private void onClickSave(ActionEvent evt) {
+	private void onClickSave(ActionEvent evt)
+	{
 		boolean is_valid = true;
 		for (int i = 0; i < this.breaksTimeInputs.length; i++) {
 			this.breaksTimeInputs[i].clearWarning();
@@ -415,10 +430,10 @@ public class BreaksPanel extends JScrollPane {
 		}
 		SWMain.timersManager.saveBreaksSettings(this.preferredBreakSettings);
 
-		SWMain.timersManager.saveNotificationPrefLocation((byte)this.notificationLocationCombobox.getSelectedIndex());
+		SWMain.timersManager.saveNotificationPrefLocation((byte) this.notificationLocationCombobox.getSelectedIndex());
 
 		this.showOnSaveMessage(SWMain.messagesBundle.getString("changes_saved")
-			+ ". " + SWMain.messagesBundle.getString("changes_saved_extra_text"), Color.GREEN);
+					       + ". " + SWMain.messagesBundle.getString("changes_saved_extra_text"), Color.GREEN);
 
 		SWMain.timersManager.createExecutorsFromPreferences();
 	}
@@ -428,10 +443,13 @@ public class BreaksPanel extends JScrollPane {
 	 * Naturally, this method will set the foreground color to red
 	 * It will also create a timer to delete the reset the text in the label
 	 *
-	 * @param successMessage message to show in the label
-	 * @param color          color of the text
+	 * @param successMessage
+	 * 	message to show in the label
+	 * @param color
+	 * 	color of the text
 	 */
-	private void showOnSaveMessage(String successMessage, Color color) {
+	private void showOnSaveMessage(String successMessage, Color color)
+	{
 		this.changesSavedStatusLabel.setForeground(color);
 		this.changesSavedStatusLabel.setText(successMessage);
 
@@ -448,9 +466,11 @@ public class BreaksPanel extends JScrollPane {
 	/**
 	 * Sets the recommended values
 	 *
-	 * @param evt the event argument from the action listener
+	 * @param evt
+	 * 	the event argument from the action listener
 	 */
-	private void onClickSetRecommendedValues(ActionEvent evt) {
+	private void onClickSetRecommendedValues(ActionEvent evt)
+	{
 		this.workingTimeInputs[this.SMALL_BREAKS_IDX].setValues((byte) 0, (byte) 10, (byte) 0);
 		this.breaksTimeInputs[this.SMALL_BREAKS_IDX].setValues((byte) 0, (byte) 0, (byte) 10);
 		if (!this.featureEnabledCheckBoxes[this.SMALL_BREAKS_IDX].isSelected())
@@ -471,7 +491,8 @@ public class BreaksPanel extends JScrollPane {
 	/**
 	 * Class to enable or disable time inputs when checkbox is clicked
 	 */
-	private static class OnActionCheckBoxListener implements ActionListener {
+	private static class OnActionCheckBoxListener implements ActionListener
+	{
 		private final TimeInputPanel workingTimeInputPanel;
 		private final TimeInputPanel breakTimeInputPanel;
 		private boolean is_enabled;
@@ -479,14 +500,16 @@ public class BreaksPanel extends JScrollPane {
 		public OnActionCheckBoxListener(final TimeInputPanel workingTimeInputPanel,
 						final TimeInputPanel breakTimeInputPanel,
 						final boolean is_enabled
-		) {
+		)
+		{
 			this.workingTimeInputPanel = workingTimeInputPanel;
 			this.breakTimeInputPanel = breakTimeInputPanel;
 			this.is_enabled = is_enabled;
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent e)
+		{
 			this.is_enabled = !this.is_enabled;
 
 			this.workingTimeInputPanel.clearWarning();
