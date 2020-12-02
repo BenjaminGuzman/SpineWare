@@ -18,61 +18,44 @@
 
 package org.fos.timers.notifications;
 
+import org.fos.Colors;
 import org.fos.Fonts;
-import org.fos.Loggers;
 import org.fos.SWMain;
 
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.JProgressBar;
 import javax.swing.Timer;
-import javax.swing.border.EmptyBorder;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
 
-public class TakeABreakNotification extends JDialog {
-	private static ImageIcon swIcon; // static to avoid reading the image each time the notification is shown
-
-	private boolean will_take_break = false;
-
-	private final Timer timeoutTimer;
+public class TakeABreakNotification extends Notification {
+	private boolean break_dismissed = true; // default behaviour is dismissed
+	private boolean break_postponed = false;
 
 	// this countdown latch should be decremented when the dialog ends (its closed or "take a break" is clicked)
 	private final CountDownLatch countDownLatch;
 
+	private final Timer countDownTimer;
+
+	private final JProgressBar progressBarCountDown;
+	private int remaining_seconds;
+	private final int few_remaining_seconds_thresh;
+
 	public TakeABreakNotification(
 		final String takeABreakMessage,
 		final CountDownLatch countDownLatch,
-		final boolean include_take_break_button
+		final boolean is_not_day_limit_notification,
+		final byte notification_location
 	) {
-		super();
-		assert SwingUtilities.isEventDispatchThread();
+		super(is_not_day_limit_notification ? 15_000 : -1, notification_location);
 
 		this.countDownLatch = countDownLatch;
 
-		JPanel mainPanel = new JPanel(new GridBagLayout());
-		mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-		// create SW icon
-		this.loadSWIcon();
-		JLabel swIconLabel = new JLabel();
-		if (TakeABreakNotification.swIcon != null)
-			swIconLabel.setIcon(TakeABreakNotification.swIcon);
-		else
-			swIconLabel.setText("SW");
+		this.remaining_seconds = super.getDisposeTimeout() / 1_000;
+		this.few_remaining_seconds_thresh = this.remaining_seconds / 2;
 
 		// create take a break label
 		JLabel takeABreakLabel = new JLabel(takeABreakMessage);
@@ -80,17 +63,30 @@ public class TakeABreakNotification extends JDialog {
 
 		// create buttons
 		JPanel buttonsPanel = new JPanel();
-		JButton dismissButton = new JButton(SWMain.messagesBundle.getString("notification_dismiss_break"));
-		JButton takeBreakButton = null;
-		if (include_take_break_button) {
-			takeBreakButton = new JButton(SWMain.messagesBundle.getString("notification_take_break"));
-			takeBreakButton.addActionListener(this::onClickTakeBreak);
-		}
-		dismissButton.addActionListener(this::onClickDismiss);
 
-		buttonsPanel.add(takeBreakButton);
+		if (is_not_day_limit_notification) {
+			JButton takeBreakButton = new JButton(SWMain.messagesBundle.getString("notification_take_break"));
+			takeBreakButton.addActionListener(this::onClickTakeBreak);
+			buttonsPanel.add(takeBreakButton);
+			this.getRootPane().setDefaultButton(takeBreakButton);
+
+			JButton postponeButton = new JButton(SWMain.messagesBundle.getString("postpone"));
+			postponeButton.addActionListener(this::onClickPostpone);
+			buttonsPanel.add(postponeButton);
+		}
+
+		JButton dismissButton = new JButton(SWMain.messagesBundle.getString("notification_dismiss_break"));
+		dismissButton.addActionListener(this::onClickDismiss);
 		buttonsPanel.add(dismissButton);
 
+		// create the progress bar
+		this.progressBarCountDown = new JProgressBar(0, this.remaining_seconds);
+		this.progressBarCountDown.setValue(this.remaining_seconds);
+		this.progressBarCountDown.setString(this.remaining_seconds + "s");
+		this.progressBarCountDown.setStringPainted(true);
+		this.progressBarCountDown.setBorderPainted(false);
+		this.progressBarCountDown.setBackground(Colors.RED_WINE);
+		this.progressBarCountDown.setForeground(Colors.GREEN);
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
 		gridBagConstraints.ipadx = 5;
@@ -98,100 +94,95 @@ public class TakeABreakNotification extends JDialog {
 
 		// add SW icon
 		gridBagConstraints.gridheight = 2;
-		mainPanel.add(swIconLabel, gridBagConstraints);
+		super.mainPanel.add(super.swIconLabel, gridBagConstraints);
 
 		// add take a break label
 		gridBagConstraints.gridx = 1;
 		gridBagConstraints.gridy = 0;
 		gridBagConstraints.gridheight = 1;
-		mainPanel.add(takeABreakLabel, gridBagConstraints);
+		super.mainPanel.add(takeABreakLabel, gridBagConstraints);
 
 		// add buttons panel
 		gridBagConstraints.gridx = 1;
 		gridBagConstraints.gridy = 1;
-		mainPanel.add(buttonsPanel, gridBagConstraints);
+		super.mainPanel.add(buttonsPanel, gridBagConstraints);
 
-		this.setContentPane(mainPanel);
-		this.setUndecorated(true);
-		this.setResizable(false);
-		this.setType(Type.POPUP);
-		this.setAlwaysOnTop(true);
-		this.setAutoRequestFocus(false); // if you're working, this alert should not make you loose your focus in whatever you're doing
-		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE); // even though this is not likely to happen, is a good practice to have it
-		this.pack();
+		// add progress bar
+		gridBagConstraints.gridx = 1;
+		gridBagConstraints.gridy = 2;
+		gridBagConstraints.weightx = 2;
+		super.mainPanel.add(this.progressBarCountDown, gridBagConstraints);
 
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		Dimension notificationSize = this.getSize();
+		this.countDownTimer = new Timer(1_000, (ActionEvent evt) -> {
+			if (this.remaining_seconds < 0) {
+				this.dispose();
+				return;
+			}
 
-		Point notificationLocation = new Point(
-			screenSize.width - notificationSize.width,
-			screenSize.height - notificationSize.height - 50
-		);
+			String str = --this.remaining_seconds + "s";
+			this.progressBarCountDown.setString(str);
+			this.progressBarCountDown.setValue(this.remaining_seconds);
+		});
 
-		this.setLocation(notificationLocation);
-		this.setVisible(true); // TODO: add an sliding animation to the notification
-
-		// create timer to automatically dismiss the notification after some time
-		this.timeoutTimer = new Timer(11_000, (ActionEvent evt) -> this.dispose());
-		this.timeoutTimer.start();
-	}
-
-	/**
-	 * If the image icon has been already loaded, this will simply do nothing
-	 * If it hasn't been loaded, it tries to load it and stores it in the swIcon static member
-	 */
-	private void loadSWIcon() {
-		if (TakeABreakNotification.swIcon != null)
-			return;
-
-		String iconImagePath = "/resources/media/SW_white.png";
-		InputStream iconInputStream = SWMain.getImageAsStream(iconImagePath);
-		Image icon;
-		try {
-			icon = ImageIO.read(iconInputStream);
-		} catch (IOException e) {
-			Loggers.errorLogger.log(Level.SEVERE, "Error while reading SW icon in path: " + iconImagePath, e);
-			return;
-		}
-		icon = icon.getScaledInstance(67, 59, Image.SCALE_AREA_AVERAGING);
-
-		TakeABreakNotification.swIcon = new ImageIcon(icon);
+		super.showJDialog();
+		this.countDownTimer.start();
 	}
 
 	/**
 	 * Invoked when the user clicks the take break button
-	 * This will set the will_take_break property to true
+	 * This will set the break_dismissed and break_postponed properties to false
 	 *
 	 * @param evt event
 	 */
 	private void onClickTakeBreak(ActionEvent evt) {
-		this.will_take_break = true;
+		this.break_dismissed = false;
+		this.break_postponed = false;
 		this.dispose();
 	}
 
 	/**
 	 * Invoked when the user clicks the dismiss button
-	 * This will set the will_take_break property to false
+	 * This will set the break_dismissed property to false
 	 *
 	 * @param evt event
 	 */
 	private void onClickDismiss(ActionEvent evt) {
-		this.will_take_break = false;
+		this.break_dismissed = true;
+		this.dispose();
+	}
+
+	/**
+	 * Invoked when the user clicks the postpone button
+	 * This will set the break_postponed property to false
+	 *
+	 * @param evt event
+	 */
+	private void onClickPostpone(ActionEvent evt) {
+		this.break_postponed = true;
 		this.dispose();
 	}
 
 	/**
 	 * @return true or false depending on what the user chose
-	 * If this method is invoked after the user makes the choice, this method has undefined behaviour
+	 * If this method is invoked before the user makes the choice, this method will return true
+	 * That is the default behaviour, if the user does not decide, the notification will be dismissed
 	 */
-	public boolean willTakeBreak() {
-		return this.will_take_break;
+	public boolean breakWasDismissed() {
+		return this.break_dismissed;
+	}
+
+	/**
+	 * @return true or false depending on what the user chose
+	 * If this method is invoked before the user makes the choice, this method has undefined behaviour
+	 */
+	public boolean breakWasPostponed() {
+		return this.break_postponed;
 	}
 
 	@Override
 	public void dispose() {
 		super.dispose();
-		this.timeoutTimer.stop();
+		this.countDownTimer.stop();
 		this.countDownLatch.countDown();
 	}
 }
