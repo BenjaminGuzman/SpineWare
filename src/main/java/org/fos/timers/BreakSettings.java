@@ -25,18 +25,53 @@ package org.fos.timers;
  * and a boolean value to indicate if the break is enabled or not
  */
 public class BreakSettings {
-	public TimerSettings workTimerSettings;
-	public TimerSettings breakTimerSettings;
+	private TimerSettings workTimerSettings;
+	private TimerSettings breakTimerSettings;
+	private TimerSettings postponeTimerSettings;
 	private boolean is_enabled;
 
-	public BreakSettings(final TimerSettings workTimerSettings, final TimerSettings breakTimerSettings, final boolean is_enabled) {
+	public BreakSettings(
+		final TimerSettings workTimerSettings,
+		final TimerSettings breakTimerSettings,
+		final TimerSettings postponeTimerSettings,
+		final boolean is_enabled
+	) {
 		this.workTimerSettings = workTimerSettings;
 		this.breakTimerSettings = breakTimerSettings;
+		this.postponeTimerSettings = postponeTimerSettings;
 		this.is_enabled = is_enabled;
 	}
 
-	public BreakSettings(final TimerSettings workTimerSettings, final TimerSettings breakTimerSettings) {
-		this(workTimerSettings, breakTimerSettings, true);
+	public BreakSettings(
+		final TimerSettings workTimerSettings,
+		final TimerSettings breakTimerSettings,
+		final TimerSettings postponeTimerSettings
+	) {
+		this(workTimerSettings, breakTimerSettings, postponeTimerSettings, true);
+	}
+
+	public TimerSettings getWorkTimerSettings() {
+		return workTimerSettings;
+	}
+
+	public TimerSettings getBreakTimerSettings() {
+		return breakTimerSettings;
+	}
+
+	public void setWorkTimerSettings(TimerSettings workTimerSettings) {
+		this.workTimerSettings = workTimerSettings;
+	}
+
+	public TimerSettings getPostponeTimerSettings() {
+		return this.postponeTimerSettings;
+	}
+
+	public void setPostponeTimerSettings(TimerSettings postponeTimerSettings) {
+		this.postponeTimerSettings = postponeTimerSettings;
+	}
+
+	public void setBreakTimerSettings(TimerSettings breakTimerSettings) {
+		this.breakTimerSettings = breakTimerSettings;
 	}
 
 	public boolean isEnabled() {

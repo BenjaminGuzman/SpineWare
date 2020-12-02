@@ -19,6 +19,8 @@ package org.fos;
 
 import org.fos.core.TimersManager;
 import org.fos.panels.BreaksPanel;
+import org.fos.panels.HelpPanel;
+import org.fos.timers.notifications.StartUpNotification;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -44,33 +46,37 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.prefs.Preferences;
 
 public class SWMain extends JFrame {
 	public static ResourceBundle messagesBundle;
 	public static TimersManager timersManager;
 
-	private final JComponent[] mainPanelContentCaches = new JComponent[1];
+	private final JComponent[] mainPanelContentCaches = new JComponent[2];
 	private JComponent activeContentPanel = null;
 	private JPanel mainContentPanel = null;
 
 	private static final short BREAKS_PANEL_CACHE_IDX = 0;
+	private static final short HELP_PANEL_CACHE_IDX = 1;
 
 	public SWMain() {
 		super("SpineWare");
-		//FlatDarkLaf.install();
 		this.configSysTray();
 
 		// set the JFrame icon
 		String iconPath = "/resources/media/SW_white.min.png";
 		InputStream iconInputStream = SWMain.getImageAsStream(iconPath);
+		BufferedImage swIconImage;
 		try {
-			this.setIconImage(ImageIO.read(iconInputStream));
+			swIconImage = ImageIO.read(iconInputStream);
+			this.setIconImage(swIconImage);
 		} catch (IOException e) {
 			Loggers.errorLogger.log(Level.WARNING, "Error while setting JFrame image icon", e);
 		}
@@ -79,10 +85,18 @@ public class SWMain extends JFrame {
 
 		this.pack();
 		this.setLocationRelativeTo(null);
-		//this.setVisible(true); // do not show the jframe on start
 		this.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 
 		this.setMinimumSize(new Dimension(600, 600));
+
+		// if this is the first time the user opens the application, show the jframe
+		Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+		boolean first_time_opened = prefs.getBoolean("first time opened", true);
+		if (first_time_opened) {
+			this.setVisible(true); // do not show the jframe on start
+			prefs.putBoolean("first time opened", false);
+		} else
+			new StartUpNotification();
 	}
 
 	public static void main(String[] args) {
@@ -102,12 +116,16 @@ public class SWMain extends JFrame {
 	 * @return the panel that contains both panels
 	 */
 	public JPanel createMainPanel() {
+		JPanel rootContentPanel = new JPanel(new BorderLayout());
 		this.mainContentPanel = new JPanel(new BorderLayout());
 
 		// menu panel
-		mainContentPanel.add(this.createMenuPanel(), BorderLayout.WEST);
+		rootContentPanel.add(this.createMenuPanel(), BorderLayout.WEST);
 
-		return this.mainContentPanel;
+		// main panel
+		rootContentPanel.add(this.mainContentPanel, BorderLayout.CENTER);
+
+		return rootContentPanel;
 	}
 
 	/**
@@ -147,14 +165,9 @@ public class SWMain extends JFrame {
 		menuPanel.add(swLogoImageLabel, gridBagConstraints);
 
 		// add all buttons
-		gridBagConstraints.insets.left = 0;
-		gridBagConstraints.insets.right = 0;
-		gridBagConstraints.insets.bottom = 0;
-		gridBagConstraints.insets.top = 0;
-
-		String[] buttonsLabels = new String[] { "menu_breaks" };
-		String[] buttonsIcons = new String[] { "timer_white_18dp.png" };
-		ActionListener[] buttonsListeners = new ActionListener[] { this::onClickBreaksMenu };
+		String[] buttonsLabels = new String[] { "menu_breaks", "menu_help" };
+		String[] buttonsIcons = new String[] { "timer_white_18dp.png", "help_white_18dp.png" };
+		ActionListener[] buttonsListeners = new ActionListener[] { this::onClickBreaksMenu, this::onClickHelpMenu };
 
 		JButton button;
 		Insets buttonInsets = new Insets(10, 10, 10, 10);
@@ -193,6 +206,15 @@ public class SWMain extends JFrame {
 	}
 
 	/**
+	 * Method invoked when the user clicks the help button in the main menu
+	 * This method will swap the main content panel
+	 * @param evt the event
+	 */
+	public void onClickHelpMenu(final ActionEvent evt) {
+		this.changePanel(SWMain.HELP_PANEL_CACHE_IDX, HelpPanel.class);
+	}
+
+	/**
 	 * Changes the current active panel
 	 * If the panel is not in the cache, a new instance will be created and added to the cache
 	 * If the panel is already active, this method will simply do nothing
@@ -217,16 +239,18 @@ public class SWMain extends JFrame {
 		}
 
 		// if the panel is the active one, do nothing
-		if (this.activeContentPanel == this.mainPanelContentCaches[panel_cache_idx]) {
+		if (panelClass.isInstance(this.activeContentPanel)) {
 			Loggers.debugLogger.log(Level.INFO, "The panel with class "
 				+ panelClass.getName() + " is already shown");
 			return;
 		}
 
 		if (this.activeContentPanel != null)
-			this.mainContentPanel.remove(this.activeContentPanel);
+			this.mainContentPanel.removeAll(); // clear the content panel
 		this.activeContentPanel = this.mainPanelContentCaches[panel_cache_idx];
 		this.mainContentPanel.add(this.activeContentPanel, BorderLayout.CENTER);
+		this.mainContentPanel.revalidate();
+		this.mainContentPanel.repaint();
 	}
 
 	/**
@@ -347,12 +371,11 @@ public class SWMain extends JFrame {
 		try {
 			newBundle = ResourceBundle.getBundle("resources.bundles.messages", locale);
 		} catch(Exception e) {
-			Loggers.errorLogger.log(Level.SEVERE, "Could not load messages for locale: " + locale, e);
-			return;
+			Loggers.errorLogger.log(Level.WARNING, "Could not load messages for locale: "
+				+ locale + ". Using default US locales", e);
+			newBundle = ResourceBundle.getBundle("resources.bundles.messages", Locale.US);
 		}
 
 		SWMain.messagesBundle = newBundle;
-
-		Loggers.debugLogger.fine("The bundle with locale: " + locale + " has been loaded");
 	}
 }

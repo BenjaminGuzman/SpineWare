@@ -18,10 +18,10 @@
 
 package org.fos;
 
-import java.awt.Font;
+import java.awt.Color;
 
-public class Fonts {
-	public static Font SANS_SERIF_BOLD_15 = new Font(Font.SANS_SERIF, Font.BOLD, 15);
-	public static Font SANS_SERIF_BOLD_12 = new Font(Font.SANS_SERIF, Font.BOLD, 12);
-	public static Font MONOSPACED_BOLD_24 = new Font(Font.MONOSPACED, Font.BOLD, 24);
+public class Colors {
+	public final static Color RED = new Color(0xE30505);
+	public final static Color RED_WINE = new Color(0x420D0D);
+	public final static Color GREEN = new Color(0x518E2B);
 }

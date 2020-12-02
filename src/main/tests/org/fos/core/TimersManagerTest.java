@@ -50,14 +50,14 @@ class TimersManagerTest {
 	void loadBreakSettings() {
 		TimersManager timersManager = new TimersManager();
 		timersManager.saveBreaksSettings(new BreakSettings[]{
-			new BreakSettings(null, null, false),
-			new BreakSettings(null, null, false),
-			new BreakSettings(null, null, false)
+			new BreakSettings(null, null, null,false),
+			new BreakSettings(null, null, null, false),
+			new BreakSettings(null, null, null, false)
 		});
 		BreakSettings[] breaksSettings = timersManager.loadBreaksSettings();
 		for (BreakSettings breakSettings : breaksSettings) {
-			assertNull(breakSettings.breakTimerSettings);
-			assertNull(breakSettings.workTimerSettings);
+			assertNull(breakSettings.getBreakTimerSettings());
+			assertNull(breakSettings.getWorkTimerSettings());
 			assertFalse(breakSettings.isEnabled());
 		}
 
@@ -66,20 +66,25 @@ class TimersManagerTest {
 		timersManager.saveBreaksSettings(new BreakSettings[]{
 			new BreakSettings(
 				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds), true),
-			new BreakSettings(
 				new TimerSettings(hours, minutes, seconds),
 				new TimerSettings(hours, minutes, seconds), true),
 			new BreakSettings(
+				new TimerSettings(hours, minutes, seconds),
+				new TimerSettings(hours, minutes, seconds),
+				new TimerSettings(hours, minutes, seconds), true),
+			new BreakSettings(
+				new TimerSettings(hours, minutes, seconds),
 				new TimerSettings(hours, minutes, seconds),
 				new TimerSettings(hours, minutes, seconds), true)
 		});
 		breaksSettings = timersManager.loadBreaksSettings();
 		for (BreakSettings breakSettings : breaksSettings) {
-			if (breakSettings.breakTimerSettings != null)
-				assertEquals(breakSettings.breakTimerSettings.getHMSAsSeconds(), hms);
+			if (breakSettings.getBreakTimerSettings() != null) {
+				assertEquals(breakSettings.getBreakTimerSettings().getHMSAsSeconds(), hms);
+				assertEquals(breakSettings.getPostponeTimerSettings().getHMSAsSeconds(), hms);
+			}
 
-			assertEquals(breakSettings.workTimerSettings.getHMSAsSeconds(), hms);
+			assertEquals(breakSettings.getWorkTimerSettings().getHMSAsSeconds(), hms);
 			assertTrue(breakSettings.isEnabled());
 		}
 	}

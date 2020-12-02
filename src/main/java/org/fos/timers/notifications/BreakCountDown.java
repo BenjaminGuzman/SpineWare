@@ -18,6 +18,7 @@
 
 package org.fos.timers.notifications;
 
+import org.fos.Fonts;
 import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.timers.TimerSettings;
@@ -87,7 +88,6 @@ public class BreakCountDown extends JDialog {
 			new JLabel(String.valueOf(this.breakSettings.getMinutes())),
 			new JLabel(String.valueOf(this.breakSettings.getSeconds()))
 		};
-		Font bigNumberFont = new Font(Font.MONOSPACED, Font.BOLD, 24);
 
 		// create cancel button
 		JButton cancelButton = new JButton(SWMain.messagesBundle.getString("cancel"));
@@ -122,7 +122,7 @@ public class BreakCountDown extends JDialog {
 		};
 		byte i = 0;
 		for (JLabel label : this.hmsRemainingTimeLabels) {
-			label.setFont(bigNumberFont);
+			label.setFont(Fonts.MONOSPACED_BOLD_24);
 			label.setHorizontalAlignment(JLabel.RIGHT);
 			mainPanel.add(label, gridBagConstraints); // add number label
 
