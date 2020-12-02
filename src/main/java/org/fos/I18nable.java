@@ -1,5 +1,5 @@
 /*
- * Copyright © 2020 Benjamín Guzmán
+ * Copyright (c) 2020. Benjamín Guzmán
  * Author: Benjamín Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,6 +17,7 @@
  */
 package org.fos;
 
-public interface I18nable {
-    public void setTextAccordingToLanguage();
+public interface I18nable
+{
+	void setTextAccordingToLanguage();
 }
