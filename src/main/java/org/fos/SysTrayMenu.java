@@ -27,6 +27,9 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.Timer;
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -43,11 +46,21 @@ public class SysTrayMenu extends JDialog
 	private final ActionListener onClickExitButton;
 	private final ActionListener onClickOpenButton;
 
+	private final int[] remaining_seconds_for_notifications;
+	private final JProgressBar smallBreakProgressBar;
+	private final JProgressBar stretchBreakProgressBar;
+	private final JProgressBar dayBreakProgressBar;
+	private Timer statusTimer;
+
 	public SysTrayMenu(final JFrame owner, final ActionListener onClickExitButton, final ActionListener onClickOpenButton)
 	{
 		super(owner, "SpineWare");
 		this.onClickExitButton = onClickExitButton;
 		this.onClickOpenButton = onClickOpenButton;
+
+		this.smallBreakProgressBar = new JProgressBar(0, 1);
+		this.stretchBreakProgressBar = new JProgressBar(0, 1);
+		this.dayBreakProgressBar = new JProgressBar(0, 1);
 
 		this.setUndecorated(true);
 		this.setResizable(false);
@@ -74,6 +87,8 @@ public class SysTrayMenu extends JDialog
 				SysTrayMenu.this.setVisible(false);
 			}
 		});
+
+		this.remaining_seconds_for_notifications = new int[3];
 	}
 
 	/**
@@ -121,38 +136,105 @@ public class SysTrayMenu extends JDialog
 		gridBagConstraints.gridx = 0;
 		gridBagConstraints.gridy = 0;
 
+		gridBagConstraints.gridwidth = 2;
 		mainPanel.add(swLogoImageLabel, gridBagConstraints);
 
-		gridBagConstraints.gridy = 1;
+		++gridBagConstraints.gridy;
 		mainPanel.add(exitButton, gridBagConstraints);
 
-		gridBagConstraints.gridy = 2;
+		++gridBagConstraints.gridy;
 		mainPanel.add(openButton, gridBagConstraints);
 
-		// TODO: add 3 progress bars to show the remaining time for each break
+		gridBagConstraints.gridwidth = 1;
+
+		// small break progress bar
+		gridBagConstraints.gridx = 0;
+		++gridBagConstraints.gridy;
+		mainPanel.add(new JLabel(SWMain.messagesBundle.getString("small_breaks_title")), gridBagConstraints);
+
+		gridBagConstraints.gridx = 1;
+		mainPanel.add(this.smallBreakProgressBar, gridBagConstraints);
+
+		// stretch break progress bar
+		gridBagConstraints.gridx = 0;
+		++gridBagConstraints.gridy;
+		mainPanel.add(new JLabel(SWMain.messagesBundle.getString("stretch_breaks_title")), gridBagConstraints);
+
+		gridBagConstraints.gridx = 1;
+		mainPanel.add(this.stretchBreakProgressBar, gridBagConstraints);
+
+		// day break progress bar
+		gridBagConstraints.gridx = 0;
+		++gridBagConstraints.gridy;
+		mainPanel.add(new JLabel(SWMain.messagesBundle.getString("day_break_title")), gridBagConstraints);
+
+		gridBagConstraints.gridx = 1;
+		mainPanel.add(this.dayBreakProgressBar, gridBagConstraints);
 
 		return mainPanel;
 	}
 
 	@Override
-	public void setVisible(boolean b)
+	public void setVisible(boolean visible)
 	{
-		super.setVisible(b);
+		super.setVisible(visible);
 
-		WorkingTimeTimer smallBreakTimer = SWMain.timersManager.getSmallBreaksWorkingTimer();
-		WorkingTimeTimer stretchBreakTimer = SWMain.timersManager.getStretchBreaksWorkingTimer();
-		WorkingTimeTimer dayBreakTimer = SWMain.timersManager.getDayBreakWorkingTimer();
-
-		if (smallBreakTimer != null) {
-			long remaining_s_for_notification = smallBreakTimer.getNotificationShouldBeShownAt()
-				- System.currentTimeMillis() / 1_000;
-			if (remaining_s_for_notification <= 0) {
-				// TODO: show that the notification is already shown
-			} else {
-				// TODO: show in the progress bar the remaining seconds
-				// TODO: update the value each 2 seconds until the notification is shown
-			}
+		if (!visible) {
+			if (this.statusTimer != null)
+				this.statusTimer.stop(); // if the user is not seeing the dialog, don't waste system resources
+			return;
 		}
 
+		WorkingTimeTimer[] timers = new WorkingTimeTimer[]{
+			SWMain.timersManager.getSmallBreaksWorkingTimer(),
+			SWMain.timersManager.getStretchBreaksWorkingTimer(),
+			SWMain.timersManager.getDayBreakWorkingTimer()
+		};
+
+		JProgressBar[] progressBars = new JProgressBar[]{
+			this.smallBreakProgressBar,
+			this.stretchBreakProgressBar,
+			this.dayBreakProgressBar
+		};
+
+		boolean set_timer = false;
+
+		for (byte i = 0; i < 3; ++i) {
+			progressBars[i].setStringPainted(true);
+			progressBars[i].setForeground(Colors.GREEN);
+			progressBars[i].setBackground(Colors.RED_WINE);
+
+			this.remaining_seconds_for_notifications[i] = -1;
+			if (timers[i] == null) { // that timer is disabled
+				progressBars[i].setString(SWMain.messagesBundle.getString("feature_disabled"));
+				progressBars[i].setEnabled(false);
+				progressBars[i].setBackground(Color.DARK_GRAY);
+				continue;
+			}
+
+			this.remaining_seconds_for_notifications[i] = timers[i].getRemainingSeconds();
+			set_timer = true;
+
+			progressBars[i].setMaximum(timers[i].getWorkingTimeSeconds());
+		}
+
+		if (!set_timer)
+			return;
+
+		this.statusTimer = new Timer(1_000, (ActionEvent evt) -> {
+			for (byte i = 0; i < 3; ++i) {
+				if (this.remaining_seconds_for_notifications[i] > 0) { // small break
+					--this.remaining_seconds_for_notifications[i];
+					progressBars[i].setString(this.remaining_seconds_for_notifications[i] + "s");
+					progressBars[i].setValue(this.remaining_seconds_for_notifications[i]);
+				} else if (timers[i] != null) { // if notification is enabled but the notification is showing
+					progressBars[i].setString(SWMain.messagesBundle.getString("notification_is_showing"));
+					progressBars[i].setValue(0);
+					this.remaining_seconds_for_notifications[i] = timers[i].getRemainingSeconds();
+				}
+			}
+		});
+		this.statusTimer.setInitialDelay(0);
+		this.statusTimer.start();
 	}
 }

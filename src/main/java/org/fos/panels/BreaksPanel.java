@@ -55,7 +55,7 @@ public class BreaksPanel extends JScrollPane
 
 	private final JCheckBox[] featureEnabledCheckBoxes = new JCheckBox[3];
 	private final TimeInputPanel[] workingTimeInputs = new TimeInputPanel[3];
-	private final TimeInputPanel[] postponeTimeInputs = new TimeInputPanel[2];
+	private final TimeInputPanel[] postponeTimeInputs = new TimeInputPanel[3];
 	private final TimeInputPanel[] breaksTimeInputs = new TimeInputPanel[2];
 
 	private final JLabel changesSavedStatusLabel;
@@ -78,7 +78,7 @@ public class BreaksPanel extends JScrollPane
 		new TimerSettings((byte) 0, (byte) 5, (byte) 0), // max break time for the small break
 		new TimerSettings((byte) 1, (byte) 0, (byte) 0), // max break time for the stretch break
 	};
-	private final TimerSettings minRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 0, (byte) 5);
+	private final TimerSettings minRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 0, (byte) 6);
 	private final TimerSettings maxRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 30, (byte) 0);
 	private final byte SMALL_BREAKS_IDX = 0;
 	private final byte STRETCH_BREAKS_IDX = 1;
@@ -193,7 +193,7 @@ public class BreaksPanel extends JScrollPane
 
 		// third row break time input for hours, minutes, seconds
 		JLabel breakTimeLabel = null;
-		JLabel postponeTimeLabel = null;
+		JLabel postponeTimeLabel;
 		TimeInputPanel breakTimeInput = null;
 		if (break_idx != this.DAY_BREAK_IDX) { // the day break doesn't have break time inputs, only working time inputs
 			breakTimeLabel = new JLabel(
@@ -207,17 +207,18 @@ public class BreaksPanel extends JScrollPane
 			);
 			breakTimeInput = this.breaksTimeInputs[break_idx];
 			breakTimeInput.setEnabled(this.preferredBreakSettings[break_idx].isEnabled());
-
-			postponeTimeLabel = new JLabel(
-				SWMain.messagesBundle.getString("postpone_time_label"),
-				SwingConstants.RIGHT
-			);
-			this.postponeTimeInputs[break_idx] = new TimeInputPanel(
-				this.minRequiredPostponeTime,
-				this.maxRequiredPostponeTime,
-				this.preferredBreakSettings[break_idx].getPostponeTimerSettings()
-			);
 		}
+
+		postponeTimeLabel = new JLabel(
+			SWMain.messagesBundle.getString("postpone_time_label"),
+			SwingConstants.RIGHT
+		);
+		this.postponeTimeInputs[break_idx] = new TimeInputPanel(
+			this.minRequiredPostponeTime,
+			this.maxRequiredPostponeTime,
+			this.preferredBreakSettings[break_idx].getPostponeTimerSettings(),
+			true
+		);
 
 		// set listener for the checkbox
 		this.featureEnabledCheckBoxes[break_idx].addActionListener(new OnActionCheckBoxListener(
@@ -266,27 +267,26 @@ public class BreaksPanel extends JScrollPane
 		panel.add(this.workingTimeInputs[break_idx], gridBagConstraints);
 
 		// the day break does not have break time, only working time
-		if (break_idx == this.DAY_BREAK_IDX)
-			return panel;
+		if (break_idx != this.DAY_BREAK_IDX) {
+			// add fourth row, break time input
+			gridBagConstraints.gridx = 1;
+			++gridBagConstraints.gridy;
 
-		// add fourth row, break time input
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 4;
+			gridBagConstraints.gridwidth = 1;
+			gridBagConstraints.anchor = GridBagConstraints.EAST;
+			gridBagConstraints.fill = GridBagConstraints.VERTICAL;
+			panel.add(breakTimeLabel, gridBagConstraints);
 
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.anchor = GridBagConstraints.EAST;
-		gridBagConstraints.fill = GridBagConstraints.VERTICAL;
-		panel.add(breakTimeLabel, gridBagConstraints);
-
-		gridBagConstraints.gridwidth = 3;
-		++gridBagConstraints.gridx;
-		gridBagConstraints.anchor = GridBagConstraints.WEST;
-		gridBagConstraints.fill = GridBagConstraints.VERTICAL;
-		panel.add(breakTimeInput, gridBagConstraints);
+			gridBagConstraints.gridwidth = 3;
+			++gridBagConstraints.gridx;
+			gridBagConstraints.anchor = GridBagConstraints.WEST;
+			gridBagConstraints.fill = GridBagConstraints.VERTICAL;
+			panel.add(breakTimeInput, gridBagConstraints);
+		}
 
 		// add fifth row, break time input
 		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 5;
+		++gridBagConstraints.gridy;
 
 		gridBagConstraints.gridwidth = 1;
 		gridBagConstraints.anchor = GridBagConstraints.EAST;
@@ -396,6 +396,11 @@ public class BreaksPanel extends JScrollPane
 					& this.postponeTimeInputs[i].checkInputValidity();
 			}
 		}
+		// check if the postpone time for the day limit is also valid
+		this.postponeTimeInputs[2].clearWarning();
+		if (this.featureEnabledCheckBoxes[2].isSelected())
+			is_valid = is_valid & this.postponeTimeInputs[2].checkInputValidity();
+
 		if (!is_valid) {
 			this.showOnSaveMessage(SWMain.messagesBundle.getString("invalid_input_check_above"), Colors.RED);
 			return;
@@ -419,14 +424,14 @@ public class BreaksPanel extends JScrollPane
 				this.workingTimeInputs[break_idx].getTime()
 			));
 
-			if (break_idx != this.DAY_BREAK_IDX) {
+			this.preferredBreakSettings[break_idx].setPostponeTimerSettings(new TimerSettings(
+				this.postponeTimeInputs[break_idx].getTime()
+			));
+
+			if (break_idx != this.DAY_BREAK_IDX)
 				this.preferredBreakSettings[break_idx].setBreakTimerSettings(new TimerSettings(
 					this.breaksTimeInputs[break_idx].getTime()
 				));
-				this.preferredBreakSettings[break_idx].setPostponeTimerSettings(new TimerSettings(
-					this.postponeTimeInputs[break_idx].getTime()
-				));
-			}
 		}
 		SWMain.timersManager.saveBreaksSettings(this.preferredBreakSettings);
 
@@ -473,6 +478,7 @@ public class BreaksPanel extends JScrollPane
 	{
 		this.workingTimeInputs[this.SMALL_BREAKS_IDX].setValues((byte) 0, (byte) 10, (byte) 0);
 		this.breaksTimeInputs[this.SMALL_BREAKS_IDX].setValues((byte) 0, (byte) 0, (byte) 10);
+		this.breaksTimeInputs[this.SMALL_BREAKS_IDX].setValues((byte) 0, (byte) 0, (byte) 10);
 		if (!this.featureEnabledCheckBoxes[this.SMALL_BREAKS_IDX].isSelected())
 			this.featureEnabledCheckBoxes[this.SMALL_BREAKS_IDX].doClick();
 
@@ -482,8 +488,16 @@ public class BreaksPanel extends JScrollPane
 			this.featureEnabledCheckBoxes[this.STRETCH_BREAKS_IDX].doClick();
 
 		this.workingTimeInputs[this.DAY_BREAK_IDX].setValues((byte) 8, (byte) 0, (byte) 0);
+		this.workingTimeInputs[this.DAY_BREAK_IDX].setValues((byte) 8, (byte) 0, (byte) 0);
 		if (!this.featureEnabledCheckBoxes[this.DAY_BREAK_IDX].isSelected())
 			this.featureEnabledCheckBoxes[this.DAY_BREAK_IDX].doClick();
+
+		for (TimeInputPanel postponeTimeInput : this.postponeTimeInputs)
+			postponeTimeInput.setValues(
+				this.minRequiredPostponeTime.getHours(),
+				this.minRequiredPostponeTime.getMinutes(),
+				this.minRequiredPostponeTime.getSeconds()
+			);
 
 		this.showOnSaveMessage(SWMain.messagesBundle.getString("recommended_values_were_set"), Color.WHITE);
 	}

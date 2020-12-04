@@ -23,6 +23,7 @@ import org.fos.SWMain;
 import org.fos.timers.notifications.BreakCountDown;
 import org.fos.timers.notifications.TakeABreakNotification;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -130,9 +131,23 @@ public class WorkingTimeTimer implements Runnable
 	{
 		if (this.n_dismisses >= WorkingTimeTimer.MAX_N_DISMISSES
 			|| this.n_postponed >= WorkingTimeTimer.MAX_N_POSTPONED) {
-			this.showBreakCountDown();
 			this.n_dismisses = 0;
 			this.n_postponed = 0;
+
+			if (this.breakTimerSettings == null) { // in case of the day limit timer
+				// this should almost never happen
+				SwingUtilities.invokeLater(() -> {
+					JOptionPane.showMessageDialog(
+						null,
+						"You really need to stop working!",
+						"That's enough",
+						JOptionPane.WARNING_MESSAGE
+					);
+					this.scheduleWorkingTimeExecutor();
+				});
+				return;
+			}
+			this.showBreakCountDown();
 			return;
 		}
 
@@ -244,5 +259,21 @@ public class WorkingTimeTimer implements Runnable
 	public long getNotificationShouldBeShownAt()
 	{
 		return this.notification_should_be_shown_at_s;
+	}
+
+	/**
+	 * @return the remaining time in seconds for the notification to be shown
+	 */
+	public int getRemainingSeconds()
+	{
+		return (int) (this.notification_should_be_shown_at_s - System.currentTimeMillis() / 1_000);
+	}
+
+	/**
+	 * @return the working timer time as seconds
+	 */
+	public int getWorkingTimeSeconds()
+	{
+		return this.workingTimerSettings.getHMSAsSeconds();
 	}
 }

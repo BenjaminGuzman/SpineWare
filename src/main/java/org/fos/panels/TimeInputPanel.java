@@ -143,7 +143,7 @@ public class TimeInputPanel extends JPanel
 		int min_recommended_value = this.minRecommendedTime.getHMSAsSeconds();
 		int selected_value = this.getTime();
 
-		if (selected_value < 5) {
+		if (selected_value <= 5) {
 			this.warningLabel.setForeground(Colors.RED);
 			this.warningLabel.setText(SWMain.messagesBundle.getString("must_be_greater_than"));
 			return false;
@@ -151,11 +151,13 @@ public class TimeInputPanel extends JPanel
 
 		if (this.use_hard_limits) {
 			if (selected_value > max_recommended_value)
-				this.warningLabel.setText(this.maxRecommendedTime.getHMSAsSeconds()
+				this.warningLabel.setText(this.maxRecommendedTime.getHMSAsString()
 								  + " " + SWMain.messagesBundle.getString("is_the_maximum"));
 			else if (selected_value < min_recommended_value)
-				this.warningLabel.setText(this.minRecommendedTime.getHMSAsSeconds()
+				this.warningLabel.setText(this.minRecommendedTime.getHMSAsString()
 								  + " " + SWMain.messagesBundle.getString("is_the_minimum"));
+			else
+				return true; // if the value is between min and max
 			this.warningLabel.setForeground(Colors.RED);
 			return false;
 		}

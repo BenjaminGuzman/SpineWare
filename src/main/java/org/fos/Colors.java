@@ -22,7 +22,7 @@ import java.awt.Color;
 
 public class Colors
 {
-	public final static Color RED = new Color(0xE30505);
+	public final static Color RED = new Color(0xFF7676);
 	public final static Color RED_WINE = new Color(0x420D0D);
 	public final static Color GREEN = new Color(0x518E2B);
 }
