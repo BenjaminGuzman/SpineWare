@@ -107,10 +107,9 @@ public class TimersManager
 
 		TimerSettings breakTimerSettings = breakSettings.getBreakTimerSettings();
 		this.prefs.putInt(breakName + " working time", breakSettings.getWorkTimerSettings().getHMSAsSeconds());
-		if (breakTimerSettings != null) {
+		this.prefs.putInt(breakName + " postpone time", breakSettings.getPostponeTimerSettings().getHMSAsSeconds());
+		if (breakTimerSettings != null)
 			this.prefs.putInt(breakName + " break time", breakTimerSettings.getHMSAsSeconds());
-			this.prefs.putInt(breakName + " postpone time", breakSettings.getPostponeTimerSettings().getHMSAsSeconds());
-		}
 	}
 
 	/**

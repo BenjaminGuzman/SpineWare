@@ -35,9 +35,8 @@ public class TakeABreakNotification extends Notification
 {
 	// this countdown latch should be decremented when the dialog ends (its closed or "take a break" is clicked)
 	private final CountDownLatch countDownLatch;
-	private final Timer countDownTimer;
+	private Timer countDownTimer;
 	private final JProgressBar progressBarCountDown;
-	private final int few_remaining_seconds_thresh;
 	private boolean break_dismissed = true; // default behaviour is dismissed
 	private boolean break_postponed = false;
 	private int remaining_seconds;
@@ -49,12 +48,11 @@ public class TakeABreakNotification extends Notification
 		final byte notification_location
 	)
 	{
-		super(is_not_day_limit_notification ? 15_000 : -1, notification_location);
+		super(is_not_day_limit_notification ? 15_000 : 60_000, notification_location);
 
 		this.countDownLatch = countDownLatch;
 
 		this.remaining_seconds = super.getDisposeTimeout() / 1_000;
-		this.few_remaining_seconds_thresh = this.remaining_seconds / 2;
 
 		// create take a break label
 		JLabel takeABreakLabel = new JLabel(takeABreakMessage);
@@ -68,11 +66,11 @@ public class TakeABreakNotification extends Notification
 			takeBreakButton.addActionListener(this::onClickTakeBreak);
 			buttonsPanel.add(takeBreakButton);
 			this.getRootPane().setDefaultButton(takeBreakButton);
-
-			JButton postponeButton = new JButton(SWMain.messagesBundle.getString("postpone"));
-			postponeButton.addActionListener(this::onClickPostpone);
-			buttonsPanel.add(postponeButton);
 		}
+
+		JButton postponeButton = new JButton(SWMain.messagesBundle.getString("postpone"));
+		postponeButton.addActionListener(this::onClickPostpone);
+		buttonsPanel.add(postponeButton);
 
 		JButton dismissButton = new JButton(SWMain.messagesBundle.getString("notification_dismiss_break"));
 		dismissButton.addActionListener(this::onClickDismiss);
@@ -107,24 +105,26 @@ public class TakeABreakNotification extends Notification
 		super.mainPanel.add(buttonsPanel, gridBagConstraints);
 
 		// add progress bar
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 2;
-		gridBagConstraints.weightx = 2;
-		super.mainPanel.add(this.progressBarCountDown, gridBagConstraints);
+		if (is_not_day_limit_notification) {
+			gridBagConstraints.gridx = 1;
+			gridBagConstraints.gridy = 2;
+			gridBagConstraints.weightx = 2;
+			super.mainPanel.add(this.progressBarCountDown, gridBagConstraints);
 
-		this.countDownTimer = new Timer(1_000, (ActionEvent evt) -> {
-			if (this.remaining_seconds < 0) {
-				this.dispose();
-				return;
-			}
+			this.countDownTimer = new Timer(1_000, (ActionEvent evt) -> {
+				if (this.remaining_seconds <= 0) {
+					this.dispose();
+					return;
+				}
 
-			String str = --this.remaining_seconds + "s";
-			this.progressBarCountDown.setString(str);
-			this.progressBarCountDown.setValue(this.remaining_seconds);
-		});
+				String str = --this.remaining_seconds + "s";
+				this.progressBarCountDown.setString(str);
+				this.progressBarCountDown.setValue(this.remaining_seconds);
+			});
+			this.countDownTimer.start();
+		} else
 
-		super.showJDialog();
-		this.countDownTimer.start();
+			super.showJDialog();
 	}
 
 	/**
@@ -190,7 +190,8 @@ public class TakeABreakNotification extends Notification
 	public void dispose()
 	{
 		super.dispose();
-		this.countDownTimer.stop();
+		if (this.countDownTimer != null)
+			this.countDownTimer.stop();
 		this.countDownLatch.countDown();
 	}
 }

@@ -34,6 +34,17 @@ There are three main areas where you can contribute:
 - **Help to bring SpineWare to Windows and MacOS**: We love free software and mainly used GNU/Linux to run and test SpineWare, but we believe is part of the freedom of the user to choose what software to use and in which platform. A great advantage is that SpineWare is written in Java.
 - **Translations**: Currently SpineWare is available only in 2 languages: English and Spanish.
 
+## Media licenses
+
+All files (except the GPLv3 logo, `gplv3-136x68.png`) inside the `media/` directory or `src/main/resources/` are licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
+
+Icon files (the ones that end with `_18dp.png`) were taken from here [https://material.io/resources/icons](https://material.io/resources/icons)
+
+The GPLv3 logo `gplv3-136x68.png` was taken from [https://www.gnu.org/graphics/license-logos.html](https://www.gnu.org/graphics/license-logos.html)
+
+All other images were made by the authors and are licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
+
+
 ## Dependencies
 
 - Java 11+, SpineWare's core programming language
