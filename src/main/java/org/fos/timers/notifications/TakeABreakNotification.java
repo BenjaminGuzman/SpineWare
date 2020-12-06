@@ -37,8 +37,8 @@ public class TakeABreakNotification extends Notification
 	private final CountDownLatch countDownLatch;
 	private Timer countDownTimer;
 	private final JProgressBar progressBarCountDown;
-	private boolean break_dismissed = true; // default behaviour is dismissed
-	private boolean break_postponed = false;
+	private boolean break_dismissed = false;
+	private boolean break_postponed = true; // default behaviour is postponed
 	private int remaining_seconds;
 
 	public TakeABreakNotification(
@@ -63,16 +63,19 @@ public class TakeABreakNotification extends Notification
 
 		if (is_not_day_limit_notification) {
 			JButton takeBreakButton = new JButton(SWMain.messagesBundle.getString("notification_take_break"));
+			takeBreakButton.setToolTipText(SWMain.messagesBundle.getString("notification_take_break_tooltip"));
 			takeBreakButton.addActionListener(this::onClickTakeBreak);
 			buttonsPanel.add(takeBreakButton);
 			this.getRootPane().setDefaultButton(takeBreakButton);
 		}
 
-		JButton postponeButton = new JButton(SWMain.messagesBundle.getString("postpone"));
+		JButton postponeButton = new JButton(SWMain.messagesBundle.getString("notification_postpone_break"));
+		postponeButton.setToolTipText(SWMain.messagesBundle.getString("notification_postpone_tooltip"));
 		postponeButton.addActionListener(this::onClickPostpone);
 		buttonsPanel.add(postponeButton);
 
 		JButton dismissButton = new JButton(SWMain.messagesBundle.getString("notification_dismiss_break"));
+		dismissButton.setToolTipText(SWMain.messagesBundle.getString("notification_dismiss_tooltip"));
 		dismissButton.addActionListener(this::onClickDismiss);
 		buttonsPanel.add(dismissButton);
 
@@ -90,7 +93,7 @@ public class TakeABreakNotification extends Notification
 		gridBagConstraints.ipady = 5;
 
 		// add SW icon
-		gridBagConstraints.gridheight = 2;
+		gridBagConstraints.gridheight = 3;
 		super.mainPanel.add(super.swIconLabel, gridBagConstraints);
 
 		// add take a break label
@@ -122,9 +125,8 @@ public class TakeABreakNotification extends Notification
 				this.progressBarCountDown.setValue(this.remaining_seconds);
 			});
 			this.countDownTimer.start();
-		} else
-
-			super.showJDialog();
+		}
+		super.showJDialog();
 	}
 
 	/**

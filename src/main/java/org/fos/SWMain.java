@@ -72,7 +72,7 @@ public class SWMain extends JFrame
 
 		// set the JFrame icon
 		String iconPath = "/resources/media/SW_white.min.png";
-		InputStream iconInputStream = SWMain.getImageAsStream(iconPath);
+		InputStream iconInputStream = SWMain.getFileAsStream(iconPath);
 		BufferedImage swIconImage;
 		try {
 			swIconImage = ImageIO.read(iconInputStream);
@@ -114,16 +114,16 @@ public class SWMain extends JFrame
 	 * Same method as {@link Class#getResourceAsStream(String) getResourceAsStream(String)}
 	 * but, if the resource can't be loaded, a warning message is loaded
 	 *
-	 * @param imagePath
+	 * @param filePath
 	 * 	the path of the image you want to read
 	 *
 	 * @return the stream if it can be loaded, null otherwise
 	 */
-	public static InputStream getImageAsStream(final String imagePath)
+	public static InputStream getFileAsStream(final String filePath)
 	{
-		InputStream inStream = SWMain.class.getResourceAsStream(imagePath);
+		InputStream inStream = SWMain.class.getResourceAsStream(filePath);
 		if (inStream == null)
-			Loggers.errorLogger.warning("Couldn't read file: " + imagePath + " (probably doesn't exists)");
+			Loggers.errorLogger.warning("Couldn't read file: " + filePath + " (probably doesn't exists)");
 		return inStream;
 	}
 
@@ -183,7 +183,7 @@ public class SWMain extends JFrame
 		gridBagConstraints.anchor = GridBagConstraints.NORTH;
 
 		// SpineWare logo image
-		InputStream inputStreamSWLogo = SWMain.getImageAsStream("/resources/media/SpineWare_white.png");
+		InputStream inputStreamSWLogo = SWMain.getFileAsStream("/resources/media/SpineWare_white.png");
 		ImageIcon swLogoImageIcon = null;
 		try {
 			Image img = ImageIO.read(inputStreamSWLogo);
@@ -209,8 +209,8 @@ public class SWMain extends JFrame
 		Insets buttonInsets = new Insets(10, 10, 10, 10);
 		for (short i = 0; i < buttonsIcons.length; ++i) {
 			button = new JButton(messagesBundle.getString(buttonsLabels[i]));
-			InputStream inputStreamBreaksIcon = SWMain.getImageAsStream("/resources/media/"
-											    + buttonsIcons[i]);
+			InputStream inputStreamBreaksIcon = SWMain.getFileAsStream("/resources/media/"
+											   + buttonsIcons[i]);
 			try { // the button should be optional, if some problem occurs while adding it, the button should
 				// exist anyway
 				button.setIcon(new ImageIcon(ImageIO.read(inputStreamBreaksIcon)));
@@ -316,7 +316,7 @@ public class SWMain extends JFrame
 		try {
 			String iconPath = "/resources/media/SW_white_black.min.png";
 
-			InputStream iconInputStream = SWMain.getImageAsStream(iconPath);
+			InputStream iconInputStream = SWMain.getFileAsStream(iconPath);
 
 			iconImage = ImageIO.read(iconInputStream);
 		} catch (IOException e) {

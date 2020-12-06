@@ -45,25 +45,37 @@ public class TimersManager
 	 *
 	 * @return a TimerSettings object constructed from the preferences values
 	 */
-	private BreakSettings loadBreakSettings(final String breakName)
+	private BreakSettings loadBreakSettings(final String breakName, final byte breakType)
 	{
 		String _breakName = this.normalizeBreakName(breakName);
 
 		boolean is_enabled = this.prefs.getBoolean(_breakName + " enabled", false);
 		if (!is_enabled)
-			return new BreakSettings(null, null, null, false);
+			return new BreakSettings(null, null, null, breakType, null, null, false);
 
 		int working_time = this.prefs.getInt(_breakName + " working time", 5);
 		int break_time = this.prefs.getInt(_breakName + " break time", 5);
 		int postpone_time = this.prefs.getInt(_breakName + " postpone time", 5);
+		String notificationAudioPath = this.prefs.get(_breakName + " notification audio", null);
+		String breakAudiosDir = this.prefs.get(_breakName + " break audios dir", null);
 
 		if (_breakName.equals("day break"))
-			return new BreakSettings(new TimerSettings(working_time), null, null);
+			return new BreakSettings(
+				new TimerSettings(working_time),
+				null, // day break does not have break time
+				new TimerSettings(postpone_time),
+				breakType,
+				notificationAudioPath,
+				breakAudiosDir
+			);
 		else
 			return new BreakSettings(
 				new TimerSettings(working_time),
 				new TimerSettings(break_time),
-				new TimerSettings(postpone_time)
+				new TimerSettings(postpone_time),
+				breakType,
+				notificationAudioPath,
+				breakAudiosDir
 			);
 	}
 
@@ -83,7 +95,7 @@ public class TimersManager
 		BreakSettings[] breaksSettings = new BreakSettings[3];
 		byte i = 0;
 		for (String breakName : breaksNames) {
-			breaksSettings[i] = this.loadBreakSettings(breakName);
+			breaksSettings[i] = this.loadBreakSettings(breakName, i);
 			++i;
 		}
 
@@ -108,8 +120,18 @@ public class TimersManager
 		TimerSettings breakTimerSettings = breakSettings.getBreakTimerSettings();
 		this.prefs.putInt(breakName + " working time", breakSettings.getWorkTimerSettings().getHMSAsSeconds());
 		this.prefs.putInt(breakName + " postpone time", breakSettings.getPostponeTimerSettings().getHMSAsSeconds());
-		if (breakTimerSettings != null)
+		if (breakSettings.getNotificationAudioPath() == null)
+			this.prefs.remove(breakName + " notification audio");
+		else
+			this.prefs.put(breakName + " notification audio", breakSettings.getNotificationAudioPath());
+
+		if (breakTimerSettings != null) {
 			this.prefs.putInt(breakName + " break time", breakTimerSettings.getHMSAsSeconds());
+			if (breakSettings.getBreakAudiosDirStr() == null)
+				this.prefs.remove(breakName + " break audios dir");
+			else
+				this.prefs.put(breakName + " break audios dir", breakSettings.getBreakAudiosDirStr());
+		}
 	}
 
 	/**
@@ -195,9 +217,7 @@ public class TimersManager
 		if (breaksSettings[0].isEnabled()) { // small breaks
 			breakTimerSettings = breaksSettings[0].getBreakTimerSettings();
 			this.smallBreaksWorkingTimer = new WorkingTimeTimer(
-				breaksSettings[0].getWorkTimerSettings(),
-				breakTimerSettings,
-				breaksSettings[0].getPostponeTimerSettings(),
+				breaksSettings[0],
 				SWMain.messagesBundle.getString("notification_time_for_a")
 					+ " " + breakTimerSettings.getHMSAsString()
 					+ " " + SWMain.messagesBundle.getString("break"),
@@ -207,11 +227,9 @@ public class TimersManager
 		}
 
 		if (breaksSettings[1].isEnabled()) { // stretch breaks
-			breakTimerSettings = breaksSettings[0].getBreakTimerSettings();
+			breakTimerSettings = breaksSettings[1].getBreakTimerSettings();
 			this.stretchBreaksWorkingTimer = new WorkingTimeTimer(
-				breaksSettings[1].getWorkTimerSettings(),
-				breakTimerSettings,
-				breaksSettings[1].getPostponeTimerSettings(),
+				breaksSettings[1],
 				SWMain.messagesBundle.getString("notification_time_for_a")
 					+ " " + breakTimerSettings.getHMSAsString()
 					+ " " + SWMain.messagesBundle.getString("break"),
@@ -222,9 +240,7 @@ public class TimersManager
 
 		if (breaksSettings[2].isEnabled()) { // day breaks
 			this.dayBreakWorkingTimer = new WorkingTimeTimer(
-				breaksSettings[2].getWorkTimerSettings(),
-				null,
-				breaksSettings[2].getPostponeTimerSettings(),
+				breaksSettings[2],
 				SWMain.messagesBundle.getString("time_for_a_day_break"),
 				SWMain.messagesBundle.getString("day_break_title"),
 				false

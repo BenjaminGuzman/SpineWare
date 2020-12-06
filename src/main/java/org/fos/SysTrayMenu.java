@@ -101,7 +101,7 @@ public class SysTrayMenu extends JDialog
 	{
 		JPanel mainPanel = new JPanel(new GridBagLayout());
 
-		InputStream inputStreamSWLogo = SWMain.getImageAsStream("/resources/media/SW_white.min.png");
+		InputStream inputStreamSWLogo = SWMain.getFileAsStream("/resources/media/SW_white.min.png");
 		ImageIcon swLogoImageIcon = null;
 		try {
 			Image img = ImageIO.read(inputStreamSWLogo);

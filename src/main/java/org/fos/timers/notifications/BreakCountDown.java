@@ -144,7 +144,7 @@ public class BreakCountDown extends JDialog
 		mainPanel.add(cancelButton, gridBagConstraints);
 
 		String iconPath = "/resources/media/SW_white.min.png";
-		InputStream iconInputStream = SWMain.getImageAsStream(iconPath);
+		InputStream iconInputStream = SWMain.getFileAsStream(iconPath);
 		try {
 			this.setIconImage(ImageIO.read(iconInputStream));
 		} catch (IOException e) {
@@ -188,7 +188,7 @@ public class BreakCountDown extends JDialog
 			return;
 
 		String iconImagePath = "/resources/media/SpineWare_white.png";
-		InputStream iconInputStream = SWMain.getImageAsStream(iconImagePath);
+		InputStream iconInputStream = SWMain.getFileAsStream(iconImagePath);
 		Image icon;
 		try {
 			icon = ImageIO.read(iconInputStream);
