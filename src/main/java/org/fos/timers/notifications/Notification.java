@@ -130,7 +130,7 @@ public class Notification extends JDialog
 			return;
 
 		String iconImagePath = "/resources/media/SW_white.png";
-		InputStream iconInputStream = SWMain.getImageAsStream(iconImagePath);
+		InputStream iconInputStream = SWMain.getFileAsStream(iconImagePath);
 		Image icon;
 		try {
 			icon = ImageIO.read(iconInputStream);

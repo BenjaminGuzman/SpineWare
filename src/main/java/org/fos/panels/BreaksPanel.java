@@ -31,12 +31,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -78,6 +80,8 @@ public class BreaksPanel extends JScrollPane
 		new TimerSettings((byte) 0, (byte) 5, (byte) 0), // max break time for the small break
 		new TimerSettings((byte) 1, (byte) 0, (byte) 0), // max break time for the stretch break
 	};
+	private final String[] notificationAudioPaths = new String[3];
+	private final String[] breakAudiosDirs = new String[2];
 	private final TimerSettings minRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 0, (byte) 6);
 	private final TimerSettings maxRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 30, (byte) 0);
 	private final byte SMALL_BREAKS_IDX = 0;
@@ -99,23 +103,25 @@ public class BreaksPanel extends JScrollPane
 		// load preferred times
 		this.preferredBreakSettings = SWMain.timersManager.loadBreaksSettings();
 
+		FileNameExtensionFilter fileFilter = new FileNameExtensionFilter("Audio files", "mp3", "ogg", "wav");
+
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(this.createBreakPanel(this.SMALL_BREAKS_IDX));
+		panel.add(this.createBreakPanel(this.SMALL_BREAKS_IDX, fileFilter));
 		panel.add(Box.createVerticalStrut(10));
 
 		panel.add(new JSeparator(JSeparator.HORIZONTAL));
 
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(this.createBreakPanel(this.STRETCH_BREAKS_IDX));
+		panel.add(this.createBreakPanel(this.STRETCH_BREAKS_IDX, fileFilter));
 		panel.add(Box.createVerticalStrut(10));
 
 		panel.add(new JSeparator(JSeparator.HORIZONTAL));
 
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(this.createBreakPanel(this.DAY_BREAK_IDX));
+		panel.add(this.createBreakPanel(this.DAY_BREAK_IDX, fileFilter));
 		panel.add(Box.createVerticalStrut(10));
 
 		panel.add(Box.createVerticalStrut(10));
@@ -151,7 +157,7 @@ public class BreaksPanel extends JScrollPane
 	 *
 	 * @return the JPanel containing all the elements mentioned above
 	 */
-	private JPanel createBreakPanel(final byte break_idx)
+	private JPanel createBreakPanel(final byte break_idx, FileNameExtensionFilter fileFilter)
 	{
 		String breakPrefix;
 		if (break_idx == this.SMALL_BREAKS_IDX)
@@ -178,6 +184,49 @@ public class BreaksPanel extends JScrollPane
 
 		this.featureEnabledCheckBoxes[break_idx] = new JCheckBox(SWMain.messagesBundle.getString("feature_enabled"));
 		this.featureEnabledCheckBoxes[break_idx].setSelected(this.preferredBreakSettings[break_idx].isEnabled());
+
+		// audio configuration
+		JButton notificationAudioButton = new JButton(SWMain.messagesBundle.getString("notification_select_audio_file"));
+		notificationAudioButton.setToolTipText(SWMain.messagesBundle.getString("notification_select_audio_file_tooltip"));
+
+		JLabel notificationAudioLabel = new JLabel("Default", SwingConstants.CENTER);
+		notificationAudioButton.addActionListener((ActionEvent evt) -> {
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setFileFilter(fileFilter);
+			int selected_option = fileChooser.showOpenDialog(this);
+			if (selected_option == JFileChooser.APPROVE_OPTION) {
+				this.notificationAudioPaths[break_idx] = fileChooser.getSelectedFile().getAbsolutePath();
+				notificationAudioLabel.setText(this.notificationAudioPaths[break_idx]);
+			}
+		});
+		if (this.preferredBreakSettings[break_idx].getNotificationAudioPath() != null)
+			notificationAudioLabel.setText(this.preferredBreakSettings[break_idx].getNotificationAudioPath());
+
+		JButton notificationUseDefaultButton = new JButton(SWMain.messagesBundle.getString("notification_use_default_audio"));
+		notificationUseDefaultButton.addActionListener((ActionEvent evt) -> {
+			this.notificationAudioPaths[break_idx] = null;
+			notificationAudioLabel.setText("Default");
+		});
+
+		JButton breakAudiosButton = new JButton(SWMain.messagesBundle.getString("break_select_audio_directory"));
+		breakAudiosButton.setToolTipText(SWMain.messagesBundle.getString("break_select_audio_directory_tooltip"));
+		JLabel breakAudiosLabel = new JLabel(SWMain.messagesBundle.getString("no_sound_will_be_played"), SwingConstants.CENTER);
+		breakAudiosButton.addActionListener((ActionEvent evt) -> {
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int selected_option = fileChooser.showOpenDialog(this);
+			if (selected_option == JFileChooser.APPROVE_OPTION) {
+				this.breakAudiosDirs[break_idx] = fileChooser.getSelectedFile().getAbsolutePath();
+				breakAudiosLabel.setText(this.breakAudiosDirs[break_idx]);
+			}
+		});
+		if (this.preferredBreakSettings[break_idx].getBreakAudiosDirStr() != null)
+			breakAudiosLabel.setText(this.preferredBreakSettings[break_idx].getBreakAudiosDirStr());
+		JButton breakNoAudioButton = new JButton(SWMain.messagesBundle.getString("break_without_audio"));
+		breakNoAudioButton.addActionListener((ActionEvent evt) -> {
+			this.breakAudiosDirs[break_idx] = null;
+			breakAudiosLabel.setText(SWMain.messagesBundle.getString("no_sound_will_be_played"));
+		});
 
 		// second row working time input for hours, minutes, seconds
 		JLabel workingTimeLabel = new JLabel(
@@ -252,7 +301,7 @@ public class BreaksPanel extends JScrollPane
 		gridBagConstraints.gridx = 1;
 		panel.add(breakFullDescLabel, gridBagConstraints);
 
-		// add second row, working time input
+		// add third row, working time input
 		gridBagConstraints.gridx = 1;
 		gridBagConstraints.gridy = 3;
 
@@ -298,6 +347,39 @@ public class BreaksPanel extends JScrollPane
 		gridBagConstraints.anchor = GridBagConstraints.WEST;
 		gridBagConstraints.fill = GridBagConstraints.VERTICAL;
 		panel.add(this.postponeTimeInputs[break_idx], gridBagConstraints);
+
+		// add audio files chooser, notification
+		gridBagConstraints.anchor = GridBagConstraints.CENTER;
+		gridBagConstraints.gridwidth = 1;
+		gridBagConstraints.gridx = 0;
+		++gridBagConstraints.gridy;
+
+		panel.add(notificationUseDefaultButton, gridBagConstraints);
+
+		++gridBagConstraints.gridx;
+		panel.add(notificationAudioButton, gridBagConstraints);
+
+		gridBagConstraints.gridx = 0;
+		++gridBagConstraints.gridy;
+		gridBagConstraints.gridwidth = 2;
+		panel.add(notificationAudioLabel, gridBagConstraints);
+
+		// add audio files chooser, break
+		if (break_idx != this.DAY_BREAK_IDX) { // day break does not have break time
+			gridBagConstraints.gridx = 2;
+			gridBagConstraints.gridwidth = 1;
+			--gridBagConstraints.gridy;
+			panel.add(breakNoAudioButton, gridBagConstraints);
+
+			++gridBagConstraints.gridx;
+			panel.add(breakAudiosButton, gridBagConstraints);
+
+			++gridBagConstraints.gridy;
+			gridBagConstraints.gridx = 2;
+			gridBagConstraints.gridwidth = 2;
+
+			panel.add(breakAudiosLabel, gridBagConstraints);
+		}
 
 		return panel;
 	}
@@ -349,7 +431,7 @@ public class BreaksPanel extends JScrollPane
 		JButton saveButton = new JButton(SWMain.messagesBundle.getString("save_changes"));
 		try {
 			saveButton.setIcon(new ImageIcon(
-				ImageIO.read(SWMain.getImageAsStream("/resources/media/save_white_18dp.png"))
+				ImageIO.read(SWMain.getFileAsStream("/resources/media/save_white_18dp.png"))
 			));
 		} catch (IOException e) {
 			Loggers.errorLogger.log(Level.WARNING, "Error while reading save icon", e);
@@ -416,6 +498,8 @@ public class BreaksPanel extends JScrollPane
 			return;
 		}
 
+		// TODO: check for breaks that are equal, avoid collisions
+
 		int[] breaks_idxs = new int[]{this.SMALL_BREAKS_IDX, this.STRETCH_BREAKS_IDX, this.DAY_BREAK_IDX};
 		for (int break_idx : breaks_idxs) {
 			this.preferredBreakSettings[break_idx].setEnabled(this.featureEnabledCheckBoxes[break_idx].isSelected());
@@ -428,10 +512,14 @@ public class BreaksPanel extends JScrollPane
 				this.postponeTimeInputs[break_idx].getTime()
 			));
 
-			if (break_idx != this.DAY_BREAK_IDX)
+			this.preferredBreakSettings[break_idx].setNotificationAudioPath(this.notificationAudioPaths[break_idx]);
+
+			if (break_idx != this.DAY_BREAK_IDX) {
 				this.preferredBreakSettings[break_idx].setBreakTimerSettings(new TimerSettings(
 					this.breaksTimeInputs[break_idx].getTime()
 				));
+				this.preferredBreakSettings[break_idx].setBreakAudiosDirStr(this.breakAudiosDirs[break_idx]);
+			}
 		}
 		SWMain.timersManager.saveBreaksSettings(this.preferredBreakSettings);
 
