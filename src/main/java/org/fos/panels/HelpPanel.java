@@ -49,7 +49,7 @@ public class HelpPanel extends JScrollPane
 		mainPanel.setLayout(new GridBagLayout());
 
 		// spineware logo
-		InputStream inputStreamSWLogo = SWMain.getImageAsStream("/resources/media/SpineWare_white.png");
+		InputStream inputStreamSWLogo = SWMain.getFileAsStream("/resources/media/SpineWare_white.png");
 		ImageIcon swLogoImageIcon = null;
 		try {
 			Image img = ImageIO.read(inputStreamSWLogo);
@@ -75,7 +75,7 @@ public class HelpPanel extends JScrollPane
 		gplLicenseLabel.setHorizontalTextPosition(SwingConstants.CENTER);
 		gplLicenseLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-		InputStream inputStreamGPLLogo = SWMain.getImageAsStream("/resources/media/gplv3-136x68.png");
+		InputStream inputStreamGPLLogo = SWMain.getFileAsStream("/resources/media/gplv3-136x68.png");
 		try {
 			Image img = ImageIO.read(inputStreamGPLLogo);
 			gplLicenseLabel.setIcon(new ImageIcon(img));

@@ -50,9 +50,9 @@ class TimersManagerTest {
 	void loadBreakSettings() {
 		TimersManager timersManager = new TimersManager();
 		timersManager.saveBreaksSettings(new BreakSettings[]{
-			new BreakSettings(null, null, null,false),
-			new BreakSettings(null, null, null, false),
-			new BreakSettings(null, null, null, false)
+			new BreakSettings(null, null, null, (byte) 0, null, null, false),
+			new BreakSettings(null, null, null, (byte) 1, null, null, false),
+			new BreakSettings(null, null, null, (byte) 2, null, null, false)
 		});
 		BreakSettings[] breaksSettings = timersManager.loadBreaksSettings();
 		for (BreakSettings breakSettings : breaksSettings) {
@@ -67,15 +67,21 @@ class TimersManagerTest {
 			new BreakSettings(
 				new TimerSettings(hours, minutes, seconds),
 				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds), true),
+				new TimerSettings(hours, minutes, seconds),
+				(byte) 0, null, null, true
+			),
 			new BreakSettings(
 				new TimerSettings(hours, minutes, seconds),
 				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds), true),
+				new TimerSettings(hours, minutes, seconds),
+				(byte) 0, null, null, true
+			),
 			new BreakSettings(
 				new TimerSettings(hours, minutes, seconds),
 				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds), true)
+				new TimerSettings(hours, minutes, seconds),
+				(byte) 0, null, null, true
+			)
 		});
 		breaksSettings = timersManager.loadBreaksSettings();
 		for (BreakSettings breakSettings : breaksSettings) {

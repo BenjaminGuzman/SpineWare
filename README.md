@@ -36,13 +36,26 @@ There are three main areas where you can contribute:
 
 ## Media licenses
 
-All files (except the GPLv3 logo, `gplv3-136x68.png`) inside the `media/` directory or `src/main/resources/` are licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
+### Images
+
+All files (except the GPLv3 logo, `gplv3-136x68.png`) inside the `media/` directory or `src/main/resources/media` are licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 Icon files (the ones that end with `_18dp.png`) were taken from here [https://material.io/resources/icons](https://material.io/resources/icons)
 
 The GPLv3 logo `gplv3-136x68.png` was taken from [https://www.gnu.org/graphics/license-logos.html](https://www.gnu.org/graphics/license-logos.html)
 
 All other images were made by the authors and are licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
+
+### Audios
+
+All sounds placed under the `media/sounds` directory or `src/main/resources/media/sounds` are licensed under the [Creative Commons license](http://creativecommons.org/licenses/by/3.0/)
+
+These are the authors for some audio files:
+
+- **Kjartan Abel**, [https://freesound.org/people/kjartan_abel/](https://freesound.org/people/kjartan_abel/)
+- **Sami Hiltunen** [https://freesound.org/people/SamiHil/](https://freesound.org/people/SamiHil/)
+- [https://freesound.org/people/Erokia/](https://freesound.org/people/Erokia/)
+- [https://freesound.org/people/DaveJf/](https://freesound.org/people/DaveJf/)
 
 
 ## Dependencies

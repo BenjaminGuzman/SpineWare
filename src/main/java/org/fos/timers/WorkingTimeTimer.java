@@ -25,8 +25,6 @@ import org.fos.timers.notifications.TakeABreakNotification;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,11 +34,11 @@ import java.util.logging.Level;
 
 public class WorkingTimeTimer implements Runnable
 {
+	private static boolean is_break_happening = false; // sentinel value to avoid collisions between breaks
+
 	private final static byte MAX_N_DISMISSES = 3;
 	private final static byte MAX_N_POSTPONED = 4;
-	private final TimerSettings workingTimerSettings;
-	private final TimerSettings breakTimerSettings;
-	private final TimerSettings postponeTimerSettings;
+	private final BreakSettings breakSettings;
 	private final String takeABreakMessage;
 	private final String breakName;
 	private final boolean add_take_break_option;
@@ -55,17 +53,13 @@ public class WorkingTimeTimer implements Runnable
 	private ScheduledExecutorService executorService;
 
 	public WorkingTimeTimer(
-		final TimerSettings workingTimerSettings,
-		final TimerSettings breakTimerSettings,
-		final TimerSettings postponeTimerSettings,
+		final BreakSettings breakSettings,
 		final String takeABreakMessage,
 		final String breakName
 	)
 	{
 		this(
-			workingTimerSettings,
-			breakTimerSettings,
-			postponeTimerSettings,
+			breakSettings,
 			takeABreakMessage,
 			breakName,
 			true
@@ -73,17 +67,13 @@ public class WorkingTimeTimer implements Runnable
 	}
 
 	public WorkingTimeTimer(
-		final TimerSettings workingTimerSettings,
-		final TimerSettings breakTimerSettings,
-		final TimerSettings postponeTimerSettings,
+		final BreakSettings breakSettings,
 		final String takeABreakMessage,
 		final String breakName,
 		final boolean add_take_break_option
 	)
 	{
-		this.workingTimerSettings = workingTimerSettings;
-		this.breakTimerSettings = breakTimerSettings;
-		this.postponeTimerSettings = postponeTimerSettings;
+		this.breakSettings = breakSettings;
 		this.takeABreakMessage = takeABreakMessage;
 		this.breakName = breakName;
 		this.add_take_break_option = add_take_break_option;
@@ -113,6 +103,8 @@ public class WorkingTimeTimer implements Runnable
 		TakeABreakNotification notification = this.notificationRef.get();
 		if (notification != null)
 			notification.dispose();
+
+		this.breakSettings.stopAudio();
 	}
 
 	/**
@@ -129,12 +121,19 @@ public class WorkingTimeTimer implements Runnable
 	@Override
 	public void run()
 	{
+		if (WorkingTimeTimer.is_break_happening) {
+			this.schedulePostponedExecutor();
+			WorkingTimeTimer.is_break_happening = true;
+			return;
+		}
+		WorkingTimeTimer.is_break_happening = true;
+
 		if (this.n_dismisses >= WorkingTimeTimer.MAX_N_DISMISSES
 			|| this.n_postponed >= WorkingTimeTimer.MAX_N_POSTPONED) {
 			this.n_dismisses = 0;
 			this.n_postponed = 0;
 
-			if (this.breakTimerSettings == null) { // in case of the day limit timer
+			if (this.breakSettings.getBreakTimerSettings() == null) { // in case of the day limit timer
 				// this should almost never happen
 				SwingUtilities.invokeLater(() -> {
 					JOptionPane.showMessageDialog(
@@ -152,17 +151,21 @@ public class WorkingTimeTimer implements Runnable
 		}
 
 		this.notificationCountDownLatch = new CountDownLatch(1);
-		SwingUtilities.invokeLater(() -> notificationRef.set(
-			new TakeABreakNotification(
-				this.takeABreakMessage,
-				this.notificationCountDownLatch,
-				this.add_take_break_option,
-				SWMain.timersManager.getNotificationPrefLocation()
-			)
-		));
+		SwingUtilities.invokeLater(() -> {
+			this.breakSettings.playNotificationAudio();
+			notificationRef.set(
+				new TakeABreakNotification(
+					this.takeABreakMessage,
+					this.notificationCountDownLatch,
+					this.add_take_break_option,
+					SWMain.timersManager.getNotificationPrefLocation()
+				)
+			);
+		});
 
 		try {
 			this.notificationCountDownLatch.await();
+			this.breakSettings.stopAudio();
 		} catch (InterruptedException e) {
 			Loggers.errorLogger.log(Level.WARNING, "The count down latch for the notification was interrupted", e);
 		}
@@ -179,11 +182,12 @@ public class WorkingTimeTimer implements Runnable
 			return;
 		}
 
-		if (this.breakTimerSettings == null) { // the day break does not have break time
+		if (this.breakSettings.getBreakTimerSettings() == null) { // the day break does not have break time
 			this.scheduleWorkingTimeExecutor();
 			return;
 		}
 
+		this.breakSettings.playBreakAudio();
 		this.showBreakCountDown();
 	}
 
@@ -199,7 +203,7 @@ public class WorkingTimeTimer implements Runnable
 		SwingUtilities.invokeLater(() -> this.breakCountDownRef.set(
 			new BreakCountDown(
 				this.breakName,
-				this.breakTimerSettings,
+				this.breakSettings.getBreakTimerSettings(),
 				this.breakCountDownLatch
 			)
 		));
@@ -213,35 +217,26 @@ public class WorkingTimeTimer implements Runnable
 		this.scheduleWorkingTimeExecutor();
 	}
 
+	private void scheduleExecutor(int seconds_timeout)
+	{
+		WorkingTimeTimer.is_break_happening = false;
+
+		this.breakSettings.stopAudio();
+
+		this.executorService.schedule(this, seconds_timeout, TimeUnit.SECONDS);
+
+		this.last_time_timer_was_set_s = System.currentTimeMillis() / 1_000;
+		this.notification_should_be_shown_at_s = this.last_time_timer_was_set_s + seconds_timeout;
+	}
+
 	private void schedulePostponedExecutor()
 	{
-		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-		LocalDateTime now = LocalDateTime.now();
-		Loggers.debugLogger.info(
-			"Break was postponed, notification will appear in: "
-				+ this.postponeTimerSettings.getHMSAsString()
-				+ " from now (" + dateTimeFormatter.format(now) + ") currently you have postponed this break "
-				+ this.n_postponed + " time(s)"
-		);
-		this.executorService.schedule(this, this.postponeTimerSettings.getHMSAsSeconds(), TimeUnit.SECONDS);
-		this.last_time_timer_was_set_s = System.currentTimeMillis() / 1_000;
-		this.notification_should_be_shown_at_s = this.last_time_timer_was_set_s
-			+ this.postponeTimerSettings.getHMSAsSeconds();
+		this.scheduleExecutor(this.breakSettings.getPostponeTimerSettings().getHMSAsSeconds());
 	}
 
 	private void scheduleWorkingTimeExecutor()
 	{
-		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-		LocalDateTime now = LocalDateTime.now();
-		Loggers.debugLogger.info(
-			"Break notification will appear in: "
-				+ this.workingTimerSettings.getHMSAsString()
-				+ " from now (" + dateTimeFormatter.format(now) + ")"
-		);
-		this.executorService.schedule(this, this.workingTimerSettings.getHMSAsSeconds(), TimeUnit.SECONDS);
-		this.last_time_timer_was_set_s = System.currentTimeMillis() / 1_000;
-		this.notification_should_be_shown_at_s = this.last_time_timer_was_set_s
-			+ this.workingTimerSettings.getHMSAsSeconds();
+		this.scheduleExecutor(this.breakSettings.getWorkTimerSettings().getHMSAsSeconds());
 	}
 
 	/**
@@ -274,6 +269,6 @@ public class WorkingTimeTimer implements Runnable
 	 */
 	public int getWorkingTimeSeconds()
 	{
-		return this.workingTimerSettings.getHMSAsSeconds();
+		return this.breakSettings.getWorkTimerSettings().getHMSAsSeconds();
 	}
 }
