@@ -20,6 +20,7 @@ package org.fos.timers.notifications;
 
 import org.fos.Loggers;
 import org.fos.SWMain;
+import org.fos.timers.NotificationLocation;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -41,26 +42,21 @@ import java.util.logging.Level;
 
 public class Notification extends JDialog
 {
-	public static byte NOTIFICATION_LOCATION_BOTTOM_RIGHT = 0;
-	public static byte NOTIFICATION_LOCATION_BOTTOM_LEFT = 1;
-	public static byte NOTIFICATION_LOCATION_TOP_RIGHT = 2;
-	public static byte NOTIFICATION_LOCATION_TOP_LEFT = 3;
-
 	protected static ImageIcon swIcon; // static to avoid reading the image each time the notification is shown
 	private final int dispose_timeout_ms;
-	private final byte notification_location;
+	private final NotificationLocation notificationLocation;
 	protected JLabel swIconLabel; // icon that contains the SW image
 	protected JPanel mainPanel; // panel that will contain everything in the JDialog
 	private Timer timeoutTimer; // timer to automatically dispose the dialog
 
 	public Notification()
 	{
-		this(20_000, Notification.NOTIFICATION_LOCATION_BOTTOM_RIGHT);
+		this(20_000, NotificationLocation.BOTTOM_RIGHT);
 	}
 
-	public Notification(byte notification_location)
+	public Notification(NotificationLocation notificationLocation)
 	{
-		this(20_000, notification_location);
+		this(20_000, notificationLocation);
 	}
 
 	/**
@@ -71,16 +67,16 @@ public class Notification extends JDialog
 	 * @param dispose_timeout_ms
 	 * 	number of milliseconds to wait before the dialog is automatically disposed
 	 * 	if this is less than or equal to 0, the notification will be never dismissed
-	 * @param notification_location
+	 * @param notificationLocation
 	 * 	this tells where to put the notification, check this class static constants for details
 	 */
-	public Notification(int dispose_timeout_ms, byte notification_location)
+	public Notification(int dispose_timeout_ms, NotificationLocation notificationLocation)
 	{
 		super();
 		assert SwingUtilities.isEventDispatchThread();
 
 		this.dispose_timeout_ms = dispose_timeout_ms;
-		this.notification_location = notification_location;
+		this.notificationLocation = notificationLocation;
 
 		this.mainPanel = new JPanel(new GridBagLayout());
 		mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -130,12 +126,11 @@ public class Notification extends JDialog
 			return;
 
 		String iconImagePath = "/resources/media/SW_white.png";
-		InputStream iconInputStream = SWMain.getFileAsStream(iconImagePath);
 		Image icon;
-		try {
+		try (InputStream iconInputStream = SWMain.getFileAsStream(iconImagePath)) {
 			icon = ImageIO.read(iconInputStream);
 		} catch (IOException e) {
-			Loggers.errorLogger.log(Level.SEVERE, "Error while reading SW icon in path: " + iconImagePath, e);
+			Loggers.getErrorLogger().log(Level.SEVERE, "Error while reading SW icon in path: " + iconImagePath, e);
 			return;
 		}
 		icon = icon.getScaledInstance(67, 59, Image.SCALE_AREA_AVERAGING);
@@ -151,13 +146,13 @@ public class Notification extends JDialog
 		int x = 0, y = 50;
 
 		// if the preferred location is at the bottom
-		if (this.notification_location == Notification.NOTIFICATION_LOCATION_BOTTOM_RIGHT
-			|| this.notification_location == Notification.NOTIFICATION_LOCATION_BOTTOM_LEFT)
+		if (this.notificationLocation == NotificationLocation.BOTTOM_RIGHT
+			|| this.notificationLocation == NotificationLocation.BOTTOM_LEFT)
 			y = screenSize.height - notificationSize.height - 50;
 
 		// if the preferred location is to the right
-		if (this.notification_location == Notification.NOTIFICATION_LOCATION_TOP_RIGHT
-			|| this.notification_location == Notification.NOTIFICATION_LOCATION_BOTTOM_RIGHT)
+		if (this.notificationLocation == NotificationLocation.TOP_RIGHT
+			|| this.notificationLocation == NotificationLocation.BOTTOM_RIGHT)
 			x = screenSize.width - notificationSize.width;
 
 		return new Point(x, y);

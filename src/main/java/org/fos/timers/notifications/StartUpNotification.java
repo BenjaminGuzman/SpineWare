@@ -20,6 +20,7 @@ package org.fos.timers.notifications;
 
 import org.fos.Fonts;
 import org.fos.SWMain;
+import org.fos.timers.NotificationLocation;
 
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
@@ -28,7 +29,7 @@ public class StartUpNotification extends Notification
 {
 	public StartUpNotification()
 	{
-		super(4_000, Notification.NOTIFICATION_LOCATION_BOTTOM_RIGHT);
+		super(4_000, NotificationLocation.BOTTOM_RIGHT);
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
 		gridBagConstraints.ipadx = 5;

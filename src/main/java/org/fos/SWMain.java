@@ -52,6 +52,7 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.TooManyListenersException;
 import java.util.logging.Level;
 import java.util.prefs.Preferences;
 
@@ -72,13 +73,12 @@ public class SWMain extends JFrame
 
 		// set the JFrame icon
 		String iconPath = "/resources/media/SW_white.min.png";
-		InputStream iconInputStream = SWMain.getFileAsStream(iconPath);
-		BufferedImage swIconImage;
-		try {
-			swIconImage = ImageIO.read(iconInputStream);
+
+		try (InputStream iconInputStream = SWMain.getFileAsStream(iconPath)) {
+			BufferedImage swIconImage = ImageIO.read(iconInputStream);
 			this.setIconImage(swIconImage);
 		} catch (IOException e) {
-			Loggers.errorLogger.log(Level.WARNING, "Error while setting JFrame image icon", e);
+			Loggers.getErrorLogger().log(Level.WARNING, "Error while setting JFrame image icon", e);
 		}
 
 		this.setContentPane(this.createMainPanel());
@@ -101,7 +101,11 @@ public class SWMain extends JFrame
 
 	public static void main(String[] args)
 	{
-		Loggers.init();
+		try {
+			Loggers.init();
+		} catch (TooManyListenersException e) {
+			Loggers.getErrorLogger().log(Level.SEVERE, "You shouldn't be calling the init method on Loggers twice", e);
+		}
 		SWMain.changeMessagesBundle(Locale.getDefault());
 		com.formdev.flatlaf.FlatDarkLaf.install();
 
@@ -123,7 +127,7 @@ public class SWMain extends JFrame
 	{
 		InputStream inStream = SWMain.class.getResourceAsStream(filePath);
 		if (inStream == null)
-			Loggers.errorLogger.warning("Couldn't read file: " + filePath + " (probably doesn't exists)");
+			Loggers.getErrorLogger().warning("Couldn't read file: " + filePath + " (probably doesn't exists)");
 		return inStream;
 	}
 
@@ -134,8 +138,8 @@ public class SWMain extends JFrame
 		try {
 			newBundle = ResourceBundle.getBundle("resources.bundles.messages", locale);
 		} catch (Exception e) {
-			Loggers.errorLogger.log(Level.WARNING, "Could not load messages for locale: "
-				+ locale + ". Using default US locales", e);
+			Loggers.getErrorLogger().log(Level.WARNING, "Could not load messages for locale: "
+				+ locale + ". Using default US locale", e);
 			newBundle = ResourceBundle.getBundle("resources.bundles.messages", Locale.US);
 		}
 
@@ -183,9 +187,8 @@ public class SWMain extends JFrame
 		gridBagConstraints.anchor = GridBagConstraints.NORTH;
 
 		// SpineWare logo image
-		InputStream inputStreamSWLogo = SWMain.getFileAsStream("/resources/media/SpineWare_white.png");
 		ImageIcon swLogoImageIcon = null;
-		try {
+		try (InputStream inputStreamSWLogo = SWMain.getFileAsStream("/resources/media/SpineWare_white.png")) {
 			Image img = ImageIO.read(inputStreamSWLogo);
 			img = img.getScaledInstance(150, 45, Image.SCALE_AREA_AVERAGING);
 			swLogoImageIcon = new ImageIcon(img);
@@ -209,13 +212,13 @@ public class SWMain extends JFrame
 		Insets buttonInsets = new Insets(10, 10, 10, 10);
 		for (short i = 0; i < buttonsIcons.length; ++i) {
 			button = new JButton(messagesBundle.getString(buttonsLabels[i]));
-			InputStream inputStreamBreaksIcon = SWMain.getFileAsStream("/resources/media/"
-											   + buttonsIcons[i]);
-			try { // the button should be optional, if some problem occurs while adding it, the button should
+			try (InputStream inputStreamBreaksIcon = SWMain.getFileAsStream("/resources/media/"
+												+ buttonsIcons[i])) {
+				// the button should be optional, if some problem occurs while adding it, the button should
 				// exist anyway
 				button.setIcon(new ImageIcon(ImageIO.read(inputStreamBreaksIcon)));
 			} catch (IOException e) {
-				Loggers.errorLogger.log(Level.WARNING, "Error while setting icon for button", e);
+				Loggers.getErrorLogger().log(Level.WARNING, "Error while setting icon for button", e);
 			}
 
 			button.setFont(buttonFont);
@@ -267,7 +270,7 @@ public class SWMain extends JFrame
 	 * @param panelClass
 	 * 	the class of the panel
 	 * @param <T>
-	 * 	class of the panels
+	 * 	class of the panel
 	 */
 	public <T extends JComponent> void changePanel(final short panel_cache_idx, final Class<T> panelClass)
 	{
@@ -280,14 +283,14 @@ public class SWMain extends JFrame
 				this.mainPanelContentCaches[panel_cache_idx] = panelClass.getConstructor().newInstance();
 			} catch (InstantiationException | IllegalAccessException
 				| InvocationTargetException | NoSuchMethodException e) {
-				Loggers.errorLogger.log(Level.SEVERE, "Error while creating the main content panel", e);
+				Loggers.getErrorLogger().log(Level.SEVERE, "Error while creating the main content panel", e);
 			}
-			Loggers.debugLogger.log(Level.INFO, "Loaded panel, created instance of: " + panelClass.getName());
+			Loggers.getDebugLogger().log(Level.INFO, "Loaded panel, created instance of: " + panelClass.getName());
 		}
 
 		// if the panel is the active one, do nothing
 		if (panelClass.isInstance(this.activeContentPanel)) {
-			Loggers.debugLogger.log(Level.INFO, "The panel with class "
+			Loggers.getDebugLogger().log(Level.INFO, "The panel with class "
 				+ panelClass.getName() + " is already shown");
 			return;
 		}
@@ -308,19 +311,17 @@ public class SWMain extends JFrame
 	private void configSysTray()
 	{
 		if (!SystemTray.isSupported()) {
-			Loggers.errorLogger.warning("System Tray is not supported :(");
+			Loggers.getErrorLogger().severe("System Tray is not supported :(\nExiting now...");
+			System.exit(1);
 			return;
 		}
 
 		Image iconImage;
-		try {
-			String iconPath = "/resources/media/SW_white_black.min.png";
-
-			InputStream iconInputStream = SWMain.getFileAsStream(iconPath);
-
+		String iconPath = "/resources/media/SW_white_black.min.png";
+		try (InputStream iconInputStream = SWMain.getFileAsStream(iconPath)) {
 			iconImage = ImageIO.read(iconInputStream);
 		} catch (IOException e) {
-			Loggers.errorLogger.log(Level.SEVERE, "Couldn't read image file file", e);
+			Loggers.getErrorLogger().log(Level.SEVERE, "Couldn't read image file file", e);
 			return;
 		}
 
@@ -343,7 +344,7 @@ public class SWMain extends JFrame
 		try {
 			sysTray.add(trayIcon);
 		} catch (AWTException e) {
-			Loggers.errorLogger.log(Level.SEVERE, "Couldn't add icon to system tray", e);
+			Loggers.getErrorLogger().log(Level.SEVERE, "Couldn't add icon to system tray", e);
 		}
 
 		trayIcon.addMouseListener(new MouseListener()
@@ -405,7 +406,7 @@ public class SWMain extends JFrame
 	public void exit()
 	{
 		SWMain.timersManager.killAllTimers();
-		Loggers.debugLogger.log(Level.INFO, "Shutting down...");
+		Loggers.getDebugLogger().log(Level.INFO, "Shutting down...");
 		this.dispose();
 		System.exit(0);
 	}

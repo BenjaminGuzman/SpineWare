@@ -144,11 +144,10 @@ public class BreakCountDown extends JDialog
 		mainPanel.add(cancelButton, gridBagConstraints);
 
 		String iconPath = "/resources/media/SW_white.min.png";
-		InputStream iconInputStream = SWMain.getFileAsStream(iconPath);
-		try {
+		try (InputStream iconInputStream = SWMain.getFileAsStream(iconPath)) {
 			this.setIconImage(ImageIO.read(iconInputStream));
 		} catch (IOException e) {
-			Loggers.errorLogger.log(Level.WARNING, "Error while setting JFrame image icon", e);
+			Loggers.getErrorLogger().log(Level.WARNING, "Error while setting JFrame image icon", e);
 		}
 
 		this.setContentPane(mainPanel);
@@ -188,12 +187,11 @@ public class BreakCountDown extends JDialog
 			return;
 
 		String iconImagePath = "/resources/media/SpineWare_white.png";
-		InputStream iconInputStream = SWMain.getFileAsStream(iconImagePath);
 		Image icon;
-		try {
+		try (InputStream iconInputStream = SWMain.getFileAsStream(iconImagePath)) {
 			icon = ImageIO.read(iconInputStream);
 		} catch (IOException e) {
-			Loggers.errorLogger.log(Level.SEVERE, "Error while reading SpineWare icon in path: " + iconImagePath, e);
+			Loggers.getErrorLogger().log(Level.SEVERE, "Error while reading SpineWare icon in path: " + iconImagePath, e);
 			return;
 		}
 		icon = icon.getScaledInstance(400, 120, Image.SCALE_AREA_AVERAGING);

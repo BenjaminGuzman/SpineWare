@@ -21,6 +21,7 @@ import org.fos.Colors;
 import org.fos.Fonts;
 import org.fos.Loggers;
 import org.fos.SWMain;
+import org.fos.core.BreakType;
 import org.fos.timers.BreakSettings;
 import org.fos.timers.TimerSettings;
 
@@ -47,6 +48,9 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.logging.Level;
 
 public class BreaksPanel extends JScrollPane
@@ -61,7 +65,7 @@ public class BreaksPanel extends JScrollPane
 	private final TimeInputPanel[] breaksTimeInputs = new TimeInputPanel[2];
 
 	private final JLabel changesSavedStatusLabel;
-	private final BreakSettings[] preferredBreakSettings;
+	private final List<BreakSettings> preferredBreakSettings;
 	private final TimerSettings[] minWorkRecommendedTimes = new TimerSettings[]{
 		new TimerSettings((byte) 0, (byte) 5, (byte) 0), // min work time for the small break
 		new TimerSettings((byte) 0, (byte) 30, (byte) 0), // min work time for the stretch break
@@ -84,9 +88,6 @@ public class BreaksPanel extends JScrollPane
 	private final String[] breakAudiosDirs = new String[2];
 	private final TimerSettings minRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 0, (byte) 6);
 	private final TimerSettings maxRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 30, (byte) 0);
-	private final byte SMALL_BREAKS_IDX = 0;
-	private final byte STRETCH_BREAKS_IDX = 1;
-	private final byte DAY_BREAK_IDX = 2;
 	private Timer changesSavedStatusLabelTimer; // timer to hide the changes saved status label
 
 	// configuration stuff
@@ -109,19 +110,19 @@ public class BreaksPanel extends JScrollPane
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(this.createBreakPanel(this.SMALL_BREAKS_IDX, fileFilter));
+		panel.add(this.createBreakPanel(BreakType.SMALL_BREAK, fileFilter));
 		panel.add(Box.createVerticalStrut(10));
 
 		panel.add(new JSeparator(JSeparator.HORIZONTAL));
 
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(this.createBreakPanel(this.STRETCH_BREAKS_IDX, fileFilter));
+		panel.add(this.createBreakPanel(BreakType.STRETCH_BREAK, fileFilter));
 		panel.add(Box.createVerticalStrut(10));
 
 		panel.add(new JSeparator(JSeparator.HORIZONTAL));
 
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(this.createBreakPanel(this.DAY_BREAK_IDX, fileFilter));
+		panel.add(this.createBreakPanel(BreakType.DAY_BREAK, fileFilter));
 		panel.add(Box.createVerticalStrut(10));
 
 		panel.add(Box.createVerticalStrut(10));
@@ -148,7 +149,7 @@ public class BreaksPanel extends JScrollPane
 	 * - working time input
 	 * - break time input (if the break is not a day break, in which case this will not be displayed)
 	 *
-	 * @param break_idx
+	 * @param breakType
 	 * 	the break index, this is important to avoid writing so much code, each break has an index
 	 * 	small break is 0
 	 * 	stretch break is 1
@@ -157,17 +158,10 @@ public class BreaksPanel extends JScrollPane
 	 *
 	 * @return the JPanel containing all the elements mentioned above
 	 */
-	private JPanel createBreakPanel(final byte break_idx, FileNameExtensionFilter fileFilter)
+	private JPanel createBreakPanel(final BreakType breakType, final FileNameExtensionFilter fileFilter)
 	{
-		String breakPrefix;
-		if (break_idx == this.SMALL_BREAKS_IDX)
-			breakPrefix = "small_breaks";
-		else if (break_idx == this.STRETCH_BREAKS_IDX)
-			breakPrefix = "stretch_breaks";
-		else if (break_idx == this.DAY_BREAK_IDX)
-			breakPrefix = "day_break";
-		else
-			throw new IllegalArgumentException("Argument break_idx is not in range");
+		String breakPrefix = breakType.getMessagesPrefix();
+		byte break_idx = breakType.getIndex();
 
 		String breakTitle = SWMain.messagesBundle.getString(breakPrefix + "_title");
 		String breakFullDescription = SWMain.messagesBundle.getString(breakPrefix + "_full_description");
@@ -183,7 +177,7 @@ public class BreaksPanel extends JScrollPane
 		breakFullDescLabel.setFont(this.FULL_DESCRIPTION_FONT);
 
 		this.featureEnabledCheckBoxes[break_idx] = new JCheckBox(SWMain.messagesBundle.getString("feature_enabled"));
-		this.featureEnabledCheckBoxes[break_idx].setSelected(this.preferredBreakSettings[break_idx].isEnabled());
+		this.featureEnabledCheckBoxes[break_idx].setSelected(this.preferredBreakSettings.get(break_idx).isEnabled());
 
 		// audio configuration
 		JButton notificationAudioButton = new JButton(SWMain.messagesBundle.getString("notification_select_audio_file"));
@@ -199,8 +193,8 @@ public class BreaksPanel extends JScrollPane
 				notificationAudioLabel.setText(this.notificationAudioPaths[break_idx]);
 			}
 		});
-		if (this.preferredBreakSettings[break_idx].getNotificationAudioPath() != null)
-			notificationAudioLabel.setText(this.preferredBreakSettings[break_idx].getNotificationAudioPath());
+		if (this.preferredBreakSettings.get(break_idx).getNotificationAudioPath() != null)
+			notificationAudioLabel.setText(this.preferredBreakSettings.get(break_idx).getNotificationAudioPath());
 
 		JButton notificationUseDefaultButton = new JButton(SWMain.messagesBundle.getString("notification_use_default_audio"));
 		notificationUseDefaultButton.addActionListener((ActionEvent evt) -> {
@@ -220,8 +214,8 @@ public class BreaksPanel extends JScrollPane
 				breakAudiosLabel.setText(this.breakAudiosDirs[break_idx]);
 			}
 		});
-		if (this.preferredBreakSettings[break_idx].getBreakAudiosDirStr() != null)
-			breakAudiosLabel.setText(this.preferredBreakSettings[break_idx].getBreakAudiosDirStr());
+		if (this.preferredBreakSettings.get(break_idx).getBreakAudiosDirStr() != null)
+			breakAudiosLabel.setText(this.preferredBreakSettings.get(break_idx).getBreakAudiosDirStr());
 		JButton breakNoAudioButton = new JButton(SWMain.messagesBundle.getString("break_without_audio"));
 		breakNoAudioButton.addActionListener((ActionEvent evt) -> {
 			this.breakAudiosDirs[break_idx] = null;
@@ -236,15 +230,15 @@ public class BreaksPanel extends JScrollPane
 		this.workingTimeInputs[break_idx] = new TimeInputPanel(
 			this.minWorkRecommendedTimes[break_idx],
 			this.maxWorkRecommendedTimes[break_idx],
-			this.preferredBreakSettings[break_idx].getWorkTimerSettings()
+			this.preferredBreakSettings.get(break_idx).getWorkTimerSettings()
 		);
-		this.workingTimeInputs[break_idx].setEnabled(this.preferredBreakSettings[break_idx].isEnabled());
+		this.workingTimeInputs[break_idx].setEnabled(this.preferredBreakSettings.get(break_idx).isEnabled());
 
 		// third row break time input for hours, minutes, seconds
 		JLabel breakTimeLabel = null;
 		JLabel postponeTimeLabel;
 		TimeInputPanel breakTimeInput = null;
-		if (break_idx != this.DAY_BREAK_IDX) { // the day break doesn't have break time inputs, only working time inputs
+		if (breakType != BreakType.DAY_BREAK) { // the day break doesn't have break time inputs, only working time inputs
 			breakTimeLabel = new JLabel(
 				SWMain.messagesBundle.getString("break_time_label"),
 				SwingConstants.RIGHT
@@ -252,10 +246,10 @@ public class BreaksPanel extends JScrollPane
 			this.breaksTimeInputs[break_idx] = new TimeInputPanel(
 				this.minBreakRecommendedTimes[break_idx],
 				this.maxBreakRecommendedTimes[break_idx],
-				this.preferredBreakSettings[break_idx].getBreakTimerSettings()
+				this.preferredBreakSettings.get(break_idx).getBreakTimerSettings()
 			);
 			breakTimeInput = this.breaksTimeInputs[break_idx];
-			breakTimeInput.setEnabled(this.preferredBreakSettings[break_idx].isEnabled());
+			breakTimeInput.setEnabled(this.preferredBreakSettings.get(break_idx).isEnabled());
 		}
 
 		postponeTimeLabel = new JLabel(
@@ -265,14 +259,16 @@ public class BreaksPanel extends JScrollPane
 		this.postponeTimeInputs[break_idx] = new TimeInputPanel(
 			this.minRequiredPostponeTime,
 			this.maxRequiredPostponeTime,
-			this.preferredBreakSettings[break_idx].getPostponeTimerSettings(),
+			this.preferredBreakSettings.get(break_idx).getPostponeTimerSettings(),
 			true
 		);
+		this.postponeTimeInputs[break_idx].setEnabled(this.preferredBreakSettings.get(break_idx).isEnabled());
 
 		// set listener for the checkbox
 		this.featureEnabledCheckBoxes[break_idx].addActionListener(new OnActionCheckBoxListener(
 			this.workingTimeInputs[break_idx],
 			breakTimeInput,
+			postponeTimeInputs[break_idx],
 			this.featureEnabledCheckBoxes[break_idx].isSelected()
 		));
 
@@ -316,7 +312,7 @@ public class BreaksPanel extends JScrollPane
 		panel.add(this.workingTimeInputs[break_idx], gridBagConstraints);
 
 		// the day break does not have break time, only working time
-		if (break_idx != this.DAY_BREAK_IDX) {
+		if (breakType != BreakType.DAY_BREAK) {
 			// add fourth row, break time input
 			gridBagConstraints.gridx = 1;
 			++gridBagConstraints.gridy;
@@ -365,7 +361,7 @@ public class BreaksPanel extends JScrollPane
 		panel.add(notificationAudioLabel, gridBagConstraints);
 
 		// add audio files chooser, break
-		if (break_idx != this.DAY_BREAK_IDX) { // day break does not have break time
+		if (breakType != BreakType.DAY_BREAK) { // day break does not have break time
 			gridBagConstraints.gridx = 2;
 			gridBagConstraints.gridwidth = 1;
 			--gridBagConstraints.gridy;
@@ -403,7 +399,9 @@ public class BreaksPanel extends JScrollPane
 			SWMain.messagesBundle.getString("notification_location_top_left")
 		};
 		this.notificationLocationCombobox = new JComboBox<>(locationOptions);
-		this.notificationLocationCombobox.setSelectedIndex(SWMain.timersManager.getNotificationPrefLocation(true));
+		this.notificationLocationCombobox.setSelectedIndex(
+			SWMain.timersManager.getNotificationPrefLocation(true).getLocationIdx()
+		);
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
 		gridBagConstraints.ipadx = 5;
@@ -429,12 +427,12 @@ public class BreaksPanel extends JScrollPane
 
 		// save button
 		JButton saveButton = new JButton(SWMain.messagesBundle.getString("save_changes"));
-		try {
+		try (InputStream saveIconIS = SWMain.getFileAsStream("/resources/media/save_white_18dp.png")) {
 			saveButton.setIcon(new ImageIcon(
-				ImageIO.read(SWMain.getFileAsStream("/resources/media/save_white_18dp.png"))
+				ImageIO.read(saveIconIS)
 			));
 		} catch (IOException e) {
-			Loggers.errorLogger.log(Level.WARNING, "Error while reading save icon", e);
+			Loggers.getErrorLogger().log(Level.WARNING, "Error while reading save icon", e);
 		}
 		saveButton.setFont(Fonts.SANS_SERIF_BOLD_15);
 
@@ -500,27 +498,9 @@ public class BreaksPanel extends JScrollPane
 
 		// TODO: check for breaks that are equal, avoid collisions
 
-		int[] breaks_idxs = new int[]{this.SMALL_BREAKS_IDX, this.STRETCH_BREAKS_IDX, this.DAY_BREAK_IDX};
-		for (int break_idx : breaks_idxs) {
-			this.preferredBreakSettings[break_idx].setEnabled(this.featureEnabledCheckBoxes[break_idx].isSelected());
+		// update preferences for each break
+		EnumSet.allOf(BreakType.class).forEach(this::updatePreferredBreakSettings);
 
-			this.preferredBreakSettings[break_idx].setWorkTimerSettings(new TimerSettings(
-				this.workingTimeInputs[break_idx].getTime()
-			));
-
-			this.preferredBreakSettings[break_idx].setPostponeTimerSettings(new TimerSettings(
-				this.postponeTimeInputs[break_idx].getTime()
-			));
-
-			this.preferredBreakSettings[break_idx].setNotificationAudioPath(this.notificationAudioPaths[break_idx]);
-
-			if (break_idx != this.DAY_BREAK_IDX) {
-				this.preferredBreakSettings[break_idx].setBreakTimerSettings(new TimerSettings(
-					this.breaksTimeInputs[break_idx].getTime()
-				));
-				this.preferredBreakSettings[break_idx].setBreakAudiosDirStr(this.breakAudiosDirs[break_idx]);
-			}
-		}
 		SWMain.timersManager.saveBreaksSettings(this.preferredBreakSettings);
 
 		SWMain.timersManager.saveNotificationPrefLocation((byte) this.notificationLocationCombobox.getSelectedIndex());
@@ -529,6 +509,30 @@ public class BreaksPanel extends JScrollPane
 					       + ". " + SWMain.messagesBundle.getString("changes_saved_extra_text"), Color.GREEN);
 
 		SWMain.timersManager.createExecutorsFromPreferences();
+	}
+
+	private void updatePreferredBreakSettings(BreakType breakType)
+	{
+		byte break_idx = breakType.getIndex();
+
+		this.preferredBreakSettings.get(break_idx).setEnabled(this.featureEnabledCheckBoxes[break_idx].isSelected());
+
+		this.preferredBreakSettings.get(break_idx).setWorkTimerSettings(new TimerSettings(
+			this.workingTimeInputs[break_idx].getTime()
+		));
+
+		this.preferredBreakSettings.get(break_idx).setPostponeTimerSettings(new TimerSettings(
+			this.postponeTimeInputs[break_idx].getTime()
+		));
+
+		this.preferredBreakSettings.get(break_idx).setNotificationAudioPath(this.notificationAudioPaths[break_idx]);
+
+		if (breakType != BreakType.DAY_BREAK) {
+			this.preferredBreakSettings.get(break_idx).setBreakTimerSettings(new TimerSettings(
+				this.breaksTimeInputs[break_idx].getTime()
+			));
+			this.preferredBreakSettings.get(break_idx).setBreakAudiosDirStr(this.breakAudiosDirs[break_idx]);
+		}
 	}
 
 	/**
@@ -564,21 +568,24 @@ public class BreaksPanel extends JScrollPane
 	 */
 	private void onClickSetRecommendedValues(ActionEvent evt)
 	{
-		this.workingTimeInputs[this.SMALL_BREAKS_IDX].setValues((byte) 0, (byte) 10, (byte) 0);
-		this.breaksTimeInputs[this.SMALL_BREAKS_IDX].setValues((byte) 0, (byte) 0, (byte) 10);
-		this.breaksTimeInputs[this.SMALL_BREAKS_IDX].setValues((byte) 0, (byte) 0, (byte) 10);
-		if (!this.featureEnabledCheckBoxes[this.SMALL_BREAKS_IDX].isSelected())
-			this.featureEnabledCheckBoxes[this.SMALL_BREAKS_IDX].doClick();
+		byte small_breaks_idx = BreakType.SMALL_BREAK.getIndex();
+		this.workingTimeInputs[small_breaks_idx].setValues((byte) 0, (byte) 10, (byte) 0);
+		this.breaksTimeInputs[small_breaks_idx].setValues((byte) 0, (byte) 0, (byte) 10);
+		this.breaksTimeInputs[small_breaks_idx].setValues((byte) 0, (byte) 0, (byte) 10);
+		if (!this.featureEnabledCheckBoxes[small_breaks_idx].isSelected())
+			this.featureEnabledCheckBoxes[small_breaks_idx].doClick();
 
-		this.workingTimeInputs[this.STRETCH_BREAKS_IDX].setValues((byte) 2, (byte) 0, (byte) 0);
-		this.breaksTimeInputs[this.STRETCH_BREAKS_IDX].setValues((byte) 0, (byte) 30, (byte) 0);
-		if (!this.featureEnabledCheckBoxes[this.STRETCH_BREAKS_IDX].isSelected())
-			this.featureEnabledCheckBoxes[this.STRETCH_BREAKS_IDX].doClick();
+		byte stretch_breaks_idx = BreakType.STRETCH_BREAK.getIndex();
+		this.workingTimeInputs[stretch_breaks_idx].setValues((byte) 2, (byte) 0, (byte) 0);
+		this.breaksTimeInputs[stretch_breaks_idx].setValues((byte) 0, (byte) 30, (byte) 0);
+		if (!this.featureEnabledCheckBoxes[stretch_breaks_idx].isSelected())
+			this.featureEnabledCheckBoxes[stretch_breaks_idx].doClick();
 
-		this.workingTimeInputs[this.DAY_BREAK_IDX].setValues((byte) 8, (byte) 0, (byte) 0);
-		this.workingTimeInputs[this.DAY_BREAK_IDX].setValues((byte) 8, (byte) 0, (byte) 0);
-		if (!this.featureEnabledCheckBoxes[this.DAY_BREAK_IDX].isSelected())
-			this.featureEnabledCheckBoxes[this.DAY_BREAK_IDX].doClick();
+		byte day_break_idx = BreakType.DAY_BREAK.getIndex();
+		this.workingTimeInputs[day_break_idx].setValues((byte) 8, (byte) 0, (byte) 0);
+		this.workingTimeInputs[day_break_idx].setValues((byte) 8, (byte) 0, (byte) 0);
+		if (!this.featureEnabledCheckBoxes[day_break_idx].isSelected())
+			this.featureEnabledCheckBoxes[day_break_idx].doClick();
 
 		for (TimeInputPanel postponeTimeInput : this.postponeTimeInputs)
 			postponeTimeInput.setValues(
@@ -597,15 +604,18 @@ public class BreaksPanel extends JScrollPane
 	{
 		private final TimeInputPanel workingTimeInputPanel;
 		private final TimeInputPanel breakTimeInputPanel;
+		private final TimeInputPanel postponeTimeInputPanel;
 		private boolean is_enabled;
 
 		public OnActionCheckBoxListener(final TimeInputPanel workingTimeInputPanel,
 						final TimeInputPanel breakTimeInputPanel,
+						final TimeInputPanel postponeTimeInputPanel,
 						final boolean is_enabled
 		)
 		{
 			this.workingTimeInputPanel = workingTimeInputPanel;
 			this.breakTimeInputPanel = breakTimeInputPanel;
+			this.postponeTimeInputPanel = postponeTimeInputPanel;
 			this.is_enabled = is_enabled;
 		}
 
@@ -624,6 +634,8 @@ public class BreaksPanel extends JScrollPane
 				this.breakTimeInputPanel.setEnabled(this.is_enabled);
 			}
 
+			this.postponeTimeInputPanel.clearWarning();
+			this.postponeTimeInputPanel.setEnabled(this.is_enabled);
 		}
 	}
 }

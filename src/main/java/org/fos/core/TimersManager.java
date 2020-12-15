@@ -20,63 +20,85 @@ package org.fos.core;
 import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.timers.BreakSettings;
+import org.fos.timers.NotificationLocation;
 import org.fos.timers.TimerSettings;
 import org.fos.timers.WorkingTimeTimer;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 public class TimersManager
 {
-	private byte notification_location_pref = 0;
+	private static boolean alreadyInstantiated = false;
+	private NotificationLocation notificationPreferredLocation;
 
 	private Preferences prefs;
 
-	private WorkingTimeTimer smallBreaksWorkingTimer;
-	private WorkingTimeTimer stretchBreaksWorkingTimer;
-	private WorkingTimeTimer dayBreakWorkingTimer;
+	private List<WorkingTimeTimer> workingTimeTimers;
+
+	public TimersManager()
+	{
+		if (TimersManager.alreadyInstantiated)
+			throw new IllegalStateException("This class has already been instantiated");
+		TimersManager.alreadyInstantiated = true;
+		this.workingTimeTimers = new LinkedList<>();
+	}
 
 	/**
 	 * Loads settings from the preferences
 	 *
-	 * @param breakName
-	 * 	name of the timer, this could be small breaks, stretch breaks, or day break
+	 * @param breakType
+	 * 	type of the break, this method will take the name of the break and load the preferences associated with that
+	 * 	name
 	 *
 	 * @return a TimerSettings object constructed from the preferences values
 	 */
-	private BreakSettings loadBreakSettings(final String breakName, final byte breakType)
+	private BreakSettings loadBreakSettings(final BreakType breakType)
 	{
-		String _breakName = this.normalizeBreakName(breakName);
-
-		boolean is_enabled = this.prefs.getBoolean(_breakName + " enabled", false);
+		String breakName = breakType.getName();
+		boolean is_enabled = this.prefs.getBoolean(breakName + " enabled", false);
 		if (!is_enabled)
-			return new BreakSettings(null, null, null, breakType, null, null, false);
+			return new BreakSettings.Builder()
+				.workTimerSettings(null)
+				.breakTimerSettings(null)
+				.postponeTimerSettings(null)
+				.breakType(breakType)
+				.notificationAudioPath(null)
+				.breakAudiosDirStr(null)
+				.enabled(false)
+				.createBreakSettings();
 
-		int working_time = this.prefs.getInt(_breakName + " working time", 5);
-		int break_time = this.prefs.getInt(_breakName + " break time", 5);
-		int postpone_time = this.prefs.getInt(_breakName + " postpone time", 5);
-		String notificationAudioPath = this.prefs.get(_breakName + " notification audio", null);
-		String breakAudiosDir = this.prefs.get(_breakName + " break audios dir", null);
+		int working_time = this.prefs.getInt(breakName + " working time", 5);
+		int break_time = this.prefs.getInt(breakName + " break time", 5);
+		int postpone_time = this.prefs.getInt(breakName + " postpone time", 5);
+		String notificationAudioPath = this.prefs.get(breakName + " notification audio", null);
+		String breakAudiosDir = this.prefs.get(breakName + " break audios dir", null);
 
-		if (_breakName.equals("day break"))
-			return new BreakSettings(
-				new TimerSettings(working_time),
-				null, // day break does not have break time
-				new TimerSettings(postpone_time),
-				breakType,
-				notificationAudioPath,
-				breakAudiosDir
-			);
+		if (breakType == BreakType.DAY_BREAK)
+			return new BreakSettings.Builder()
+				.workTimerSettings(new TimerSettings(working_time))
+				.breakTimerSettings(null)
+				.postponeTimerSettings(new TimerSettings(postpone_time))
+				.breakType(breakType)
+				.notificationAudioPath(notificationAudioPath)
+				.breakAudiosDirStr(breakAudiosDir)
+				.createBreakSettings();
 		else
-			return new BreakSettings(
-				new TimerSettings(working_time),
-				new TimerSettings(break_time),
-				new TimerSettings(postpone_time),
-				breakType,
-				notificationAudioPath,
-				breakAudiosDir
-			);
+			return new BreakSettings.Builder()
+				.workTimerSettings(new TimerSettings(working_time))
+				.breakTimerSettings(new TimerSettings(break_time))
+				.postponeTimerSettings(new TimerSettings(postpone_time))
+				.breakType(breakType)
+				.notificationAudioPath(notificationAudioPath)
+				.breakAudiosDirStr(breakAudiosDir)
+				.createBreakSettings();
 	}
 
 	/**
@@ -87,31 +109,28 @@ public class TimersManager
 	 *
 	 * @return the loaded breaks
 	 */
-	public BreakSettings[] loadBreaksSettings()
+	public List<BreakSettings> loadBreaksSettings()
 	{
 		this.loadPreferences();
 
-		String[] breaksNames = new String[]{"small breaks", "stretch breaks", "day break"};
-		BreakSettings[] breaksSettings = new BreakSettings[3];
-		byte i = 0;
-		for (String breakName : breaksNames) {
-			breaksSettings[i] = this.loadBreakSettings(breakName, i);
-			++i;
-		}
-
-		return breaksSettings;
+		return Arrays.stream(BreakType.values())
+			.map(this::loadBreakSettings)
+			.collect(Collectors.toList());
 	}
 
 	/**
 	 * Saves the break settings in the user preferences
 	 *
-	 * @param breakName
-	 * 	the break name
+	 * @param breakType
+	 * 	type of the break, this method will take the name of the break and save the preferences associated with that
+	 * 	name
 	 * @param breakSettings
 	 * 	the break settings to be saved
 	 */
-	private void saveBreakSettings(final String breakName, final BreakSettings breakSettings)
+	private void saveBreakSettings(final BreakType breakType, final BreakSettings breakSettings)
 	{
+		String breakName = breakType.getName();
+
 		this.prefs.putBoolean(breakName + " enabled", breakSettings.isEnabled());
 
 		if (!breakSettings.isEnabled())
@@ -144,35 +163,19 @@ public class TimersManager
 	 * @param breaksSettings
 	 * 	the array of settings
 	 */
-	public void saveBreaksSettings(final BreakSettings[] breaksSettings)
+	public void saveBreaksSettings(final List<BreakSettings> breaksSettings)
 	{
 		this.loadPreferences();
 
-		this.saveBreakSettings("small breaks", breaksSettings[0]);
-		this.saveBreakSettings("stretch breaks", breaksSettings[1]);
-		this.saveBreakSettings("day break", breaksSettings[2]);
+		this.saveBreakSettings(BreakType.SMALL_BREAK, breaksSettings.get(0));
+		this.saveBreakSettings(BreakType.STRETCH_BREAK, breaksSettings.get(1));
+		this.saveBreakSettings(BreakType.DAY_BREAK, breaksSettings.get(2));
+
 		try {
-			prefs.flush();
+			prefs.flush(); // ensure preferences are saved
 		} catch (BackingStoreException e) {
-			Loggers.errorLogger.log(Level.WARNING, "Couldn't ensure preferences were saved", e);
+			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't ensure preferences were saved", e);
 		}
-	}
-
-	/**
-	 * Checks if the breakName is a valid and calls String.toLowerCase
-	 *
-	 * @param breakName
-	 * 	name of the break
-	 *
-	 * @return the normalized break name
-	 */
-	private String normalizeBreakName(final String breakName)
-	{
-		String _breakName = breakName.toLowerCase();
-		if (!_breakName.equals("small breaks") && !_breakName.equals("stretch breaks") & !_breakName.equals("day break"))
-			throw new IllegalArgumentException("Argument timerName with value \"" + breakName + "\" is not valid");
-
-		return _breakName;
 	}
 
 	/**
@@ -186,7 +189,7 @@ public class TimersManager
 			try {
 				this.prefs.sync(); // ensure we read updated values
 			} catch (BackingStoreException e) {
-				Loggers.errorLogger.log(
+				Loggers.getErrorLogger().log(
 					Level.SEVERE,
 					"Couldn't sync preferences for package " + TimersManager.class,
 					e
@@ -199,7 +202,7 @@ public class TimersManager
 		try {
 			this.prefs.sync(); // ensure we read updated values
 		} catch (BackingStoreException e) {
-			Loggers.errorLogger.log(Level.SEVERE, "Couldn't sync preferences for package " + TimersManager.class, e);
+			Loggers.getErrorLogger().log(Level.SEVERE, "Couldn't sync preferences for package " + TimersManager.class, e);
 		}
 	}
 
@@ -209,45 +212,41 @@ public class TimersManager
 	public void createExecutorsFromPreferences()
 	{
 		this.killAllTimers();
-		BreakSettings[] breaksSettings = this.loadBreaksSettings();
+		List<BreakSettings> breaksSettings = this.loadBreaksSettings();
 
-		this.notification_location_pref = this.getNotificationPrefLocation(true);
+		if (this.workingTimeTimers != null)
+			this.workingTimeTimers.clear();
 
-		TimerSettings breakTimerSettings;
-		if (breaksSettings[0].isEnabled()) { // small breaks
-			breakTimerSettings = breaksSettings[0].getBreakTimerSettings();
-			this.smallBreaksWorkingTimer = new WorkingTimeTimer(
-				breaksSettings[0],
-				SWMain.messagesBundle.getString("notification_time_for_a")
-					+ " " + breakTimerSettings.getHMSAsString()
-					+ " " + SWMain.messagesBundle.getString("break"),
-				SWMain.messagesBundle.getString("time_for_a_small_break")
-			);
-			this.smallBreaksWorkingTimer.init();
-		}
+		this.notificationPreferredLocation = this.getNotificationPrefLocation(true);
 
-		if (breaksSettings[1].isEnabled()) { // stretch breaks
-			breakTimerSettings = breaksSettings[1].getBreakTimerSettings();
-			this.stretchBreaksWorkingTimer = new WorkingTimeTimer(
-				breaksSettings[1],
-				SWMain.messagesBundle.getString("notification_time_for_a")
-					+ " " + breakTimerSettings.getHMSAsString()
-					+ " " + SWMain.messagesBundle.getString("break"),
-				SWMain.messagesBundle.getString("time_for_a_stretch_break")
-			);
-			this.stretchBreaksWorkingTimer.init();
-		}
+		// create the corresponding working time timer if it is enabled only
+		this.workingTimeTimers = breaksSettings
+			.stream()
+			.map(breakSettings -> {
+				     if (!breakSettings.isEnabled())
+					     return null;
 
-		if (breaksSettings[2].isEnabled()) { // day breaks
-			this.dayBreakWorkingTimer = new WorkingTimeTimer(
-				breaksSettings[2],
-				SWMain.messagesBundle.getString("time_for_a_day_break"),
-				SWMain.messagesBundle.getString("day_break_title"),
-				false
-			);
-			this.dayBreakWorkingTimer.init();
-		}
+				     return breakSettings.getBreakType() == BreakType.DAY_BREAK ?
+					     new WorkingTimeTimer(
+						     breakSettings,
+						     SWMain.messagesBundle.getString("time_for_a_day_break"),
+						     SWMain.messagesBundle.getString("day_break_title"),
+						     false
+					     ) : new WorkingTimeTimer(
+					     breakSettings,
+					     SWMain.messagesBundle.getString("notification_time_for_a")
+						     + " " + breakSettings.getBreakTimerSettings().getHMSAsString()
+						     + " " + SWMain.messagesBundle.getString("break"),
+					     SWMain.messagesBundle.getString("time_for_a_small_break")
+				     );
+			     }
+			)
+			.collect(Collectors.toList());
 
+		this.workingTimeTimers
+			.stream()
+			.filter(Objects::nonNull)
+			.forEach(WorkingTimeTimer::init); // start all the timers that are not null
 	}
 
 	public void saveNotificationPrefLocation(byte location)
@@ -257,7 +256,7 @@ public class TimersManager
 		this.prefs.putInt("notification location", location);
 	}
 
-	public byte getNotificationPrefLocation()
+	public NotificationLocation getNotificationPrefLocation()
 	{
 		return this.getNotificationPrefLocation(false);
 	}
@@ -270,14 +269,20 @@ public class TimersManager
 	 *
 	 * @return the notification location preference
 	 */
-	public byte getNotificationPrefLocation(boolean reload)
+	public NotificationLocation getNotificationPrefLocation(boolean reload)
 	{
 		if (reload) {
 			this.loadPreferences();
-			this.notification_location_pref = (byte) this.prefs.getInt("notification location", 0);
+			Optional<NotificationLocation> optNotificationLocation = NotificationLocation.getInstance(
+				this.prefs.getInt("notification location", 0)
+			);
+			optNotificationLocation.ifPresentOrElse(
+				notificationLocation -> this.notificationPreferredLocation = notificationLocation,
+				() -> Loggers.getErrorLogger().severe("Something really really bad happened, couldn't load neither preferred nor default Notification Location")
+			);
 		}
 
-		return this.notification_location_pref;
+		return this.notificationPreferredLocation;
 	}
 
 	/**
@@ -286,32 +291,15 @@ public class TimersManager
 	 */
 	public void killAllTimers()
 	{
-		if (this.smallBreaksWorkingTimer != null)
-			this.smallBreaksWorkingTimer.destroy();
-
-		if (this.stretchBreaksWorkingTimer != null)
-			this.stretchBreaksWorkingTimer.destroy();
-
-		if (this.dayBreakWorkingTimer != null)
-			this.dayBreakWorkingTimer.destroy();
-
-		this.smallBreaksWorkingTimer = null;
-		this.stretchBreaksWorkingTimer = null;
-		this.dayBreakWorkingTimer = null;
+		if (this.workingTimeTimers == null)
+			return;
+		this.workingTimeTimers.stream().filter(Objects::nonNull).forEach(WorkingTimeTimer::destroy);
+		this.workingTimeTimers.clear();
+		this.workingTimeTimers = null;
 	}
 
-	public WorkingTimeTimer getSmallBreaksWorkingTimer()
+	public List<WorkingTimeTimer> getActiveWorkingTimers()
 	{
-		return smallBreaksWorkingTimer;
-	}
-
-	public WorkingTimeTimer getStretchBreaksWorkingTimer()
-	{
-		return stretchBreaksWorkingTimer;
-	}
-
-	public WorkingTimeTimer getDayBreakWorkingTimer()
-	{
-		return dayBreakWorkingTimer;
+		return this.workingTimeTimers;
 	}
 }
