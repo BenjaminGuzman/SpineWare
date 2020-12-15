@@ -1,3 +1,20 @@
+<!--
+Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
 # Requirements
 
 ## Functional requirements
@@ -23,36 +40,35 @@ If the user has not taken an stretch break for 4 hours, the system will send a w
 
 - Purpose: Relax the eyes and stretch the user's hands
 - Break time:
-	+ Min: 5 seconds
-	+ Max: 10 minutes
+  + Min: 5 seconds
+  + Max: 10 minutes
 - Working time:
-	+ Min: 15 minutes
-	+ Max: 1 hour
+  + Min: 15 minutes
+  + Max: 1 hour
 
 #### Stretch break
 
 - Purpose: Stretch the muscles.
 - Break time:
-	+ Min: 1 minute
-	+ Max: 1 hour
+  + Min: 1 minute
+  + Max: 1 hour
 - Working time:
-	+ Min: 10 minutes
-	+ Max: 4 hours
+  + Min: 10 minutes
+  + Max: 4 hours
 
 #### Day break
 
 - Purpose: End working for today.
 - Break time: Does not exists
 - Working time:
-	+ Min: Does not exists
-	+ Max: 24 hours
+  + Min: Does not exists
+  + Max: 24 hours
 
-This is a special break and should have an special timer. 
+This is a special break and should have an special timer.
 
 If the user has been working for 8 hours straight, a warning should appear despite the given configuration.
 
 If the user has been working for 16 hours straight, a severe warning should appear despite the given configuration.
-
 
 ### Tasks timer
 
@@ -64,8 +80,8 @@ For each TODO, the user can register:
 - Description (optional)
 - Start time
 - Time willing to spend on the activity. This can be provided by either
-	+ Entering the amount of time willing to spend
-	+ Entering the end time of the activity
+  + Entering the amount of time willing to spend
+  + Entering the end time of the activity
 
 The list of TODO's can be configured per day and he user will have the option to:
 
@@ -86,8 +102,6 @@ The program will redirect the user (open the web browser, show a pdf, show a vid
 ### Privacy
 
 The program will never disclose the user information to others, not even the developers, the program should not connect to any service.
-
-
 
 ## Non-functional requirements
 
