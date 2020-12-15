@@ -20,6 +20,7 @@ package org.fos.timers;
 
 import org.fos.Loggers;
 import org.fos.SWMain;
+import org.fos.core.BreakType;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -46,34 +47,31 @@ import java.util.logging.Level;
  */
 public class BreakSettings
 {
-	private TimerSettings workTimerSettings;
-	private TimerSettings breakTimerSettings;
-	private TimerSettings postponeTimerSettings;
-	private boolean is_enabled;
 	private static final String[] defaultNotificationAudio = new String[]{
 		"/resources/media/audio/small_breaks/notification.wav",
 		"/resources/media/audio/stretch_breaks/notification.wav",
 		"/resources/media/audio/day_break/notification.wav"
 	};
-	private final byte breakType;
+	private final BreakType breakType;
+	private TimerSettings workTimerSettings;
+	private TimerSettings breakTimerSettings;
+	private TimerSettings postponeTimerSettings;
+	private boolean is_enabled;
 	private String notificationAudioPath;
 	private String breakAudiosDirStr;
 	private Clip soundClip;
 	private Thread soundThread;
 
-	public BreakSettings(
+	private BreakSettings(
 		final TimerSettings workTimerSettings,
 		final TimerSettings breakTimerSettings,
 		final TimerSettings postponeTimerSettings,
-		final byte breakType,
+		final BreakType breakType,
 		final String notificationAudioPath,
 		final String breakAudiosDirStr,
 		final boolean is_enabled
 	)
 	{
-		if (breakType < 0 || breakType >= BreakSettings.defaultNotificationAudio.length)
-			throw new IllegalArgumentException("Break type is invalid");
-
 		this.workTimerSettings = workTimerSettings;
 		this.breakTimerSettings = breakTimerSettings;
 		this.postponeTimerSettings = postponeTimerSettings;
@@ -85,20 +83,13 @@ public class BreakSettings
 		try {
 			this.soundClip = AudioSystem.getClip();
 		} catch (LineUnavailableException e) {
-			Loggers.errorLogger.log(Level.WARNING, "Couldn't get system clip to play audio", e);
+			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't get system clip to play audio", e);
 		}
 	}
 
-	public BreakSettings(
-		final TimerSettings workTimerSettings,
-		final TimerSettings breakTimerSettings,
-		final TimerSettings postponeTimerSettings,
-		final byte breakType,
-		final String notificationAudioPath,
-		final String breakAudiosDirStr
-	)
+	public BreakType getBreakType()
 	{
-		this(workTimerSettings, breakTimerSettings, postponeTimerSettings, breakType, notificationAudioPath, breakAudiosDirStr, true);
+		return this.breakType;
 	}
 
 	public TimerSettings getWorkTimerSettings()
@@ -203,7 +194,7 @@ public class BreakSettings
 			else
 				audioInputStream = AudioSystem.getAudioInputStream(
 					new BufferedInputStream( // add mark/reset support, mark is just a pointer to the current position in the stream
-								 SWMain.getFileAsStream(defaultNotificationAudio[this.breakType])
+								 SWMain.getFileAsStream(defaultNotificationAudio[this.breakType.getIndex()])
 					)
 				);
 
@@ -214,11 +205,11 @@ public class BreakSettings
 
 			countDownLatch.await(); // wait till the audio has finished playing back
 		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
-			Loggers.errorLogger.log(Level.WARNING, "Couldn't play audio: " + this.notificationAudioPath, e);
+			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't play audio: " + this.notificationAudioPath, e);
 			try {
 				audioInputStream = AudioSystem.getAudioInputStream(
 					new BufferedInputStream( // add mark/reset support, mark is just a pointer to the current position in the stream
-								 SWMain.getFileAsStream(defaultNotificationAudio[this.breakType])
+								 SWMain.getFileAsStream(defaultNotificationAudio[this.breakType.getIndex()])
 					)
 				);
 				this.soundClip.addLineListener(onStopListener);
@@ -228,17 +219,19 @@ public class BreakSettings
 
 				countDownLatch.await(); // wait till the audio has finished playing back
 			} catch (UnsupportedAudioFileException | InterruptedException | LineUnavailableException | IOException ex) {
-				Loggers.errorLogger.log(Level.SEVERE, "Definitely audio couldn't be played", ex);
+				Loggers.getErrorLogger().log(Level.SEVERE, "Definitely audio couldn't be played", ex);
 			}
 
-		} catch (InterruptedException e) { // thread was interrupted
+		} catch (InterruptedException e) {
+			// thread was interrupted, no exception handling is added here 'cause the main cause for
+			// this exception to occur is the user exiting the application or cancelling something
 		} finally {
 			this.soundClip.removeLineListener(onStopListener);
 			if (audioInputStream != null) {
 				try {
 					audioInputStream.close();
 				} catch (IOException e) {
-					Loggers.errorLogger.log(Level.WARNING, "Error while closing audio file", e);
+					Loggers.getErrorLogger().log(Level.WARNING, "Error while closing audio file", e);
 				}
 			}
 		}
@@ -254,7 +247,7 @@ public class BreakSettings
 		if (this.breakAudiosDirStr == null || this.soundClip == null)
 			return;
 
-		if (this.breakType == 3)
+		if (this.breakType == BreakType.DAY_BREAK)
 			return; // probably an exception should be thrown
 
 		File breakAudiosDir = new File(this.breakAudiosDirStr);
@@ -294,7 +287,7 @@ public class BreakSettings
 				return;
 
 			if (audioFile.length() / 1024 /* B -> kB */ / 1024 /* mB -> MB */ > 100) {
-				Loggers.errorLogger.log(Level.WARNING, "The file: "
+				Loggers.getErrorLogger().log(Level.WARNING, "The file: "
 					+ audioFile.getAbsolutePath() + " is more than "
 					+ MAX_FILE_SIZE_MB + "MB, skipping...");
 				continue;
@@ -319,10 +312,10 @@ public class BreakSettings
 				audioInputStream.close();
 				this.soundClip.removeLineListener(onStopListener);
 			} catch (UnsupportedAudioFileException | IOException e) {
-				Loggers.errorLogger.log(Level.SEVERE, "Something bad happened while trying to open: "
+				Loggers.getErrorLogger().log(Level.SEVERE, "Something bad happened while trying to open: "
 					+ audioFile.getAbsolutePath(), e);
 			} catch (LineUnavailableException e) {
-				Loggers.errorLogger.log(Level.SEVERE, "Something bad happened while trying to play file: "
+				Loggers.getErrorLogger().log(Level.SEVERE, "Something bad happened while trying to play file: "
 					+ audioFile.getAbsolutePath(), e);
 			} catch (InterruptedException e) {
 				return;
@@ -332,7 +325,7 @@ public class BreakSettings
 					try {
 						audioInputStream.close();
 					} catch (IOException e) {
-						Loggers.errorLogger.log(Level.WARNING, "Error while closing audio file", e);
+						Loggers.getErrorLogger().log(Level.WARNING, "Error while closing audio file", e);
 					}
 				}
 			}
@@ -352,5 +345,71 @@ public class BreakSettings
 			this.soundThread.interrupt();
 
 		this.soundThread = null;
+	}
+
+	public static class Builder
+	{
+		private TimerSettings workTimerSettings;
+		private TimerSettings breakTimerSettings;
+		private TimerSettings postponeTimerSettings;
+		private BreakType breakType;
+		private String notificationAudioPath;
+		private String breakAudiosDirStr;
+		private boolean is_enabled = true;
+
+		public Builder workTimerSettings(TimerSettings workTimerSettings)
+		{
+			this.workTimerSettings = workTimerSettings;
+			return this;
+		}
+
+		public Builder breakTimerSettings(TimerSettings breakTimerSettings)
+		{
+			this.breakTimerSettings = breakTimerSettings;
+			return this;
+		}
+
+		public Builder postponeTimerSettings(TimerSettings postponeTimerSettings)
+		{
+			this.postponeTimerSettings = postponeTimerSettings;
+			return this;
+		}
+
+		public Builder breakType(BreakType breakType)
+		{
+			this.breakType = breakType;
+			return this;
+		}
+
+		public Builder notificationAudioPath(String notificationAudioPath)
+		{
+			this.notificationAudioPath = notificationAudioPath;
+			return this;
+		}
+
+		public Builder breakAudiosDirStr(String breakAudiosDirStr)
+		{
+			this.breakAudiosDirStr = breakAudiosDirStr;
+			return this;
+		}
+
+		public Builder enabled(boolean is_enabled)
+		{
+			this.is_enabled = is_enabled;
+			return this;
+		}
+
+		public BreakSettings createBreakSettings()
+		{
+			return new BreakSettings(
+				this.workTimerSettings,
+				this.breakTimerSettings,
+				this.postponeTimerSettings,
+				this.breakType,
+				this.notificationAudioPath,
+				this.breakAudiosDirStr,
+				this.is_enabled
+			);
+		}
 	}
 }

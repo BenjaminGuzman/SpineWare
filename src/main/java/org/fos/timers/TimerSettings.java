@@ -63,7 +63,7 @@ public class TimerSettings
 	 * Copy constructor
 	 *
 	 * @param timerSettings
-	 * 	the original object
+	 * 	the original object from which all values will be copied
 	 */
 	public TimerSettings(final TimerSettings timerSettings)
 	{

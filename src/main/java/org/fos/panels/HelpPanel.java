@@ -49,9 +49,8 @@ public class HelpPanel extends JScrollPane
 		mainPanel.setLayout(new GridBagLayout());
 
 		// spineware logo
-		InputStream inputStreamSWLogo = SWMain.getFileAsStream("/resources/media/SpineWare_white.png");
 		ImageIcon swLogoImageIcon = null;
-		try {
+		try (InputStream inputStreamSWLogo = SWMain.getFileAsStream("/resources/media/SpineWare_white.png")) {
 			Image img = ImageIO.read(inputStreamSWLogo);
 			img = img.getScaledInstance(400, 120, Image.SCALE_AREA_AVERAGING);
 			swLogoImageIcon = new ImageIcon(img);
@@ -75,8 +74,7 @@ public class HelpPanel extends JScrollPane
 		gplLicenseLabel.setHorizontalTextPosition(SwingConstants.CENTER);
 		gplLicenseLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-		InputStream inputStreamGPLLogo = SWMain.getFileAsStream("/resources/media/gplv3-136x68.png");
-		try {
+		try (InputStream inputStreamGPLLogo = SWMain.getFileAsStream("/resources/media/gplv3-136x68.png")) {
 			Image img = ImageIO.read(inputStreamGPLLogo);
 			gplLicenseLabel.setIcon(new ImageIcon(img));
 			gplLicenseLabel.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -132,7 +130,7 @@ public class HelpPanel extends JScrollPane
 						"Error",
 						JOptionPane.ERROR_MESSAGE
 					);
-					Loggers.errorLogger.log(Level.SEVERE, "Couldn't open browser", e);
+					Loggers.getErrorLogger().log(Level.SEVERE, "Couldn't open browser", e);
 				}
 			} else
 				JOptionPane.showMessageDialog(
