@@ -34,10 +34,9 @@ import java.util.logging.Level;
 
 public class WorkingTimeTimer implements Runnable
 {
-	private static boolean is_break_happening = false; // sentinel value to avoid collisions between breaks
-
 	private final static byte MAX_N_DISMISSES = 3;
 	private final static byte MAX_N_POSTPONED = 4;
+	private static boolean is_break_happening = false; // sentinel value to avoid collisions between breaks
 	private final BreakSettings breakSettings;
 	private final String takeABreakMessage;
 	private final String breakName;
@@ -167,7 +166,7 @@ public class WorkingTimeTimer implements Runnable
 			this.notificationCountDownLatch.await();
 			this.breakSettings.stopAudio();
 		} catch (InterruptedException e) {
-			Loggers.errorLogger.log(Level.WARNING, "The count down latch for the notification was interrupted", e);
+			Loggers.getErrorLogger().log(Level.WARNING, "The count down latch for the notification was interrupted", e);
 		}
 
 		if (notificationRef.get().breakWasDismissed()) {
@@ -211,7 +210,7 @@ public class WorkingTimeTimer implements Runnable
 		try {
 			this.breakCountDownLatch.await();
 		} catch (InterruptedException e) {
-			Loggers.errorLogger.log(Level.WARNING, "The count down latch for the break count down was interrupted", e);
+			Loggers.getErrorLogger().log(Level.WARNING, "The count down latch for the break count down was interrupted", e);
 		}
 
 		this.scheduleWorkingTimeExecutor();

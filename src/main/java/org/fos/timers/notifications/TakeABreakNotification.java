@@ -21,6 +21,7 @@ package org.fos.timers.notifications;
 import org.fos.Colors;
 import org.fos.Fonts;
 import org.fos.SWMain;
+import org.fos.timers.NotificationLocation;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -35,8 +36,8 @@ public class TakeABreakNotification extends Notification
 {
 	// this countdown latch should be decremented when the dialog ends (its closed or "take a break" is clicked)
 	private final CountDownLatch countDownLatch;
-	private Timer countDownTimer;
 	private final JProgressBar progressBarCountDown;
+	private Timer countDownTimer;
 	private boolean break_dismissed = false;
 	private boolean break_postponed = true; // default behaviour is postponed
 	private int remaining_seconds;
@@ -45,10 +46,10 @@ public class TakeABreakNotification extends Notification
 		final String takeABreakMessage,
 		final CountDownLatch countDownLatch,
 		final boolean is_not_day_limit_notification,
-		final byte notification_location
+		final NotificationLocation notificationLocation
 	)
 	{
-		super(is_not_day_limit_notification ? 15_000 : 60_000, notification_location);
+		super(is_not_day_limit_notification ? 15_000 : 60_000, notificationLocation);
 
 		this.countDownLatch = countDownLatch;
 

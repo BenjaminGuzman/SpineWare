@@ -24,6 +24,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -47,44 +49,30 @@ class TimersManagerTest {
 	}
 
 	@Test
-	void loadBreakSettings() {
+	void loadBreakSettings()
+	{
 		TimersManager timersManager = new TimersManager();
-		timersManager.saveBreaksSettings(new BreakSettings[]{
-			new BreakSettings(null, null, null, (byte) 0, null, null, false),
-			new BreakSettings(null, null, null, (byte) 1, null, null, false),
-			new BreakSettings(null, null, null, (byte) 2, null, null, false)
-		});
-		BreakSettings[] breaksSettings = timersManager.loadBreaksSettings();
-		for (BreakSettings breakSettings : breaksSettings) {
+		timersManager.saveBreaksSettings(Arrays.asList(
+			new BreakSettings.Builder().workTimerSettings(null).breakTimerSettings(null).postponeTimerSettings(null).breakType(BreakType.SMALL_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(false).createBreakSettings(),
+			new BreakSettings.Builder().workTimerSettings(null).breakTimerSettings(null).postponeTimerSettings(null).breakType(BreakType.STRETCH_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(false).createBreakSettings(),
+			new BreakSettings.Builder().workTimerSettings(null).breakTimerSettings(null).postponeTimerSettings(null).breakType(BreakType.DAY_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(false).createBreakSettings()
+		));
+		List<BreakSettings> breaksSettings = timersManager.loadBreaksSettings();
+		breaksSettings.forEach(breakSettings -> {
 			assertNull(breakSettings.getBreakTimerSettings());
 			assertNull(breakSettings.getWorkTimerSettings());
 			assertFalse(breakSettings.isEnabled());
-		}
+		});
 
 		byte hours = 1, minutes = 2, seconds = 3;
 		int hms = hours * 60 * 60 + minutes * 60 + seconds;
-		timersManager.saveBreaksSettings(new BreakSettings[]{
-			new BreakSettings(
-				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds),
-				(byte) 0, null, null, true
-			),
-			new BreakSettings(
-				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds),
-				(byte) 0, null, null, true
-			),
-			new BreakSettings(
-				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds),
-				new TimerSettings(hours, minutes, seconds),
-				(byte) 0, null, null, true
-			)
-		});
+		timersManager.saveBreaksSettings(Arrays.asList(
+			new BreakSettings.Builder().workTimerSettings(new TimerSettings(hours, minutes, seconds)).breakTimerSettings(new TimerSettings(hours, minutes, seconds)).postponeTimerSettings(new TimerSettings(hours, minutes, seconds)).breakType(BreakType.SMALL_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(true).createBreakSettings(),
+			new BreakSettings.Builder().workTimerSettings(new TimerSettings(hours, minutes, seconds)).breakTimerSettings(new TimerSettings(hours, minutes, seconds)).postponeTimerSettings(new TimerSettings(hours, minutes, seconds)).breakType(BreakType.SMALL_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(true).createBreakSettings(),
+			new BreakSettings.Builder().workTimerSettings(new TimerSettings(hours, minutes, seconds)).breakTimerSettings(new TimerSettings(hours, minutes, seconds)).postponeTimerSettings(new TimerSettings(hours, minutes, seconds)).breakType(BreakType.SMALL_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(true).createBreakSettings()
+		));
 		breaksSettings = timersManager.loadBreaksSettings();
-		for (BreakSettings breakSettings : breaksSettings) {
+		breaksSettings.forEach(breakSettings -> {
 			if (breakSettings.getBreakTimerSettings() != null) {
 				assertEquals(breakSettings.getBreakTimerSettings().getHMSAsSeconds(), hms);
 				assertEquals(breakSettings.getPostponeTimerSettings().getHMSAsSeconds(), hms);
@@ -92,7 +80,7 @@ class TimersManagerTest {
 
 			assertEquals(breakSettings.getWorkTimerSettings().getHMSAsSeconds(), hms);
 			assertTrue(breakSettings.isEnabled());
-		}
+		});
 	}
 
 	@Test
