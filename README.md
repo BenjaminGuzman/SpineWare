@@ -63,7 +63,7 @@ These are the authors for some audio files:
 
 ## Dependencies
 
-- Java 11+, SpineWare's core programming language
+- Java 8, SpineWare's core programming language
 
 - [FlatLaf](https://github.com/JFormDesigner/FlatLaf) to have a nice Look & Feel
 
