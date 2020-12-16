@@ -20,7 +20,7 @@ package org.fos.timers.notifications;
 
 import org.fos.Loggers;
 import org.fos.SWMain;
-import org.fos.timers.NotificationLocation;
+import org.fos.core.NotificationLocation;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;

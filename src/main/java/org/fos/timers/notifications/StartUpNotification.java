@@ -20,7 +20,7 @@ package org.fos.timers.notifications;
 
 import org.fos.Fonts;
 import org.fos.SWMain;
-import org.fos.timers.NotificationLocation;
+import org.fos.core.NotificationLocation;
 
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;

@@ -18,7 +18,7 @@
 
 package org.fos.timers;
 
-public class TimerSettings
+public class Clock
 {
 	private byte hours;
 	private byte minutes;
@@ -37,7 +37,7 @@ public class TimerSettings
 	 * @param seconds
 	 * 	configured seconds
 	 */
-	public TimerSettings(final byte hours, final byte minutes, final byte seconds)
+	public Clock(final byte hours, final byte minutes, final byte seconds)
 	{
 		this.hours = hours < 0 ? 1 : hours;
 		this.minutes = minutes < 0 ? 5 : minutes;
@@ -45,51 +45,30 @@ public class TimerSettings
 	}
 
 	/**
-	 * Creates a new timer object with the given arguments
-	 *
-	 * @param h_m_s_as_seconds
-	 * 	stands for Hours Minutes Seconds, therefore in this variable should be stored
-	 * 	the number of hours, minutes and seconds
-	 */
-	public TimerSettings(final int h_m_s_as_seconds)
-	{
-		byte[] h_m_s = this.seconds2HoursMinutesSeconds(h_m_s_as_seconds);
-		this.hours = h_m_s[0] < 0 ? 1 : h_m_s[0];
-		this.minutes = h_m_s[1] < 0 ? 5 : h_m_s[1];
-		this.seconds = h_m_s[2] < 0 ? 10 : h_m_s[2];
-	}
-
-	/**
 	 * Copy constructor
 	 *
-	 * @param timerSettings
+	 * @param clock
 	 * 	the original object from which all values will be copied
 	 */
-	public TimerSettings(final TimerSettings timerSettings)
+	public Clock(final Clock clock)
 	{
-		this(timerSettings.getHours(), timerSettings.getMinutes(), timerSettings.getSeconds());
-		this.hms_cache = timerSettings.hms_cache;
+		this(clock.getHours(), clock.getMinutes(), clock.getSeconds());
+		this.hms_cache = clock.hms_cache;
 	}
 
 	/**
-	 * Converts the given amount of seconds to hours, minutes and seconds
+	 * Converts the given amount of seconds to a clock with hours, minutes and seconds
 	 *
-	 * @param h_m_s_as_seconds
+	 * @param hms_as_seconds
 	 * 	the hours minutes and seconds as seconds
 	 *
-	 * @return an array of ints of length 3, index 0 -> hours, index 1 -> minutes, index 2 -> seconds
+	 * @return a new clock created based on the given seconds
 	 */
-	public byte[] seconds2HoursMinutesSeconds(final int h_m_s_as_seconds)
+	public static Clock from(final int hms_as_seconds)
 	{
-		int seconds = h_m_s_as_seconds % 60;
-		int hours_and_minutes_as_seconds = h_m_s_as_seconds - seconds;
+		byte[] hms = Clock.getHMSFromSeconds(hms_as_seconds);
 
-		int minutes = (hours_and_minutes_as_seconds / 60) % 60;
-		int hours_as_seconds = hours_and_minutes_as_seconds - minutes;
-
-		int hours = hours_as_seconds / 60 / 60; // no modulus because it should be less than 24, also no need to call Math.floor
-
-		return new byte[]{(byte) hours, (byte) minutes, (byte) seconds};
+		return new Clock(hms[0], hms[1], hms[2]);
 	}
 
 	/**
@@ -124,6 +103,30 @@ public class TimerSettings
 	}
 
 	/**
+	 * Converts the given amount of seconds to a byte array with hours, minutes and seconds
+	 * index 0 -> hours
+	 * index 1 -> minutes
+	 * index 2 -> seconds
+	 *
+	 * @param hms_as_seconds
+	 * 	the hours minutes and seconds as seconds
+	 *
+	 * @return the byte array
+	 */
+	private static byte[] getHMSFromSeconds(int hms_as_seconds)
+	{
+		int seconds = hms_as_seconds % 60;
+		int hours_and_minutes_as_seconds = hms_as_seconds - seconds;
+
+		int minutes = (hours_and_minutes_as_seconds / 60) % 60;
+		int hours_as_seconds = hours_and_minutes_as_seconds - minutes;
+
+		int hours = hours_as_seconds / 60 / 60; // no modulus because it should be less than 24, also no need to call Math.floor
+
+		return new byte[]{(byte) hours, (byte) minutes, (byte) seconds};
+	}
+
+	/**
 	 * This method will subtract n_seconds to the internal hours, minutes and seconds
 	 * If the total number of seconds is 0 already, this method will do nothing and return false
 	 *
@@ -138,7 +141,7 @@ public class TimerSettings
 		if (new_hms_as_seconds < 0)
 			return false;
 
-		byte[] hms = this.seconds2HoursMinutesSeconds(new_hms_as_seconds);
+		byte[] hms = Clock.getHMSFromSeconds(new_hms_as_seconds);
 
 		this.hours = hms[0];
 		this.minutes = hms[1];

@@ -21,7 +21,7 @@ package org.fos.timers.notifications;
 import org.fos.Fonts;
 import org.fos.Loggers;
 import org.fos.SWMain;
-import org.fos.timers.TimerSettings;
+import org.fos.timers.Clock;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -47,20 +47,20 @@ public class BreakCountDown extends JDialog
 {
 	private static ImageIcon spineWareIcon; // static to avoid reading the image each time the dialog is shown
 
-	private final TimerSettings breakSettings;
+	private final Clock breakSettings;
 	private final CountDownLatch countDownLatch;
 
 	private final JLabel[] hmsRemainingTimeLabels;
 
 	private final Timer timerCountDown;
 
-	public BreakCountDown(final String breakMessage, final TimerSettings breakSettings, final CountDownLatch countDownLatch)
+	public BreakCountDown(final String breakMessage, final Clock breakSettings, final CountDownLatch countDownLatch)
 	{
 		super();
 		assert !SwingUtilities.isEventDispatchThread();
 
 		//this.breakSettings = new TimerSettings(breakSettings); // we need a copy because this class will modify it
-		this.breakSettings = new TimerSettings(breakSettings);
+		this.breakSettings = new Clock(breakSettings);
 		//this.remaining_s = this.breakSettings;
 		this.countDownLatch = countDownLatch;
 

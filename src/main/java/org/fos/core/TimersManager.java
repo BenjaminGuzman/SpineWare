@@ -20,8 +20,7 @@ package org.fos.core;
 import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.timers.BreakSettings;
-import org.fos.timers.NotificationLocation;
-import org.fos.timers.TimerSettings;
+import org.fos.timers.Clock;
 import org.fos.timers.WorkingTimeTimer;
 
 import java.util.Arrays;
@@ -83,18 +82,18 @@ public class TimersManager
 
 		if (breakType == BreakType.DAY_BREAK)
 			return new BreakSettings.Builder()
-				.workTimerSettings(new TimerSettings(working_time))
+				.workTimerSettings(Clock.from(working_time))
 				.breakTimerSettings(null)
-				.postponeTimerSettings(new TimerSettings(postpone_time))
+				.postponeTimerSettings(Clock.from(postpone_time))
 				.breakType(breakType)
 				.notificationAudioPath(notificationAudioPath)
 				.breakAudiosDirStr(breakAudiosDir)
 				.createBreakSettings();
 		else
 			return new BreakSettings.Builder()
-				.workTimerSettings(new TimerSettings(working_time))
-				.breakTimerSettings(new TimerSettings(break_time))
-				.postponeTimerSettings(new TimerSettings(postpone_time))
+				.workTimerSettings(Clock.from(working_time))
+				.breakTimerSettings(Clock.from(break_time))
+				.postponeTimerSettings(Clock.from(postpone_time))
 				.breakType(breakType)
 				.notificationAudioPath(notificationAudioPath)
 				.breakAudiosDirStr(breakAudiosDir)
@@ -136,7 +135,7 @@ public class TimersManager
 		if (!breakSettings.isEnabled())
 			return;
 
-		TimerSettings breakTimerSettings = breakSettings.getBreakTimerSettings();
+		Clock breakClock = breakSettings.getBreakTimerSettings();
 		this.prefs.putInt(breakName + " working time", breakSettings.getWorkTimerSettings().getHMSAsSeconds());
 		this.prefs.putInt(breakName + " postpone time", breakSettings.getPostponeTimerSettings().getHMSAsSeconds());
 		if (breakSettings.getNotificationAudioPath() == null)
@@ -144,8 +143,8 @@ public class TimersManager
 		else
 			this.prefs.put(breakName + " notification audio", breakSettings.getNotificationAudioPath());
 
-		if (breakTimerSettings != null) {
-			this.prefs.putInt(breakName + " break time", breakTimerSettings.getHMSAsSeconds());
+		if (breakClock != null) {
+			this.prefs.putInt(breakName + " break time", breakClock.getHMSAsSeconds());
 			if (breakSettings.getBreakAudiosDirStr() == null)
 				this.prefs.remove(breakName + " break audios dir");
 			else

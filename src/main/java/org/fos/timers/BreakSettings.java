@@ -53,9 +53,9 @@ public class BreakSettings
 		"/resources/media/audio/day_break/notification.wav"
 	};
 	private final BreakType breakType;
-	private TimerSettings workTimerSettings;
-	private TimerSettings breakTimerSettings;
-	private TimerSettings postponeTimerSettings;
+	private Clock workClock;
+	private Clock breakClock;
+	private Clock postponeClock;
 	private boolean is_enabled;
 	private String notificationAudioPath;
 	private String breakAudiosDirStr;
@@ -63,18 +63,18 @@ public class BreakSettings
 	private Thread soundThread;
 
 	private BreakSettings(
-		final TimerSettings workTimerSettings,
-		final TimerSettings breakTimerSettings,
-		final TimerSettings postponeTimerSettings,
+		final Clock workClock,
+		final Clock breakClock,
+		final Clock postponeClock,
 		final BreakType breakType,
 		final String notificationAudioPath,
 		final String breakAudiosDirStr,
 		final boolean is_enabled
 	)
 	{
-		this.workTimerSettings = workTimerSettings;
-		this.breakTimerSettings = breakTimerSettings;
-		this.postponeTimerSettings = postponeTimerSettings;
+		this.workClock = workClock;
+		this.breakClock = breakClock;
+		this.postponeClock = postponeClock;
 		this.breakType = breakType;
 		this.is_enabled = is_enabled;
 		this.notificationAudioPath = notificationAudioPath;
@@ -92,34 +92,34 @@ public class BreakSettings
 		return this.breakType;
 	}
 
-	public TimerSettings getWorkTimerSettings()
+	public Clock getWorkTimerSettings()
 	{
-		return workTimerSettings;
+		return workClock;
 	}
 
-	public void setWorkTimerSettings(TimerSettings workTimerSettings)
+	public void setWorkTimerSettings(Clock workClock)
 	{
-		this.workTimerSettings = workTimerSettings;
+		this.workClock = workClock;
 	}
 
-	public TimerSettings getBreakTimerSettings()
+	public Clock getBreakTimerSettings()
 	{
-		return breakTimerSettings;
+		return breakClock;
 	}
 
-	public void setBreakTimerSettings(TimerSettings breakTimerSettings)
+	public void setBreakTimerSettings(Clock breakClock)
 	{
-		this.breakTimerSettings = breakTimerSettings;
+		this.breakClock = breakClock;
 	}
 
-	public TimerSettings getPostponeTimerSettings()
+	public Clock getPostponeTimerSettings()
 	{
-		return this.postponeTimerSettings;
+		return this.postponeClock;
 	}
 
-	public void setPostponeTimerSettings(TimerSettings postponeTimerSettings)
+	public void setPostponeTimerSettings(Clock postponeClock)
 	{
-		this.postponeTimerSettings = postponeTimerSettings;
+		this.postponeClock = postponeClock;
 	}
 
 	public String getNotificationAudioPath()
@@ -349,29 +349,29 @@ public class BreakSettings
 
 	public static class Builder
 	{
-		private TimerSettings workTimerSettings;
-		private TimerSettings breakTimerSettings;
-		private TimerSettings postponeTimerSettings;
+		private Clock workClock;
+		private Clock breakClock;
+		private Clock postponeClock;
 		private BreakType breakType;
 		private String notificationAudioPath;
 		private String breakAudiosDirStr;
 		private boolean is_enabled = true;
 
-		public Builder workTimerSettings(TimerSettings workTimerSettings)
+		public Builder workTimerSettings(Clock workClock)
 		{
-			this.workTimerSettings = workTimerSettings;
+			this.workClock = workClock;
 			return this;
 		}
 
-		public Builder breakTimerSettings(TimerSettings breakTimerSettings)
+		public Builder breakTimerSettings(Clock breakClock)
 		{
-			this.breakTimerSettings = breakTimerSettings;
+			this.breakClock = breakClock;
 			return this;
 		}
 
-		public Builder postponeTimerSettings(TimerSettings postponeTimerSettings)
+		public Builder postponeTimerSettings(Clock postponeClock)
 		{
-			this.postponeTimerSettings = postponeTimerSettings;
+			this.postponeClock = postponeClock;
 			return this;
 		}
 
@@ -402,9 +402,9 @@ public class BreakSettings
 		public BreakSettings createBreakSettings()
 		{
 			return new BreakSettings(
-				this.workTimerSettings,
-				this.breakTimerSettings,
-				this.postponeTimerSettings,
+				this.workClock,
+				this.breakClock,
+				this.postponeClock,
 				this.breakType,
 				this.notificationAudioPath,
 				this.breakAudiosDirStr,

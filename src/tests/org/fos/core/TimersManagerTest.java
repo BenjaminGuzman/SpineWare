@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2020. Benjamín Guzmán
- * Author: Benjamín Guzmán <bg@benjaminguzman.dev>
+ * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 package org.fos.core;
 
 import org.fos.timers.BreakSettings;
-import org.fos.timers.TimerSettings;
+import org.fos.timers.Clock;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,14 +32,20 @@ import java.util.prefs.Preferences;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class TimersManagerTest {
+class TimersManagerTest
+{
+	private static TimersManager timersManager;
+
 
 	@BeforeAll
-	static void beforeAll() throws BackingStoreException {
+	static void beforeAll() throws BackingStoreException
+	{
 		Preferences prefs = Preferences.userNodeForPackage(TimersManager.class);
 		prefs.clear();
+		timersManager = new TimersManager();
 	}
 
 	@AfterAll
@@ -51,7 +57,7 @@ class TimersManagerTest {
 	@Test
 	void loadBreakSettings()
 	{
-		TimersManager timersManager = new TimersManager();
+		// test correct null values
 		timersManager.saveBreaksSettings(Arrays.asList(
 			new BreakSettings.Builder().workTimerSettings(null).breakTimerSettings(null).postponeTimerSettings(null).breakType(BreakType.SMALL_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(false).createBreakSettings(),
 			new BreakSettings.Builder().workTimerSettings(null).breakTimerSettings(null).postponeTimerSettings(null).breakType(BreakType.STRETCH_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(false).createBreakSettings(),
@@ -64,27 +70,51 @@ class TimersManagerTest {
 			assertFalse(breakSettings.isEnabled());
 		});
 
+		// test correct time info & audio stuff
 		byte hours = 1, minutes = 2, seconds = 3;
 		int hms = hours * 60 * 60 + minutes * 60 + seconds;
+
+		String[] notificationAudioPaths = new String[]{"/tmp/hola.wav", "/tmp/hola.khe", "/tmp.mundo"};
+		String[] soundsDirs = new String[]{"/tmp", "/root", "/something"};
+		BreakType[] breakTypes = BreakType.values();
 		timersManager.saveBreaksSettings(Arrays.asList(
-			new BreakSettings.Builder().workTimerSettings(new TimerSettings(hours, minutes, seconds)).breakTimerSettings(new TimerSettings(hours, minutes, seconds)).postponeTimerSettings(new TimerSettings(hours, minutes, seconds)).breakType(BreakType.SMALL_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(true).createBreakSettings(),
-			new BreakSettings.Builder().workTimerSettings(new TimerSettings(hours, minutes, seconds)).breakTimerSettings(new TimerSettings(hours, minutes, seconds)).postponeTimerSettings(new TimerSettings(hours, minutes, seconds)).breakType(BreakType.SMALL_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(true).createBreakSettings(),
-			new BreakSettings.Builder().workTimerSettings(new TimerSettings(hours, minutes, seconds)).breakTimerSettings(new TimerSettings(hours, minutes, seconds)).postponeTimerSettings(new TimerSettings(hours, minutes, seconds)).breakType(BreakType.SMALL_BREAK).notificationAudioPath(null).breakAudiosDirStr(null).enabled(true).createBreakSettings()
+			new BreakSettings.Builder().workTimerSettings(new Clock(hours, minutes, seconds)).breakTimerSettings(new Clock(hours, minutes, seconds)).postponeTimerSettings(new Clock(hours, minutes, seconds)).breakType(breakTypes[0]).notificationAudioPath(notificationAudioPaths[0]).breakAudiosDirStr(soundsDirs[0]).enabled(true).createBreakSettings(),
+			new BreakSettings.Builder().workTimerSettings(new Clock(hours, minutes, seconds)).breakTimerSettings(new Clock(hours, minutes, seconds)).postponeTimerSettings(new Clock(hours, minutes, seconds)).breakType(breakTypes[1]).notificationAudioPath(notificationAudioPaths[1]).breakAudiosDirStr(soundsDirs[1]).enabled(true).createBreakSettings(),
+			new BreakSettings.Builder().workTimerSettings(new Clock(hours, minutes, seconds)).breakTimerSettings(new Clock(hours, minutes, seconds)).postponeTimerSettings(new Clock(hours, minutes, seconds)).breakType(breakTypes[2]).notificationAudioPath(notificationAudioPaths[2]).breakAudiosDirStr(soundsDirs[2]).enabled(true).createBreakSettings()
 		));
 		breaksSettings = timersManager.loadBreaksSettings();
-		breaksSettings.forEach(breakSettings -> {
-			if (breakSettings.getBreakTimerSettings() != null) {
-				assertEquals(breakSettings.getBreakTimerSettings().getHMSAsSeconds(), hms);
-				assertEquals(breakSettings.getPostponeTimerSettings().getHMSAsSeconds(), hms);
-			}
+		BreakSettings breakSettings;
+		for (byte i = 0; i < breaksSettings.size(); ++i) {
+			breakSettings = breaksSettings.get(i);
 
+			assertEquals(breakSettings.getBreakType(), breakTypes[i]);
+
+			// DAY BREAK should not have break timer
+			if (breakSettings.getBreakType() != BreakType.DAY_BREAK)
+				assertEquals(breakSettings.getBreakTimerSettings().getHMSAsSeconds(), hms);
+			else
+				assertNull(breakSettings.getBreakTimerSettings());
+
+			// assert audio stuff
+			assertEquals(breakSettings.getNotificationAudioPath(), notificationAudioPaths[i]);
+			assertEquals(breakSettings.getBreakAudiosDirStr(), soundsDirs[i]);
+
+			// assert timers
+			assertEquals(breakSettings.getPostponeTimerSettings().getHMSAsSeconds(), hms);
 			assertEquals(breakSettings.getWorkTimerSettings().getHMSAsSeconds(), hms);
 			assertTrue(breakSettings.isEnabled());
-		});
+		}
 	}
 
 	@Test
-	void saveBreaksSettings() {
+	void saveBreaksSettings()
+	{
 		this.loadBreakSettings(); // this method also test the saveBreaksSettings method
+	}
+
+	@Test
+	void singletonInstance()
+	{
+		assertThrows(IllegalStateException.class, TimersManager::new);
 	}
 }
