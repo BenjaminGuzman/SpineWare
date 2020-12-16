@@ -79,12 +79,6 @@ public class BreakSettings
 		this.is_enabled = is_enabled;
 		this.notificationAudioPath = notificationAudioPath;
 		this.breakAudiosDirStr = breakAudiosDirStr;
-
-		try {
-			this.soundClip = AudioSystem.getClip();
-		} catch (LineUnavailableException e) {
-			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't get system clip to play audio", e);
-		}
 	}
 
 	public BreakType getBreakType()
@@ -152,8 +146,37 @@ public class BreakSettings
 		this.is_enabled = is_enabled;
 	}
 
+	/**
+	 * Gets the clip to reproduce audio files
+	 * This method should be called before playing audio and using the this.soundClip object
+	 * to ensure it isn't null
+	 * If the sound clip couldn't be loaded, a warning message will be logged
+	 * @return true if the soundClip could be loaded, false otherwise
+	 */
+	public boolean loadSoundClip() {
+		if (this.soundClip != null)
+			return true;
+
+		try {
+			this.soundClip = AudioSystem.getClip();
+		} catch (LineUnavailableException e) {
+			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't get system clip to play audio", e);
+			return false;
+		} catch (IllegalArgumentException e) {
+			Loggers.getErrorLogger().log(
+				Level.WARNING,
+				"Your system does not have support for playing audio files",
+				e
+			);
+			return false;
+		}
+		return true;
+	}
+
 	public void playBreakAudio()
 	{
+		if (!this.loadSoundClip()) // audio cannot be played in this system, some sort of problem occurred
+			return;
 		this.stopAudio();
 		this.soundThread = new Thread(this::_playBreakAudio);
 		this.soundThread.start();
@@ -161,6 +184,8 @@ public class BreakSettings
 
 	public void playNotificationAudio()
 	{
+		if (!this.loadSoundClip()) // audio cannot be played in this system, some sort of problem occurred
+			return;
 		this.stopAudio();
 		this.soundThread = new Thread(this::_playNotificationAudio);
 		this.soundThread.start();
