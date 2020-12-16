@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.timers;
+package org.fos.core;
 
 import java.util.Arrays;
 import java.util.Optional;

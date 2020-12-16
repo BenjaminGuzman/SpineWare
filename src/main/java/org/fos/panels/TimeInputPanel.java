@@ -21,7 +21,7 @@ package org.fos.panels;
 import org.fos.Colors;
 import org.fos.Fonts;
 import org.fos.SWMain;
-import org.fos.timers.TimerSettings;
+import org.fos.timers.Clock;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -40,14 +40,14 @@ public class TimeInputPanel extends JPanel
 
 	private final JLabel warningLabel;
 
-	private final TimerSettings minRecommendedTime;
-	private final TimerSettings maxRecommendedTime;
+	private final Clock minRecommendedTime;
+	private final Clock maxRecommendedTime;
 	private final boolean use_hard_limits; // check the constructor for details
 
 	public TimeInputPanel(
-		final TimerSettings minRecommendedTime,
-		final TimerSettings maxRecommendedTime,
-		final TimerSettings preferredTime
+		final Clock minRecommendedTime,
+		final Clock maxRecommendedTime,
+		final Clock preferredTime
 	)
 	{
 		this(minRecommendedTime, maxRecommendedTime, preferredTime, false);
@@ -71,9 +71,9 @@ public class TimeInputPanel extends JPanel
 	 * 	of warning messages
 	 */
 	public TimeInputPanel(
-		final TimerSettings minRecommendedTime,
-		final TimerSettings maxRecommendedTime,
-		final TimerSettings preferredTime,
+		final Clock minRecommendedTime,
+		final Clock maxRecommendedTime,
+		final Clock preferredTime,
 		final boolean use_hard_limits
 	)
 	{
@@ -208,8 +208,8 @@ public class TimeInputPanel extends JPanel
 	 */
 	public void showRecommendedValueWarning(boolean show_upper_bound)
 	{
-		TimerSettings timerSettings = show_upper_bound ? this.maxRecommendedTime : this.minRecommendedTime;
-		this.warningLabel.setText(timerSettings.getHMSAsString() + " " + SWMain.messagesBundle.getString("is_recommended"));
+		Clock clock = show_upper_bound ? this.maxRecommendedTime : this.minRecommendedTime;
+		this.warningLabel.setText(clock.getHMSAsString() + " " + SWMain.messagesBundle.getString("is_recommended"));
 	}
 
 	/**

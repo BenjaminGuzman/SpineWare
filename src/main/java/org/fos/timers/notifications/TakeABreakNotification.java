@@ -21,7 +21,7 @@ package org.fos.timers.notifications;
 import org.fos.Colors;
 import org.fos.Fonts;
 import org.fos.SWMain;
-import org.fos.timers.NotificationLocation;
+import org.fos.core.NotificationLocation;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;

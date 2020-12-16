@@ -23,7 +23,7 @@ import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.core.BreakType;
 import org.fos.timers.BreakSettings;
-import org.fos.timers.TimerSettings;
+import org.fos.timers.Clock;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box;
@@ -66,28 +66,28 @@ public class BreaksPanel extends JScrollPane
 
 	private final JLabel changesSavedStatusLabel;
 	private final List<BreakSettings> preferredBreakSettings;
-	private final TimerSettings[] minWorkRecommendedTimes = new TimerSettings[]{
-		new TimerSettings((byte) 0, (byte) 5, (byte) 0), // min work time for the small break
-		new TimerSettings((byte) 0, (byte) 30, (byte) 0), // min work time for the stretch break
-		new TimerSettings((byte) 8, (byte) 0, (byte) 0), // min work time for the day break
+	private final Clock[] minWorkRecommendedTimes = new Clock[]{
+		new Clock((byte) 0, (byte) 5, (byte) 0), // min work time for the small break
+		new Clock((byte) 0, (byte) 30, (byte) 0), // min work time for the stretch break
+		new Clock((byte) 8, (byte) 0, (byte) 0), // min work time for the day break
 	};
-	private final TimerSettings[] maxWorkRecommendedTimes = new TimerSettings[]{
-		new TimerSettings((byte) 0, (byte) 30, (byte) 0), // max work time for the small break
-		new TimerSettings((byte) 2, (byte) 0, (byte) 0), // max work time for the stretch break
-		new TimerSettings((byte) 12, (byte) 0, (byte) 0), // max work time for the day break
+	private final Clock[] maxWorkRecommendedTimes = new Clock[]{
+		new Clock((byte) 0, (byte) 30, (byte) 0), // max work time for the small break
+		new Clock((byte) 2, (byte) 0, (byte) 0), // max work time for the stretch break
+		new Clock((byte) 12, (byte) 0, (byte) 0), // max work time for the day break
 	};
-	private final TimerSettings[] minBreakRecommendedTimes = new TimerSettings[]{
-		new TimerSettings((byte) 0, (byte) 0, (byte) 10), // min break time for the small break
-		new TimerSettings((byte) 0, (byte) 10, (byte) 0), // min break time for the stretch break
+	private final Clock[] minBreakRecommendedTimes = new Clock[]{
+		new Clock((byte) 0, (byte) 0, (byte) 10), // min break time for the small break
+		new Clock((byte) 0, (byte) 10, (byte) 0), // min break time for the stretch break
 	};
-	private final TimerSettings[] maxBreakRecommendedTimes = new TimerSettings[]{
-		new TimerSettings((byte) 0, (byte) 5, (byte) 0), // max break time for the small break
-		new TimerSettings((byte) 1, (byte) 0, (byte) 0), // max break time for the stretch break
+	private final Clock[] maxBreakRecommendedTimes = new Clock[]{
+		new Clock((byte) 0, (byte) 5, (byte) 0), // max break time for the small break
+		new Clock((byte) 1, (byte) 0, (byte) 0), // max break time for the stretch break
 	};
 	private final String[] notificationAudioPaths = new String[3];
 	private final String[] breakAudiosDirs = new String[2];
-	private final TimerSettings minRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 0, (byte) 6);
-	private final TimerSettings maxRequiredPostponeTime = new TimerSettings((byte) 0, (byte) 30, (byte) 0);
+	private final Clock minRequiredPostponeTime = new Clock((byte) 0, (byte) 0, (byte) 6);
+	private final Clock maxRequiredPostponeTime = new Clock((byte) 0, (byte) 30, (byte) 0);
 	private Timer changesSavedStatusLabelTimer; // timer to hide the changes saved status label
 
 	// configuration stuff
@@ -517,18 +517,18 @@ public class BreaksPanel extends JScrollPane
 
 		this.preferredBreakSettings.get(break_idx).setEnabled(this.featureEnabledCheckBoxes[break_idx].isSelected());
 
-		this.preferredBreakSettings.get(break_idx).setWorkTimerSettings(new TimerSettings(
+		this.preferredBreakSettings.get(break_idx).setWorkTimerSettings(Clock.from(
 			this.workingTimeInputs[break_idx].getTime()
 		));
 
-		this.preferredBreakSettings.get(break_idx).setPostponeTimerSettings(new TimerSettings(
+		this.preferredBreakSettings.get(break_idx).setPostponeTimerSettings(Clock.from(
 			this.postponeTimeInputs[break_idx].getTime()
 		));
 
 		this.preferredBreakSettings.get(break_idx).setNotificationAudioPath(this.notificationAudioPaths[break_idx]);
 
 		if (breakType != BreakType.DAY_BREAK) {
-			this.preferredBreakSettings.get(break_idx).setBreakTimerSettings(new TimerSettings(
+			this.preferredBreakSettings.get(break_idx).setBreakTimerSettings(Clock.from(
 				this.breaksTimeInputs[break_idx].getTime()
 			));
 			this.preferredBreakSettings.get(break_idx).setBreakAudiosDirStr(this.breakAudiosDirs[break_idx]);
@@ -571,7 +571,6 @@ public class BreaksPanel extends JScrollPane
 		byte small_breaks_idx = BreakType.SMALL_BREAK.getIndex();
 		this.workingTimeInputs[small_breaks_idx].setValues((byte) 0, (byte) 10, (byte) 0);
 		this.breaksTimeInputs[small_breaks_idx].setValues((byte) 0, (byte) 0, (byte) 10);
-		this.breaksTimeInputs[small_breaks_idx].setValues((byte) 0, (byte) 0, (byte) 10);
 		if (!this.featureEnabledCheckBoxes[small_breaks_idx].isSelected())
 			this.featureEnabledCheckBoxes[small_breaks_idx].doClick();
 
@@ -582,7 +581,6 @@ public class BreaksPanel extends JScrollPane
 			this.featureEnabledCheckBoxes[stretch_breaks_idx].doClick();
 
 		byte day_break_idx = BreakType.DAY_BREAK.getIndex();
-		this.workingTimeInputs[day_break_idx].setValues((byte) 8, (byte) 0, (byte) 0);
 		this.workingTimeInputs[day_break_idx].setValues((byte) 8, (byte) 0, (byte) 0);
 		if (!this.featureEnabledCheckBoxes[day_break_idx].isSelected())
 			this.featureEnabledCheckBoxes[day_break_idx].doClick();
