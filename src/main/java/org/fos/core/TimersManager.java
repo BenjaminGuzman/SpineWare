@@ -275,10 +275,10 @@ public class TimersManager
 			Optional<NotificationLocation> optNotificationLocation = NotificationLocation.getInstance(
 				this.prefs.getInt("notification location", 0)
 			);
-			optNotificationLocation.ifPresentOrElse(
-				notificationLocation -> this.notificationPreferredLocation = notificationLocation,
-				() -> Loggers.getErrorLogger().severe("Something really really bad happened, couldn't load neither preferred nor default Notification Location")
-			);
+			if (optNotificationLocation.isPresent())
+				this.notificationPreferredLocation = optNotificationLocation.get();
+			else
+				Loggers.getErrorLogger().severe("Something really really bad happened, couldn't load neither preferred nor default Notification Location");
 		}
 
 		return this.notificationPreferredLocation;
