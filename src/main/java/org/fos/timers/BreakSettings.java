@@ -159,7 +159,7 @@ public class BreakSettings
 
 		try {
 			this.soundClip = AudioSystem.getClip();
-		} catch (LineUnavailableException e) {
+		} catch (LineUnavailableException | SecurityException e) {
 			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't get system clip to play audio", e);
 			return false;
 		} catch (IllegalArgumentException e) {
