@@ -19,37 +19,30 @@
 package org.fos;
 
 import org.fos.core.BreakType;
+import org.fos.core.TimersManager;
+import org.fos.timers.Clock;
 import org.fos.timers.WorkingTimeTimer;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.Timer;
-import java.awt.Color;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Insets;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 public class SysTrayMenu extends JDialog
 {
 	private final ActionListener onClickExitButton;
 	private final ActionListener onClickOpenButton;
 
-	private final int[] remaining_seconds_for_notifications;
+	private final Clock[] remainingNotificationTimes;
 	private final List<JProgressBar> breaksProgressBars;
 	private Timer statusTimer;
 
@@ -90,7 +83,7 @@ public class SysTrayMenu extends JDialog
 			}
 		});
 
-		this.remaining_seconds_for_notifications = new int[3];
+		this.remainingNotificationTimes = new Clock[3];
 	}
 
 	/**
@@ -102,6 +95,7 @@ public class SysTrayMenu extends JDialog
 	public JPanel initComponents()
 	{
 		JPanel mainPanel = new JPanel(new GridBagLayout());
+		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
 		ImageIcon swLogoImageIcon = null;
 		try (InputStream inputStreamSWLogo = SWMain.getFileAsStream("/resources/media/SW_white.min.png")) {
@@ -117,11 +111,11 @@ public class SysTrayMenu extends JDialog
 		else
 			swLogoImageLabel = new JLabel("SW");
 
-		JButton exitButton = new JButton(SWMain.messagesBundle.getString("systray_exit"));
-		JButton openButton = new JButton(SWMain.messagesBundle.getString("systray_open"));
+		JButton exitButton = new JButton(messagesBundle.getString("systray_exit"));
+		JButton openButton = new JButton(messagesBundle.getString("systray_open"));
 
 		exitButton.addActionListener((ActionEvent evt) -> {
-			this.setVisible(false);
+			this.dispose();
 			this.onClickExitButton.actionPerformed(evt);
 		});
 		openButton.addActionListener((ActionEvent evt) -> {
@@ -151,7 +145,7 @@ public class SysTrayMenu extends JDialog
 		// small break progress bar
 		gridBagConstraints.gridx = 0;
 		++gridBagConstraints.gridy;
-		mainPanel.add(new JLabel(SWMain.messagesBundle.getString("small_breaks_title")), gridBagConstraints);
+		mainPanel.add(new JLabel(messagesBundle.getString("small_breaks_title")), gridBagConstraints);
 
 		gridBagConstraints.gridx = 1;
 		mainPanel.add(this.breaksProgressBars.get(BreakType.SMALL_BREAK.getIndex()), gridBagConstraints);
@@ -159,7 +153,7 @@ public class SysTrayMenu extends JDialog
 		// stretch break progress bar
 		gridBagConstraints.gridx = 0;
 		++gridBagConstraints.gridy;
-		mainPanel.add(new JLabel(SWMain.messagesBundle.getString("stretch_breaks_title")), gridBagConstraints);
+		mainPanel.add(new JLabel(messagesBundle.getString("stretch_breaks_title")), gridBagConstraints);
 
 		gridBagConstraints.gridx = 1;
 		mainPanel.add(this.breaksProgressBars.get(BreakType.STRETCH_BREAK.getIndex()), gridBagConstraints);
@@ -167,7 +161,7 @@ public class SysTrayMenu extends JDialog
 		// day break progress bar
 		gridBagConstraints.gridx = 0;
 		++gridBagConstraints.gridy;
-		mainPanel.add(new JLabel(SWMain.messagesBundle.getString("day_break_title")), gridBagConstraints);
+		mainPanel.add(new JLabel(messagesBundle.getString("day_break_title")), gridBagConstraints);
 
 		gridBagConstraints.gridx = 1;
 		mainPanel.add(this.breaksProgressBars.get(BreakType.DAY_BREAK.getIndex()), gridBagConstraints);
@@ -180,13 +174,13 @@ public class SysTrayMenu extends JDialog
 	 * If it is going to be visible, the progress bars are updated and a timer to update them every second is set
 	 * If not, the timer (if exists) is stopped and the dialog is not visible
 	 *
-	 * @param visible
-	 * 	whether the dialog should be visible or not
+	 * @param visible whether the dialog should be visible or not
 	 */
 	@Override
 	public void setVisible(boolean visible)
 	{
 		super.setVisible(visible);
+		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
 		if (!visible) {
 			if (this.statusTimer != null)
@@ -194,7 +188,7 @@ public class SysTrayMenu extends JDialog
 			return;
 		}
 
-		List<WorkingTimeTimer> activeWorkingTimers = SWMain.timersManager.getActiveWorkingTimers();
+		List<WorkingTimeTimer> activeWorkingTimers = TimersManager.getActiveWorkingTimers();
 		BreakType[] breakTypes = BreakType.values();
 
 		if (activeWorkingTimers.size() != breakTypes.length) {
@@ -211,18 +205,29 @@ public class SysTrayMenu extends JDialog
 			JProgressBar progressBar = this.breaksProgressBars.get(break_idx);
 
 			progressBar.setStringPainted(true);
-			progressBar.setForeground(Colors.GREEN);
+			progressBar.setForeground(Colors.GREEN_DARK);
 			progressBar.setBackground(Colors.RED_WINE);
 
-			this.remaining_seconds_for_notifications[break_idx] = -1;
+			this.remainingNotificationTimes[break_idx] = null;
 			if (activeWorkingTimers.get(break_idx) == null) { // that timer is disabled
-				progressBar.setString(SWMain.messagesBundle.getString("feature_disabled"));
+				progressBar.setString(messagesBundle.getString("feature_disabled"));
+				progressBar.setValue(0);
 				progressBar.setEnabled(false);
 				progressBar.setBackground(Color.DARK_GRAY);
 				continue;
+			} else if (activeWorkingTimers.get(break_idx).getRemainingSToShowNotif() < 0) {
+				// notification is showing
+
+				progressBar.setString(messagesBundle.getString("notification_is_showing"));
+				progressBar.setValue(0);
+				progressBar.setBackground(Colors.RED_WINE);
+				progressBar.setMaximum(activeWorkingTimers.get(break_idx).getWorkingTimeSeconds());
+				set_timer = true;
+				continue;
 			}
 
-			this.remaining_seconds_for_notifications[break_idx] = activeWorkingTimers.get(break_idx).getRemainingSeconds();
+			this.remainingNotificationTimes[break_idx] =
+				Clock.from(activeWorkingTimers.get(break_idx).getRemainingSToShowNotif());
 
 			progressBar.setMaximum(activeWorkingTimers.get(break_idx).getWorkingTimeSeconds());
 
@@ -232,22 +237,70 @@ public class SysTrayMenu extends JDialog
 		if (!set_timer)
 			return;
 
+		final byte one = 1;
 		// set timer to update progress bar value each second
 		this.statusTimer = new Timer(1_000, (ActionEvent evt) -> {
 			for (BreakType breakType : breakTypes) {
 				byte i = breakType.getIndex();
-				if (this.remaining_seconds_for_notifications[i] > 0) { // small break
-					--this.remaining_seconds_for_notifications[i];
-					this.breaksProgressBars.get(i).setString(this.remaining_seconds_for_notifications[i] + "s");
-					this.breaksProgressBars.get(i).setValue(this.remaining_seconds_for_notifications[i]);
-				} else if (activeWorkingTimers.get(i) != null) { // if notification is enabled but the notification is showing
-					this.breaksProgressBars.get(i).setString(SWMain.messagesBundle.getString("notification_is_showing"));
+				if (this.remainingNotificationTimes[i] != null &&
+					this.remainingNotificationTimes[i].getHMSAsSeconds() > 0) {
+					// update the progress bar
+					this.breaksProgressBars.get(i).setString(
+						this.remainingNotificationTimes[i].getHMSAsString()
+					);
+					this.breaksProgressBars.get(i).setValue(
+						this.remainingNotificationTimes[i].getHMSAsSeconds()
+					);
+
+					// update the remaining notification time
+					this.remainingNotificationTimes[i].subtractSeconds(one);
+				} else if (activeWorkingTimers.get(i) != null) { // if notification is enabled and the
+					// notification is showing
+
+					this.breaksProgressBars.get(i).setString(
+						messagesBundle.getString("notification_is_showing")
+					);
 					this.breaksProgressBars.get(i).setValue(0);
-					this.remaining_seconds_for_notifications[i] = activeWorkingTimers.get(i).getRemainingSeconds();
+
+					// negate the value as the notification should be shown
+					int elapsed_s_since_notification_shown =
+						-activeWorkingTimers.get(i).getRemainingSToShowNotif();
+
+					// helpful log to understand the code:
+					// System.out.println("Elapsed seconds since notification was shown: " +
+					// elapsed_s_since_notification_shown);
+
+					if (elapsed_s_since_notification_shown >= 0)
+						return;
+
+					// reset the timer if the notification has been disposed
+					this.remainingNotificationTimes[i] = Clock.from(
+						activeWorkingTimers.get(i).getRemainingSToShowNotif() - 1
+					);
+
+					// update the progressbar
+					this.breaksProgressBars.get(i).setString(
+						this.remainingNotificationTimes[i].getHMSAsString()
+					);
+					this.breaksProgressBars.get(i).setValue(
+						this.remainingNotificationTimes[i].getHMSAsSeconds()
+					);
 				}
 			}
 		});
 		this.statusTimer.setInitialDelay(0);
 		this.statusTimer.start();
+	}
+
+	@Override
+	public String toString()
+	{
+		return "SysTrayMenu{" +
+			"onClickExitButton=" + onClickExitButton +
+			", onClickOpenButton=" + onClickOpenButton +
+			", remaining_seconds_for_notifications=" + Arrays.toString(this.remainingNotificationTimes) +
+			", breaksProgressBars=" + breaksProgressBars +
+			", statusTimer=" + statusTimer +
+			'}';
 	}
 }

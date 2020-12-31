@@ -22,18 +22,9 @@ import org.fos.Loggers;
 import org.fos.SWMain;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JEditorPane;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
-import java.awt.Desktop;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -86,7 +77,7 @@ public class HelpPanel extends JScrollPane
 		JEditorPane moreEditorPane = new JEditorPane();
 		moreEditorPane.setEditorKit(JEditorPane.createEditorKitForContentType("text/html"));
 		moreEditorPane.setEditable(false);
-		moreEditorPane.setText(SWMain.messagesBundle.getString("help_text"));
+		moreEditorPane.setText(SWMain.getMessagesBundle().getString("help_text"));
 		moreEditorPane.addHyperlinkListener(this::onClickHyperLink);
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
@@ -126,7 +117,7 @@ public class HelpPanel extends JScrollPane
 				} catch (IOException | URISyntaxException | UnsupportedOperationException e) {
 					JOptionPane.showMessageDialog(
 						null,
-						SWMain.messagesBundle.getString("error_couldnt_open_browser"),
+						SWMain.getMessagesBundle().getString("error_couldnt_open_browser"),
 						"Error",
 						JOptionPane.ERROR_MESSAGE
 					);
@@ -135,7 +126,7 @@ public class HelpPanel extends JScrollPane
 			} else
 				JOptionPane.showMessageDialog(
 					null,
-					SWMain.messagesBundle.getString("error_couldnt_open_browser"),
+					SWMain.getMessagesBundle().getString("error_couldnt_open_browser"),
 					"Error",
 					JOptionPane.ERROR_MESSAGE
 				);
