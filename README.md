@@ -15,19 +15,28 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
+
 # SpineWare
 
 ![SpineWare image](media/SpineWare.png)
 
 A Java application to take care of you while you're using the computer.
 
+## TODO's
+
+- Add pause timers button to systray
+- Improve the user experience in the break panel. Change GUI to select music. Change the save & set defaults button, one
+  button per break
+- Change logic of synchronization.
+
 ## Main features
 
 - **Timer to let you know you've been working hard and need a small break or stop working**:
-	+ The program has 3 "break types":
-		* To relax the eyes and move a little. Sometimes while you're working you have to blink, believe it or not.
-		* To stretch your muscles: You need to move from time to time to avoid atrophying your muscular and bone structure.
-		* To stop working: It is good you are passionate about your job but still, you have to rest a little bit.
+    + The program has 3 "break types":
+        * To relax the eyes and move a little. Sometimes while you're working you have to blink, believe it or not.
+        * To stretch your muscles: You need to move from time to time to avoid atrophying your muscular and bone
+          structure.
+        * To stop working: It is good you are passionate about your job but still, you have to rest a little bit.
 
 SCREENSHOT HERE
 

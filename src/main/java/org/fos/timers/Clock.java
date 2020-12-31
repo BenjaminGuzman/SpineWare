@@ -30,12 +30,9 @@ public class Clock
 	 * Constructs a ne TimerSettings object with the given arguments
 	 * and the default is_enabled as true
 	 *
-	 * @param hours
-	 * 	configured hours
-	 * @param minutes
-	 * 	configured minutes
-	 * @param seconds
-	 * 	configured seconds
+	 * @param hours   configured hours
+	 * @param minutes configured minutes
+	 * @param seconds configured seconds
 	 */
 	public Clock(final byte hours, final byte minutes, final byte seconds)
 	{
@@ -47,8 +44,7 @@ public class Clock
 	/**
 	 * Copy constructor
 	 *
-	 * @param clock
-	 * 	the original object from which all values will be copied
+	 * @param clock the original object from which all values will be copied
 	 */
 	public Clock(final Clock clock)
 	{
@@ -59,9 +55,7 @@ public class Clock
 	/**
 	 * Converts the given amount of seconds to a clock with hours, minutes and seconds
 	 *
-	 * @param hms_as_seconds
-	 * 	the hours minutes and seconds as seconds
-	 *
+	 * @param hms_as_seconds the hours minutes and seconds as seconds
 	 * @return a new clock created based on the given seconds
 	 */
 	public static Clock from(final int hms_as_seconds)
@@ -69,6 +63,28 @@ public class Clock
 		byte[] hms = Clock.getHMSFromSeconds(hms_as_seconds);
 
 		return new Clock(hms[0], hms[1], hms[2]);
+	}
+
+	/**
+	 * Converts the given amount of seconds to a byte array with hours, minutes and seconds
+	 * index 0 -> hours
+	 * index 1 -> minutes
+	 * index 2 -> seconds
+	 *
+	 * @param hms_as_seconds the hours minutes and seconds as seconds
+	 * @return the byte array
+	 */
+	private static byte[] getHMSFromSeconds(int hms_as_seconds)
+	{
+		int seconds = hms_as_seconds % 60;
+		int hours_and_minutes_as_seconds = hms_as_seconds - seconds;
+
+		int minutes = (hours_and_minutes_as_seconds / 60) % 60;
+		int hours_as_seconds = hours_and_minutes_as_seconds - minutes;
+
+		int hours = hours_as_seconds / 60 / 60; // no modulus because it should be less than 24, also no need to call Math.floor
+
+		return new byte[]{(byte) hours, (byte) minutes, (byte) seconds};
 	}
 
 	/**
@@ -103,36 +119,10 @@ public class Clock
 	}
 
 	/**
-	 * Converts the given amount of seconds to a byte array with hours, minutes and seconds
-	 * index 0 -> hours
-	 * index 1 -> minutes
-	 * index 2 -> seconds
-	 *
-	 * @param hms_as_seconds
-	 * 	the hours minutes and seconds as seconds
-	 *
-	 * @return the byte array
-	 */
-	private static byte[] getHMSFromSeconds(int hms_as_seconds)
-	{
-		int seconds = hms_as_seconds % 60;
-		int hours_and_minutes_as_seconds = hms_as_seconds - seconds;
-
-		int minutes = (hours_and_minutes_as_seconds / 60) % 60;
-		int hours_as_seconds = hours_and_minutes_as_seconds - minutes;
-
-		int hours = hours_as_seconds / 60 / 60; // no modulus because it should be less than 24, also no need to call Math.floor
-
-		return new byte[]{(byte) hours, (byte) minutes, (byte) seconds};
-	}
-
-	/**
 	 * This method will subtract n_seconds to the internal hours, minutes and seconds
 	 * If the total number of seconds is 0 already, this method will do nothing and return false
 	 *
-	 * @param n_seconds
-	 * 	number of seconds to subtract
-	 *
+	 * @param n_seconds number of seconds to subtract
 	 * @return true if the subtraction could be done, false otherwise
 	 */
 	public boolean subtractSeconds(byte n_seconds)
@@ -164,5 +154,16 @@ public class Clock
 	public byte getSeconds()
 	{
 		return seconds;
+	}
+
+	@Override
+	public String toString()
+	{
+		return "Clock{" +
+			"hours=" + hours +
+			", minutes=" + minutes +
+			", seconds=" + seconds +
+			", hms_cache=" + hms_cache +
+			'}';
 	}
 }

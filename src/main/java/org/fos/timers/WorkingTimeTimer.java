@@ -19,16 +19,16 @@ package org.fos.timers;
 
 
 import org.fos.Loggers;
-import org.fos.SWMain;
+import org.fos.core.TimersManager;
 import org.fos.timers.notifications.BreakCountDown;
 import org.fos.timers.notifications.TakeABreakNotification;
 
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
@@ -36,7 +36,11 @@ public class WorkingTimeTimer implements Runnable
 {
 	private final static byte MAX_N_DISMISSES = 3;
 	private final static byte MAX_N_POSTPONED = 4;
-	private static boolean is_break_happening = false; // sentinel value to avoid collisions between breaks
+
+	// this variable is volatile so other breaks (threads) can always see the updated value
+	private static final AtomicBoolean is_break_happening = new AtomicBoolean(false); // sentinel value to avoid
+	// collisions between breaks
+
 	private final BreakSettings breakSettings;
 	private final String takeABreakMessage;
 	private final String breakName;
@@ -93,6 +97,9 @@ public class WorkingTimeTimer implements Runnable
 	 */
 	public void destroy()
 	{
+		if (this.executorService == null)
+			return;
+
 		this.executorService.shutdownNow();
 
 		BreakCountDown breakCountDown = this.breakCountDownRef.get();
@@ -103,7 +110,7 @@ public class WorkingTimeTimer implements Runnable
 		if (notification != null)
 			notification.dispose();
 
-		this.breakSettings.stopAudio();
+		this.breakSettings.stopHooks();
 	}
 
 	/**
@@ -120,12 +127,12 @@ public class WorkingTimeTimer implements Runnable
 	@Override
 	public void run()
 	{
-		if (WorkingTimeTimer.is_break_happening) {
+		if (WorkingTimeTimer.is_break_happening.get()) {
 			this.schedulePostponedExecutor();
-			WorkingTimeTimer.is_break_happening = true;
+			WorkingTimeTimer.is_break_happening.set(true);
 			return;
 		}
-		WorkingTimeTimer.is_break_happening = true;
+		WorkingTimeTimer.is_break_happening.set(true);
 
 		if (this.n_dismisses >= WorkingTimeTimer.MAX_N_DISMISSES
 			|| this.n_postponed >= WorkingTimeTimer.MAX_N_POSTPONED) {
@@ -150,23 +157,25 @@ public class WorkingTimeTimer implements Runnable
 		}
 
 		this.notificationCountDownLatch = new CountDownLatch(1);
-		SwingUtilities.invokeLater(() -> {
-			this.breakSettings.playNotificationAudio();
-			notificationRef.set(
-				new TakeABreakNotification(
-					this.takeABreakMessage,
-					this.notificationCountDownLatch,
-					this.add_take_break_option,
-					SWMain.timersManager.getNotificationPrefLocation()
-				)
-			);
-		});
+		SwingUtilities.invokeLater(() -> notificationRef.set(
+			new TakeABreakNotification(
+				this.takeABreakMessage,
+				this.notificationCountDownLatch,
+				this.add_take_break_option,
+				TimersManager.getNotificationPrefLocation(),
+				this.breakSettings::startNotificationHooks,
+				this.breakSettings::stopNotificationHooks
+			)
+		));
 
 		try {
 			this.notificationCountDownLatch.await();
-			this.breakSettings.stopAudio();
 		} catch (InterruptedException e) {
-			Loggers.getErrorLogger().log(Level.WARNING, "The count down latch for the notification was interrupted", e);
+			Loggers.getErrorLogger().log(
+				Level.INFO,
+				"The count down latch for the notification was interrupted",
+				e
+			);
 		}
 
 		if (notificationRef.get().breakWasDismissed()) {
@@ -186,7 +195,6 @@ public class WorkingTimeTimer implements Runnable
 			return;
 		}
 
-		this.breakSettings.playBreakAudio();
 		this.showBreakCountDown();
 	}
 
@@ -203,24 +211,35 @@ public class WorkingTimeTimer implements Runnable
 			new BreakCountDown(
 				this.breakName,
 				this.breakSettings.getBreakTimerSettings(),
-				this.breakCountDownLatch
+				this.breakCountDownLatch,
+				this.breakSettings::startBreakHooks,
+				this.breakSettings::stopBreakHooks
 			)
 		));
 
 		try {
 			this.breakCountDownLatch.await();
 		} catch (InterruptedException e) {
-			Loggers.getErrorLogger().log(Level.WARNING, "The count down latch for the break count down was interrupted", e);
+			Loggers.getErrorLogger().log(
+				Level.INFO,
+				"The count down latch for the break count down was interrupted",
+				e
+			);
 		}
 
 		this.scheduleWorkingTimeExecutor();
 	}
 
+	/**
+	 * Shcedules the executor to run the method {@link #run()}
+	 *
+	 * @param seconds_timeout the seconds timeout (number of seconds to wait to execute {@link #run()})
+	 */
 	private void scheduleExecutor(int seconds_timeout)
 	{
-		WorkingTimeTimer.is_break_happening = false;
+		WorkingTimeTimer.is_break_happening.set(false);
 
-		this.breakSettings.stopAudio();
+		this.breakSettings.stopHooks();
 
 		this.executorService.schedule(this, seconds_timeout, TimeUnit.SECONDS);
 
@@ -256,10 +275,16 @@ public class WorkingTimeTimer implements Runnable
 	}
 
 	/**
-	 * @return the remaining time in seconds for the notification to be shown
+	 * @return the remaining seconds to show the notification. If this value is negative, then the notification
+	 * has already been shown
 	 */
-	public int getRemainingSeconds()
+	public int getRemainingSToShowNotif()
 	{
+		/*
+		When the notification has not been shown yet
+		this.notification_should_be_shown_at_s
+		should be in the future
+		 */
 		return (int) (this.notification_should_be_shown_at_s - System.currentTimeMillis() / 1_000);
 	}
 
@@ -269,5 +294,25 @@ public class WorkingTimeTimer implements Runnable
 	public int getWorkingTimeSeconds()
 	{
 		return this.breakSettings.getWorkTimerSettings().getHMSAsSeconds();
+	}
+
+	@Override
+	public String toString()
+	{
+		return "WorkingTimeTimer{" +
+			"breakSettings=" + breakSettings +
+			", takeABreakMessage='" + takeABreakMessage + '\'' +
+			", breakName='" + breakName + '\'' +
+			", add_take_break_option=" + add_take_break_option +
+			", notificationRef=" + notificationRef +
+			", breakCountDownRef=" + breakCountDownRef +
+			", last_time_timer_was_set_s=" + last_time_timer_was_set_s +
+			", notification_should_be_shown_at_s=" + notification_should_be_shown_at_s +
+			", n_dismisses=" + n_dismisses +
+			", n_postponed=" + n_postponed +
+			", notificationCountDownLatch=" + notificationCountDownLatch +
+			", breakCountDownLatch=" + breakCountDownLatch +
+			", executorService=" + executorService +
+			'}';
 	}
 }

@@ -23,18 +23,9 @@ import org.fos.SWMain;
 import org.fos.core.NotificationLocation;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.Dimension;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +37,10 @@ public class Notification extends JDialog
 	private final int dispose_timeout_ms;
 	private final NotificationLocation notificationLocation;
 	protected JLabel swIconLabel; // icon that contains the SW image
+	protected JButton closeBtn; // button to close the notification
 	protected JPanel mainPanel; // panel that will contain everything in the JDialog
+	protected Runnable onShown; // runnable when the notification is shown
+	protected Runnable onDisposed; // runnable when the notification is disposed
 	private Timer timeoutTimer; // timer to automatically dispose the dialog
 
 	public Notification()
@@ -64,11 +58,9 @@ public class Notification extends JDialog
 	 * this will set the main panel with a new grid bag layout and new empty border
 	 * this will also load the SW icon
 	 *
-	 * @param dispose_timeout_ms
-	 * 	number of milliseconds to wait before the dialog is automatically disposed
-	 * 	if this is less than or equal to 0, the notification will be never dismissed
-	 * @param notificationLocation
-	 * 	this tells where to put the notification, check this class static constants for details
+	 * @param dispose_timeout_ms   number of milliseconds to wait before the dialog is automatically disposed
+	 *                             if this is less than or equal to 0, the notification will be never dismissed
+	 * @param notificationLocation this tells where to put the notification, check this class static constants for details
 	 */
 	public Notification(int dispose_timeout_ms, NotificationLocation notificationLocation)
 	{
@@ -88,6 +80,14 @@ public class Notification extends JDialog
 			swIconLabel.setIcon(Notification.swIcon);
 		else
 			swIconLabel.setText("SW");
+
+		// add close button
+		this.closeBtn = new JButton("X");
+		this.closeBtn.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+		this.closeBtn.setBorderPainted(false);
+		this.closeBtn.setContentAreaFilled(false);
+		this.closeBtn.setFocusPainted(false);
+		this.closeBtn.setOpaque(false);
 	}
 
 	/**
@@ -115,6 +115,9 @@ public class Notification extends JDialog
 			this.timeoutTimer = new Timer(this.dispose_timeout_ms, (ActionEvent evt) -> this.dispose());
 			this.timeoutTimer.start();
 		}
+
+		if (this.onShown != null)
+			this.onShown.run();
 	}
 
 	/**
@@ -176,5 +179,20 @@ public class Notification extends JDialog
 		super.dispose();
 		if (this.timeoutTimer != null)
 			this.timeoutTimer.stop();
+
+		if (this.onDisposed != null)
+			this.onDisposed.run();
+	}
+
+	@Override
+	public String toString()
+	{
+		return "Notification{" +
+			"dispose_timeout_ms=" + dispose_timeout_ms +
+			", notificationLocation=" + notificationLocation +
+			", swIconLabel=" + swIconLabel +
+			", mainPanel=" + mainPanel +
+			", timeoutTimer=" + timeoutTimer +
+			'}';
 	}
 }

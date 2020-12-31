@@ -49,4 +49,12 @@ public enum NotificationLocation
 	{
 		return this.location_idx;
 	}
+
+	@Override
+	public String toString()
+	{
+		return "NotificationLocation{" +
+			"location_idx=" + location_idx +
+			'}';
+	}
 }
