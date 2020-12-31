@@ -22,8 +22,9 @@ import org.fos.Fonts;
 import org.fos.SWMain;
 import org.fos.core.NotificationLocation;
 
-import javax.swing.JLabel;
-import java.awt.GridBagConstraints;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 
 public class StartUpNotification extends Notification
 {
@@ -35,18 +36,26 @@ public class StartUpNotification extends Notification
 		gridBagConstraints.ipadx = 5;
 		gridBagConstraints.ipady = 5;
 
-		JLabel startUpLabel = new JLabel(SWMain.messagesBundle.getString("spineware_has_started"));
+		JLabel startUpLabel = new JLabel(SWMain.getMessagesBundle().getString("spineware_has_started"));
 		startUpLabel.setFont(Fonts.SANS_SERIF_BOLD_15);
 
 		// add SW icon
 		gridBagConstraints.gridheight = 2;
 		super.mainPanel.add(super.swIconLabel, gridBagConstraints);
 
-		// add take a break label
+		// add start up label
 		gridBagConstraints.gridx = 1;
 		gridBagConstraints.gridy = 0;
 		gridBagConstraints.gridheight = 2;
 		super.mainPanel.add(startUpLabel, gridBagConstraints);
+
+		// add close button
+		gridBagConstraints.gridx = 2;
+		gridBagConstraints.gridy = 0;
+		gridBagConstraints.gridwidth = 1;
+		gridBagConstraints.gridheight = 1;
+		super.mainPanel.add(super.closeBtn, gridBagConstraints);
+		super.closeBtn.addActionListener((ActionEvent e) -> this.dispose());
 
 		super.showJDialog();
 	}

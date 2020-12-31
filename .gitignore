@@ -2,6 +2,12 @@
 *.md.backup
 ./**/*.md.backup
 
+# Python venv
+**/venv
+
+## jupyter checkpoints
+**/.ipynb_checkpoints
+
 # out files
 target/
 

@@ -18,6 +18,7 @@
 
 package org.fos.cv;
 
+import nu.pattern.OpenCV;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -25,7 +26,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
 
-public class PostureChecker
+public class PostureChecker implements AutoCloseable
 {
 	// min ratio for the detected face, any face with width less than this ratio (compared to the width of the frame)
 	// will be ignored
@@ -35,12 +36,23 @@ public class PostureChecker
 	// will be ignored
 	private static final float MIN_FACE_DETECTED_RATIO_HEIGHT = 0.2f;
 
+	private static boolean alreadyInstantiated = false;
+
+	// thresholds
 	private Size minFaceDetectedSize;
+
+	// measurements
+	private int screen_area;
+
 	private VideoCapture videoCapture;
 	private CascadeClassifier faceCascadeClassifier;
 
 	public PostureChecker()
 	{
+		if (PostureChecker.alreadyInstantiated)
+			throw new IllegalStateException("This class has already been instantiated");
+		PostureChecker.alreadyInstantiated = true;
+		OpenCV.loadShared();
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
 
@@ -49,25 +61,29 @@ public class PostureChecker
 		this.videoCapture = new VideoCapture();
 		this.faceCascadeClassifier = new CascadeClassifier();
 
+		if (!this.videoCapture.isOpened())
+			this.videoCapture.open(0); // this will open the first capture device is found
+
 		Mat frame = new Mat();
 		byte i = 0;
 		final byte MAX_TRIES = 100;
 		while (!this.videoCapture.read(frame)) {
+			if (!this.videoCapture.isOpened())
+				this.videoCapture.open(0);
+
 			if (i >= MAX_TRIES)
 				throw new RuntimeException("Couldn't capture frame after " + i + " tries");
-
-			this.computeMinFaceDetectedSize(frame);
 			++i;
 		}
+
+		this.computeThresholds(frame);
 	}
 
 	/**
 	 * Captures the next frame in the video capture, saves it in the outputImage parameter
 	 * Then tries to detect faces
 	 *
-	 * @param outputFrame
-	 * 	the frame where the result will be placed
-	 *
+	 * @param outputFrame the frame where the result will be placed
 	 * @return true if the next frame was captured, false otherwise
 	 */
 	public boolean captureAndDetectFace(Mat outputFrame, boolean add_detected_faces_to_output)
@@ -76,12 +92,11 @@ public class PostureChecker
 			return false;
 
 		if (this.minFaceDetectedSize == null)
-			this.computeMinFaceDetectedSize(outputFrame);
+			this.computeThresholds(outputFrame);
 
 		Mat grayFrame = new Mat(outputFrame.rows(), outputFrame.cols(), outputFrame.type());
 		Imgproc.cvtColor(outputFrame, grayFrame, Imgproc.COLOR_BGR2GRAY);
 		Imgproc.equalizeHist(grayFrame, grayFrame);
-
 
 		return true;
 	}
@@ -90,14 +105,35 @@ public class PostureChecker
 	 * This will compute the min required size for a face to be detected
 	 * The size computed will depend on the configuration of the class, check the method to see more
 	 *
-	 * @param frame
-	 * 	the frame used as reference to compute the size
+	 * @param frame the frame used as reference to compute the size
 	 */
-	private void computeMinFaceDetectedSize(Mat frame)
+	private void computeThresholds(Mat frame)
 	{
 		this.minFaceDetectedSize = new Size(
 			PostureChecker.MIN_FACE_DETECTED_RATIO_WIDTH * frame.rows(),
 			PostureChecker.MIN_FACE_DETECTED_RATIO_HEIGHT * frame.cols()
 		);
+	}
+
+	/**
+	 * Closes the camera
+	 * Even though this should be done automatically, this method was added to ensure
+	 * the camera is closed, it is NOT required but recommended to call this method or to use try-with-resources
+	 */
+	@Override
+	public void close()
+	{
+		this.videoCapture.release();
+	}
+
+	@Override
+	public String toString()
+	{
+		return "PostureChecker{" +
+			"minFaceDetectedSize=" + minFaceDetectedSize +
+			", screen_area=" + screen_area +
+			", videoCapture=" + videoCapture +
+			", faceCascadeClassifier=" + faceCascadeClassifier +
+			'}';
 	}
 }

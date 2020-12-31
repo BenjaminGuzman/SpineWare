@@ -23,17 +23,20 @@ import org.fos.Fonts;
 import org.fos.SWMain;
 import org.fos.core.NotificationLocation;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.Timer;
-import java.awt.GridBagConstraints;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
 
 public class TakeABreakNotification extends Notification
 {
+	// Milliseconds for the notification timeout
+	public static final int MS_NOTIFICATION_TIMEOUT = 15_000;
+
+	// Milliseconds for the DAY notification timeout
+	public static final int MS_DAY_NOTIFICATION_TIMEOUT = 60_000 * 30; // half an hour
+
 	// this countdown latch should be decremented when the dialog ends (its closed or "take a break" is clicked)
 	private final CountDownLatch countDownLatch;
 	private final JProgressBar progressBarCountDown;
@@ -46,10 +49,29 @@ public class TakeABreakNotification extends Notification
 		final String takeABreakMessage,
 		final CountDownLatch countDownLatch,
 		final boolean is_not_day_limit_notification,
+		final NotificationLocation notificationLocation,
+		final Runnable onShown,
+		final Runnable onDisposed
+	)
+	{
+		this(takeABreakMessage, countDownLatch, is_not_day_limit_notification, notificationLocation);
+		super.onShown = onShown;
+		super.onDisposed = onDisposed;
+	}
+
+	public TakeABreakNotification(
+		final String takeABreakMessage,
+		final CountDownLatch countDownLatch,
+		final boolean is_not_day_limit_notification,
 		final NotificationLocation notificationLocation
 	)
 	{
-		super(is_not_day_limit_notification ? 15_000 : 60_000, notificationLocation);
+		super(
+			is_not_day_limit_notification ? MS_NOTIFICATION_TIMEOUT : MS_DAY_NOTIFICATION_TIMEOUT,
+			notificationLocation
+		);
+
+		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
 		this.countDownLatch = countDownLatch;
 
@@ -63,20 +85,20 @@ public class TakeABreakNotification extends Notification
 		JPanel buttonsPanel = new JPanel();
 
 		if (is_not_day_limit_notification) {
-			JButton takeBreakButton = new JButton(SWMain.messagesBundle.getString("notification_take_break"));
-			takeBreakButton.setToolTipText(SWMain.messagesBundle.getString("notification_take_break_tooltip"));
+			JButton takeBreakButton = new JButton(messagesBundle.getString("notification_take_break"));
+			takeBreakButton.setToolTipText(messagesBundle.getString("notification_take_break_tooltip"));
 			takeBreakButton.addActionListener(this::onClickTakeBreak);
 			buttonsPanel.add(takeBreakButton);
 			this.getRootPane().setDefaultButton(takeBreakButton);
 		}
 
-		JButton postponeButton = new JButton(SWMain.messagesBundle.getString("notification_postpone_break"));
-		postponeButton.setToolTipText(SWMain.messagesBundle.getString("notification_postpone_tooltip"));
+		JButton postponeButton = new JButton(messagesBundle.getString("notification_postpone_break"));
+		postponeButton.setToolTipText(messagesBundle.getString("notification_postpone_tooltip"));
 		postponeButton.addActionListener(this::onClickPostpone);
 		buttonsPanel.add(postponeButton);
 
-		JButton dismissButton = new JButton(SWMain.messagesBundle.getString("notification_dismiss_break"));
-		dismissButton.setToolTipText(SWMain.messagesBundle.getString("notification_dismiss_tooltip"));
+		JButton dismissButton = new JButton(messagesBundle.getString("notification_dismiss_break"));
+		dismissButton.setToolTipText(messagesBundle.getString("notification_dismiss_tooltip"));
 		dismissButton.addActionListener(this::onClickDismiss);
 		buttonsPanel.add(dismissButton);
 
@@ -87,7 +109,7 @@ public class TakeABreakNotification extends Notification
 		this.progressBarCountDown.setStringPainted(true);
 		this.progressBarCountDown.setBorderPainted(false);
 		this.progressBarCountDown.setBackground(Colors.RED_WINE);
-		this.progressBarCountDown.setForeground(Colors.GREEN);
+		this.progressBarCountDown.setForeground(Colors.GREEN_DARK);
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
 		gridBagConstraints.ipadx = 5;
@@ -134,8 +156,7 @@ public class TakeABreakNotification extends Notification
 	 * Invoked when the user clicks the take break button
 	 * This will set the break_dismissed and break_postponed properties to false
 	 *
-	 * @param evt
-	 * 	event
+	 * @param evt event
 	 */
 	private void onClickTakeBreak(ActionEvent evt)
 	{
@@ -148,8 +169,7 @@ public class TakeABreakNotification extends Notification
 	 * Invoked when the user clicks the dismiss button
 	 * This will set the break_dismissed property to false
 	 *
-	 * @param evt
-	 * 	event
+	 * @param evt event
 	 */
 	private void onClickDismiss(ActionEvent evt)
 	{
@@ -161,8 +181,7 @@ public class TakeABreakNotification extends Notification
 	 * Invoked when the user clicks the postpone button
 	 * This will set the break_postponed property to false
 	 *
-	 * @param evt
-	 * 	event
+	 * @param evt event
 	 */
 	private void onClickPostpone(ActionEvent evt)
 	{
@@ -196,5 +215,18 @@ public class TakeABreakNotification extends Notification
 		if (this.countDownTimer != null)
 			this.countDownTimer.stop();
 		this.countDownLatch.countDown();
+	}
+
+	@Override
+	public String toString()
+	{
+		return "TakeABreakNotification{" +
+			"countDownLatch=" + countDownLatch +
+			", progressBarCountDown=" + progressBarCountDown +
+			", countDownTimer=" + countDownTimer +
+			", break_dismissed=" + break_dismissed +
+			", break_postponed=" + break_postponed +
+			", remaining_seconds=" + remaining_seconds +
+			'}';
 	}
 }

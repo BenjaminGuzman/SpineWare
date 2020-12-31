@@ -18,26 +18,9 @@
 
 package org.fos.timers;
 
-import org.fos.Loggers;
-import org.fos.SWMain;
 import org.fos.core.BreakType;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineEvent;
-import javax.sound.sampled.LineListener;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
+import java.util.Objects;
 
 /**
  * Wrapper class containing information about the break settings including
@@ -47,20 +30,14 @@ import java.util.logging.Level;
  */
 public class BreakSettings
 {
-	private static final String[] defaultNotificationAudio = new String[]{
-		"/resources/media/audio/small_breaks/notification.wav",
-		"/resources/media/audio/stretch_breaks/notification.wav",
-		"/resources/media/audio/day_break/notification.wav"
-	};
 	private final BreakType breakType;
+	private final HooksConfig hooksConfig;
 	private Clock workClock;
 	private Clock breakClock;
 	private Clock postponeClock;
 	private boolean is_enabled;
 	private String notificationAudioPath;
 	private String breakAudiosDirStr;
-	private Clip soundClip;
-	private Thread soundThread;
 
 	private BreakSettings(
 		final Clock workClock,
@@ -69,16 +46,71 @@ public class BreakSettings
 		final BreakType breakType,
 		final String notificationAudioPath,
 		final String breakAudiosDirStr,
+		final HooksConfig hooksConfig,
 		final boolean is_enabled
 	)
 	{
-		this.workClock = workClock;
+		this.workClock = Objects.requireNonNull(workClock);
 		this.breakClock = breakClock;
-		this.postponeClock = postponeClock;
-		this.breakType = breakType;
+		this.postponeClock = Objects.requireNonNull(postponeClock);
+		this.breakType = Objects.requireNonNull(breakType);
 		this.is_enabled = is_enabled;
 		this.notificationAudioPath = notificationAudioPath;
 		this.breakAudiosDirStr = breakAudiosDirStr;
+		this.hooksConfig = hooksConfig;
+	}
+
+	/**
+	 * Use this method when you want ALL hooks threads to be interrupted and therefore stopped
+	 * <p>
+	 * In other words, this method will stop the audio and/or the command execution (if exists)
+	 */
+	synchronized public void stopHooks()
+	{
+		// TODO: stop hooks
+	}
+
+	/**
+	 * Use this method to start the hooks associated to the break starting up
+	 *
+	 * @return false if the hooks are already executing, true otherwise
+	 */
+	synchronized public boolean startBreakHooks()
+	{
+		return this.stopBreakHooks() & this.stopNotificationHooks();
+	}
+
+	/**
+	 * Use this method to stop the hooks associated to the break ending
+	 *
+	 * @return false if the hooks are already stopped, true otherwise
+	 */
+	synchronized public boolean stopBreakHooks()
+	{
+		// TODO: stop hooks
+		return true;
+	}
+
+	/**
+	 * Use this method to start the hooks associated to the notification showing up
+	 *
+	 * @return false if the hooks are already executing, true otherwise
+	 */
+	synchronized public boolean startNotificationHooks()
+	{
+		// TODO: start hooks
+		return true;
+	}
+
+	/**
+	 * Use this method to end the hooks associated to the notification disposing/closing
+	 *
+	 * @return false if the hooks are already stopped, true otherwise
+	 */
+	synchronized public boolean stopNotificationHooks()
+	{
+		// TODO: stop hooks
+		return true;
 	}
 
 	public BreakType getBreakType()
@@ -146,230 +178,18 @@ public class BreakSettings
 		this.is_enabled = is_enabled;
 	}
 
-	/**
-	 * Gets the clip to reproduce audio files
-	 * This method should be called before playing audio and using the this.soundClip object
-	 * to ensure it isn't null
-	 * If the sound clip couldn't be loaded, a warning message will be logged
-	 * @return true if the soundClip could be loaded, false otherwise
-	 */
-	public boolean loadSoundClip() {
-		if (this.soundClip != null)
-			return true;
-
-		try {
-			this.soundClip = AudioSystem.getClip();
-		} catch (LineUnavailableException | SecurityException e) {
-			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't get system clip to play audio", e);
-			return false;
-		} catch (IllegalArgumentException e) {
-			Loggers.getErrorLogger().log(
-				Level.WARNING,
-				"Your system does not have support for playing audio files",
-				e
-			);
-			return false;
-		}
-		return true;
-	}
-
-	public void playBreakAudio()
+	@Override
+	public String toString()
 	{
-		if (!this.loadSoundClip()) // audio cannot be played in this system, some sort of problem occurred
-			return;
-		this.stopAudio();
-		this.soundThread = new Thread(this::_playBreakAudio);
-		this.soundThread.start();
-	}
-
-	public void playNotificationAudio()
-	{
-		if (!this.loadSoundClip()) // audio cannot be played in this system, some sort of problem occurred
-			return;
-		this.stopAudio();
-		this.soundThread = new Thread(this::_playNotificationAudio);
-		this.soundThread.start();
-	}
-
-	/**
-	 * This method will read the file each time it is invoked
-	 * This is the desired behaviour, we're trading memory vs efficiency
-	 * Since efficiency is not critical here, we'll prefer to improve memory usage
-	 */
-	private void _playNotificationAudio()
-	{
-		if (this.soundClip == null)
-			return;
-
-		CountDownLatch countDownLatch = new CountDownLatch(1);
-		LineListener onStopListener = (LineEvent evt) -> {
-			if (evt.getType() == LineEvent.Type.STOP) {
-				this.soundClip.close();
-				countDownLatch.countDown();
-			}
-		};
-		AudioInputStream audioInputStream = null;
-		try {
-			File notificationSoundFile = null;
-			boolean notification_sound_file_is_good = this.notificationAudioPath != null
-				&& (notificationSoundFile = new File(this.notificationAudioPath)).exists();
-
-			if (notification_sound_file_is_good)
-				audioInputStream = AudioSystem.getAudioInputStream(notificationSoundFile);
-			else
-				audioInputStream = AudioSystem.getAudioInputStream(
-					new BufferedInputStream( // add mark/reset support, mark is just a pointer to the current position in the stream
-								 SWMain.getFileAsStream(defaultNotificationAudio[this.breakType.getIndex()])
-					)
-				);
-
-			this.soundClip.addLineListener(onStopListener);
-
-			this.soundClip.open(audioInputStream);
-			this.soundClip.start();
-
-			countDownLatch.await(); // wait till the audio has finished playing back
-		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
-			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't play audio: " + this.notificationAudioPath, e);
-			try {
-				audioInputStream = AudioSystem.getAudioInputStream(
-					new BufferedInputStream( // add mark/reset support, mark is just a pointer to the current position in the stream
-								 SWMain.getFileAsStream(defaultNotificationAudio[this.breakType.getIndex()])
-					)
-				);
-				this.soundClip.addLineListener(onStopListener);
-
-				this.soundClip.open(audioInputStream);
-				this.soundClip.start();
-
-				countDownLatch.await(); // wait till the audio has finished playing back
-			} catch (UnsupportedAudioFileException | InterruptedException | LineUnavailableException | IOException ex) {
-				Loggers.getErrorLogger().log(Level.SEVERE, "Definitely audio couldn't be played", ex);
-			}
-
-		} catch (InterruptedException e) {
-			// thread was interrupted, no exception handling is added here 'cause the main cause for
-			// this exception to occur is the user exiting the application or cancelling something
-		} finally {
-			this.soundClip.removeLineListener(onStopListener);
-			if (audioInputStream != null) {
-				try {
-					audioInputStream.close();
-				} catch (IOException e) {
-					Loggers.getErrorLogger().log(Level.WARNING, "Error while closing audio file", e);
-				}
-			}
-		}
-	}
-
-	/**
-	 * This method will loop trough all the supported audio in the breakAudiosDirStr directory
-	 * And will play every file till the thread is interrupted
-	 * To interrupt the thread call {@link #stopAudio()}
-	 */
-	public void _playBreakAudio()
-	{
-		if (this.breakAudiosDirStr == null || this.soundClip == null)
-			return;
-
-		if (this.breakType == BreakType.DAY_BREAK)
-			return; // probably an exception should be thrown
-
-		File breakAudiosDir = new File(this.breakAudiosDirStr);
-		if (!breakAudiosDir.exists() || !breakAudiosDir.isDirectory() || !breakAudiosDir.canRead())
-			return;
-
-		// use an arraylist instead of an array to have access to the Collections API
-		ArrayList<String> acceptedExtensions = new ArrayList<>(3);
-		acceptedExtensions.add(".mp3");
-		acceptedExtensions.add(".ogg");
-		acceptedExtensions.add(".wav");
-
-		File[] audioFiles = breakAudiosDir.listFiles((File file) -> {
-			if (file.isDirectory())
-				return false;
-
-			String absPath = file.getAbsolutePath();
-			return file.isFile() && acceptedExtensions.contains(
-				absPath.substring(absPath.length() - 4)
-			);
-		});
-
-		if (audioFiles == null || audioFiles.length == 0)
-			return;
-
-		Deque<File> pendingAudioFiles = new LinkedList<>(Arrays.asList(audioFiles));
-
-		final long MAX_FILE_SIZE_MB = 100;
-
-		AudioInputStream audioInputStream = null;
-		LineListener onStopListener = null;
-		while (!Thread.interrupted()) {
-			File audioFile = pendingAudioFiles.poll(); // pop from the head of the deque
-			pendingAudioFiles.addLast(audioFile); // insert to the tail of the deque
-
-			if (audioFile == null) // something really weird happened, I believe this will never happen
-				return;
-
-			if (audioFile.length() / 1024 /* B -> kB */ / 1024 /* mB -> MB */ > 100) {
-				Loggers.getErrorLogger().log(Level.WARNING, "The file: "
-					+ audioFile.getAbsolutePath() + " is more than "
-					+ MAX_FILE_SIZE_MB + "MB, skipping...");
-				continue;
-			}
-
-			try {
-				audioInputStream = AudioSystem.getAudioInputStream(audioFile.getAbsoluteFile());
-
-				CountDownLatch countDownLatch = new CountDownLatch(1);
-				onStopListener = (LineEvent evt) -> {
-					if (evt.getType() == LineEvent.Type.STOP) {
-						this.soundClip.close();
-						countDownLatch.countDown();
-					}
-				};
-				this.soundClip.addLineListener(onStopListener);
-
-				this.soundClip.open(audioInputStream);
-				this.soundClip.start();
-
-				countDownLatch.await(); // wait till the audio has finished playing back
-				audioInputStream.close();
-				this.soundClip.removeLineListener(onStopListener);
-			} catch (UnsupportedAudioFileException | IOException e) {
-				Loggers.getErrorLogger().log(Level.SEVERE, "Something bad happened while trying to open: "
-					+ audioFile.getAbsolutePath(), e);
-			} catch (LineUnavailableException e) {
-				Loggers.getErrorLogger().log(Level.SEVERE, "Something bad happened while trying to play file: "
-					+ audioFile.getAbsolutePath(), e);
-			} catch (InterruptedException e) {
-				return;
-			} finally {
-				this.soundClip.removeLineListener(onStopListener);
-				if (audioInputStream != null) {
-					try {
-						audioInputStream.close();
-					} catch (IOException e) {
-						Loggers.getErrorLogger().log(Level.WARNING, "Error while closing audio file", e);
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Will stop the execution of the process that plays the sound
-	 */
-	public void stopAudio()
-	{
-		if (this.soundClip != null) {
-			this.soundClip.stop();
-			this.soundClip.close();
-		}
-		if (this.soundThread != null)
-			this.soundThread.interrupt();
-
-		this.soundThread = null;
+		return "BreakSettings{" +
+			"breakType=" + breakType +
+			", workClock=" + workClock +
+			", breakClock=" + breakClock +
+			", postponeClock=" + postponeClock +
+			", is_enabled=" + is_enabled +
+			", notificationAudioPath='" + notificationAudioPath + '\'' +
+			", breakAudiosDirStr='" + breakAudiosDirStr + '\'' +
+			'}';
 	}
 
 	public static class Builder
@@ -381,6 +201,8 @@ public class BreakSettings
 		private String notificationAudioPath;
 		private String breakAudiosDirStr;
 		private boolean is_enabled = true;
+
+		private HooksConfig hooksConfig;
 
 		public Builder workTimerSettings(Clock workClock)
 		{
@@ -424,6 +246,12 @@ public class BreakSettings
 			return this;
 		}
 
+		public Builder hooksConfig(HooksConfig hooksConfig)
+		{
+			this.hooksConfig = hooksConfig;
+			return this;
+		}
+
 		public BreakSettings createBreakSettings()
 		{
 			return new BreakSettings(
@@ -433,6 +261,7 @@ public class BreakSettings
 				this.breakType,
 				this.notificationAudioPath,
 				this.breakAudiosDirStr,
+				this.hooksConfig,
 				this.is_enabled
 			);
 		}

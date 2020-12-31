@@ -62,4 +62,14 @@ public enum BreakType
 	{
 		return this.messagesPrefix;
 	}
+
+	@Override
+	public String toString()
+	{
+		return "BreakType{" +
+			"messagesPrefix='" + messagesPrefix + '\'' +
+			", breakName='" + breakName + '\'' +
+			", index=" + index +
+			'}';
+	}
 }
