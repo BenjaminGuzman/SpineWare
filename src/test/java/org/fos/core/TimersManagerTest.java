@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TimersManagerTest
 {
 	static OutputStream backupOS;
-	static Path backupPath = Paths.get("/tmp", "sw_prefs.bak");
+	static Path backupPath = Paths.get(System.getProperty("java.io.tmpdir"), "sw_prefs.bak");
 
 	@BeforeAll
 	static void beforeAll() throws BackingStoreException, IOException
