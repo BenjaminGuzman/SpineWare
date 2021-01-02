@@ -31,7 +31,11 @@ The following files
 
 Are licensed under
 the [Creative Commons Attribution-ShareAlike license (CC BY-SA) 4.0](https://creativecommons.org/licenses/by-sa/4.0/),
-and were made by Benjamín Guzmán <bg@benjaminguzman.dev>
+and were made by Benjamín Guzmán <bg@benjaminguzman.dev>, therefore they ALL have the following copyright notice
+
+`Copyright (C) 2020, Benjamín Guzmán `
+
+Added here as it's not possible to add it inside the file ('cause they're binaries)
 
 The GPLv3 logo `gplv3-136x68.png` is in the public domain and was taken
 from [https://www.gnu.org/graphics/license-logos.html](https://www.gnu.org/graphics/license-logos.html)

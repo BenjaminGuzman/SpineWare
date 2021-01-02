@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,12 +18,6 @@
 package org.fos.timers;
 
 
-import org.fos.Loggers;
-import org.fos.core.TimersManager;
-import org.fos.timers.notifications.BreakCountDown;
-import org.fos.timers.notifications.TakeABreakNotification;
-
-import javax.swing.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,6 +25,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import org.fos.Loggers;
+import org.fos.core.TimersManager;
+import org.fos.gui.notifications.BreakCountDown;
+import org.fos.gui.notifications.TakeABreakNotification;
+import org.fos.hooks.BreakHooksConfig;
 
 public class WorkingTimeTimer implements Runnable
 {
@@ -41,7 +42,7 @@ public class WorkingTimeTimer implements Runnable
 	private static final AtomicBoolean is_break_happening = new AtomicBoolean(false); // sentinel value to avoid
 	// collisions between breaks
 
-	private final BreakSettings breakSettings;
+	private final BreakConfig breakConfig;
 	private final String takeABreakMessage;
 	private final String breakName;
 	private final boolean add_take_break_option;
@@ -56,13 +57,13 @@ public class WorkingTimeTimer implements Runnable
 	private ScheduledExecutorService executorService;
 
 	public WorkingTimeTimer(
-		final BreakSettings breakSettings,
+		final BreakConfig breakConfig,
 		final String takeABreakMessage,
 		final String breakName
 	)
 	{
 		this(
-			breakSettings,
+			breakConfig,
 			takeABreakMessage,
 			breakName,
 			true
@@ -70,13 +71,13 @@ public class WorkingTimeTimer implements Runnable
 	}
 
 	public WorkingTimeTimer(
-		final BreakSettings breakSettings,
+		final BreakConfig breakConfig,
 		final String takeABreakMessage,
 		final String breakName,
 		final boolean add_take_break_option
 	)
 	{
-		this.breakSettings = breakSettings;
+		this.breakConfig = breakConfig;
 		this.takeABreakMessage = takeABreakMessage;
 		this.breakName = breakName;
 		this.add_take_break_option = add_take_break_option;
@@ -110,7 +111,7 @@ public class WorkingTimeTimer implements Runnable
 		if (notification != null)
 			notification.dispose();
 
-		this.breakSettings.stopHooks();
+		this.breakConfig.getHooksConfig().stopHooks();
 	}
 
 	/**
@@ -139,7 +140,7 @@ public class WorkingTimeTimer implements Runnable
 			this.n_dismisses = 0;
 			this.n_postponed = 0;
 
-			if (this.breakSettings.getBreakTimerSettings() == null) { // in case of the day limit timer
+			if (this.breakConfig.getBreakTimerSettings() == null) { // in case of the day limit timer
 				// this should almost never happen
 				SwingUtilities.invokeLater(() -> {
 					JOptionPane.showMessageDialog(
@@ -156,6 +157,8 @@ public class WorkingTimeTimer implements Runnable
 			return;
 		}
 
+		BreakHooksConfig hooksConfig = this.breakConfig.getHooksConfig();
+
 		this.notificationCountDownLatch = new CountDownLatch(1);
 		SwingUtilities.invokeLater(() -> notificationRef.set(
 			new TakeABreakNotification(
@@ -163,13 +166,13 @@ public class WorkingTimeTimer implements Runnable
 				this.notificationCountDownLatch,
 				this.add_take_break_option,
 				TimersManager.getNotificationPrefLocation(),
-				this.breakSettings::startNotificationHooks,
-				this.breakSettings::stopNotificationHooks
+				hooksConfig::onStartNotificationHooks,
+				hooksConfig::onEndNotificationHooks
 			)
 		));
 
 		try {
-			this.notificationCountDownLatch.await();
+			this.notificationCountDownLatch.await(); // wait till notification is dismissed
 		} catch (InterruptedException e) {
 			Loggers.getErrorLogger().log(
 				Level.INFO,
@@ -190,7 +193,7 @@ public class WorkingTimeTimer implements Runnable
 			return;
 		}
 
-		if (this.breakSettings.getBreakTimerSettings() == null) { // the day break does not have break time
+		if (this.breakConfig.getBreakTimerSettings() == null) { // the day break does not have break time
 			this.scheduleWorkingTimeExecutor();
 			return;
 		}
@@ -206,14 +209,16 @@ public class WorkingTimeTimer implements Runnable
 	 */
 	private void showBreakCountDown()
 	{
+		BreakHooksConfig hooksConfig = this.breakConfig.getHooksConfig();
+
 		this.breakCountDownLatch = new CountDownLatch(1);
 		SwingUtilities.invokeLater(() -> this.breakCountDownRef.set(
 			new BreakCountDown(
 				this.breakName,
-				this.breakSettings.getBreakTimerSettings(),
+				this.breakConfig.getBreakTimerSettings(),
 				this.breakCountDownLatch,
-				this.breakSettings::startBreakHooks,
-				this.breakSettings::stopBreakHooks
+				hooksConfig::onStartBreakHooks,
+				hooksConfig::onEndBreakHooks
 			)
 		));
 
@@ -239,7 +244,7 @@ public class WorkingTimeTimer implements Runnable
 	{
 		WorkingTimeTimer.is_break_happening.set(false);
 
-		this.breakSettings.stopHooks();
+		this.breakConfig.getHooksConfig().stopHooks();
 
 		this.executorService.schedule(this, seconds_timeout, TimeUnit.SECONDS);
 
@@ -249,12 +254,12 @@ public class WorkingTimeTimer implements Runnable
 
 	private void schedulePostponedExecutor()
 	{
-		this.scheduleExecutor(this.breakSettings.getPostponeTimerSettings().getHMSAsSeconds());
+		this.scheduleExecutor(this.breakConfig.getPostponeTimerSettings().getHMSAsSeconds());
 	}
 
 	private void scheduleWorkingTimeExecutor()
 	{
-		this.scheduleExecutor(this.breakSettings.getWorkTimerSettings().getHMSAsSeconds());
+		this.scheduleExecutor(this.breakConfig.getWorkTimerSettings().getHMSAsSeconds());
 	}
 
 	/**
@@ -293,14 +298,14 @@ public class WorkingTimeTimer implements Runnable
 	 */
 	public int getWorkingTimeSeconds()
 	{
-		return this.breakSettings.getWorkTimerSettings().getHMSAsSeconds();
+		return this.breakConfig.getWorkTimerSettings().getHMSAsSeconds();
 	}
 
 	@Override
 	public String toString()
 	{
 		return "WorkingTimeTimer{" +
-			"breakSettings=" + breakSettings +
+			"breakSettings=" + breakConfig +
 			", takeABreakMessage='" + takeABreakMessage + '\'' +
 			", breakName='" + breakName + '\'' +
 			", add_take_break_option=" + add_take_break_option +

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,19 +16,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.panels;
+package org.fos.gui.sections;
 
-import org.fos.Loggers;
-import org.fos.SWMain;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
-import java.awt.*;
+import java.awt.Desktop;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JEditorPane;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+import javax.swing.event.HyperlinkEvent;
+import org.fos.Loggers;
+import org.fos.SWMain;
 
 public class HelpPanel extends JScrollPane
 {

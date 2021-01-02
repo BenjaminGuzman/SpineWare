@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,16 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos;
+package org.fos.gui;
 
-import org.fos.core.BreakType;
-import org.fos.core.TimersManager;
-import org.fos.timers.Clock;
-import org.fos.timers.WorkingTimeTimer;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -36,6 +33,21 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.Timer;
+import org.fos.Loggers;
+import org.fos.SWMain;
+import org.fos.core.BreakType;
+import org.fos.core.TimersManager;
+import org.fos.timers.Clock;
+import org.fos.timers.WorkingTimeTimer;
 
 public class SysTrayMenu extends JDialog
 {
@@ -290,6 +302,14 @@ public class SysTrayMenu extends JDialog
 		});
 		this.statusTimer.setInitialDelay(0);
 		this.statusTimer.start();
+	}
+
+	@Override
+	public void dispose()
+	{
+		super.dispose();
+		if (this.statusTimer != null)
+			this.statusTimer.stop();
 	}
 
 	@Override

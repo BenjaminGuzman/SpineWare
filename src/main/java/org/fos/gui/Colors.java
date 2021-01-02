@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,18 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.timers;
+package org.fos.gui;
 
-import org.fos.core.AudioPlayer;
-import org.fos.core.CommandExecutor;
+import java.awt.Color;
 
-public class HooksExecutor extends HooksConfig
+public class Colors
 {
-	private AudioPlayer audioPlayer;
-	private CommandExecutor cmdExecutor;
-
-	public HooksExecutor(Builder builder)
-	{
-		super(builder);
-	}
+	public final static Color RED = new Color(0xFF3131);
+	public final static Color RED_WINE = new Color(0x420D0D);
+	public final static Color GREEN_DARK = new Color(0x385F1A);
+	public final static Color GREEN = new Color(0x69BB36);
+	public final static Color WHITE = new Color(0x0CDCDCD);
 }

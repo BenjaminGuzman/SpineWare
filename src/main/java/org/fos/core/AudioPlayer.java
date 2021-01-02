@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,24 +18,110 @@
 
 package org.fos.core;
 
-import org.fos.Loggers;
-import org.fos.SWMain;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.function.Consumer;
+import java.util.logging.Level;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
-import javax.swing.*;
-import java.awt.*;
-import java.util.logging.Level;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.SwingUtilities;
+import org.fos.Loggers;
+import org.fos.SWMain;
 
 public class AudioPlayer extends Thread
 {
 	private Clip audioClip;
+	private Consumer<Exception> onError;
 
 	public AudioPlayer()
 	{
 		super();
 		this.setDaemon(true);
+	}
+
+	public AudioPlayer(Consumer<Exception> onError)
+	{
+		this();
+		this.onError = onError;
+	}
+
+	/**
+	 * Plays the given audio
+	 * <p>
+	 * this should be invoked only if {@link #readyToPlayAudio()} is invoked
+	 * otherwise, this method is likely to throw {@link NullPointerException}
+	 *
+	 * @param audioFileAbsPath the absolute path for the audio file to be played
+	 * @throws NullPointerException if the audio clip has not been loaded
+	 */
+	public void loadAudio(String audioFileAbsPath) throws UnsupportedAudioFileException, LineUnavailableException, IOException
+	{
+
+		this.audioClip.open(AudioSystem.getAudioInputStream(new File(audioFileAbsPath).getAbsoluteFile()));
+	}
+
+	/**
+	 * Stops the audio clip
+	 */
+	public void stopAudio()
+	{
+		this.audioClip.stop();
+	}
+
+	/**
+	 * Same as {@link Clip#getMicrosecondPosition()}
+	 *
+	 * @return the number of microseconds of data processed since the line was opened (since audio started playing)
+	 */
+	public long getMicroSecondsPosition()
+	{
+		return this.audioClip.getMicrosecondPosition();
+	}
+
+	/**
+	 * Interrupts this thread & stops playing audio
+	 */
+	@Override
+	public void interrupt()
+	{
+		super.interrupt();
+		if (this.audioClip != null) {
+			this.audioClip.flush();
+			this.audioClip.stop();
+			this.audioClip.close();
+		}
+	}
+
+	/**
+	 * Invoked when {@link Thread#start()} is invoked
+	 * <p>
+	 * This will start playing audio, therefore, be sure to call {@link #init()}, {@link #loadAudio(String)}
+	 * before calling {@link Thread#start()}
+	 */
+	@Override
+	public void run()
+	{
+		super.run();
+		try {
+			this.audioClip.start();
+		} catch (Exception e) {
+			if (this.onError != null)
+				this.onError.accept(e);
+		}
+	}
+
+	/**
+	 * Tells if the system audio clip has already loaded
+	 * <p>
+	 * If this methods returns false, you can try to load the system audio clip with {@link #init()}
+	 *
+	 * @return true if the system audio clip has been loaded and can be used to play audio, false otherwise
+	 */
+	public boolean readyToPlayAudio()
+	{
+		return this.audioClip != null;
 	}
 
 	/**
@@ -46,7 +132,7 @@ public class AudioPlayer extends Thread
 	 *
 	 * @return true if the soundClip could be loaded, false otherwise
 	 */
-	public boolean loadSoundClip()
+	public boolean init()
 	{
 		if (this.audioClip != null)
 			return true;
@@ -59,7 +145,9 @@ public class AudioPlayer extends Thread
 				"Couldn't get system clip to play audio",
 				e
 			);
-			SwingUtilities.invokeLater(() -> this.showErrorAlert(SWMain.getMessagesBundle().getString("system_cannot_play_audio")));
+			SwingUtilities.invokeLater(
+				() -> this.showErrorAlert(SWMain.getMessagesBundle().getString("system_cannot_play_audio"))
+			);
 			return false;
 		} catch (IllegalArgumentException e) {
 			Loggers.getErrorLogger().log(
@@ -67,41 +155,36 @@ public class AudioPlayer extends Thread
 				"Your system does not have support for playing audio files",
 				e
 			);
-			SwingUtilities.invokeLater(() -> this.showErrorAlert(SWMain.getMessagesBundle().getString("system_cannot_play_audio")));
+			SwingUtilities.invokeLater(
+				() -> this.showErrorAlert(SWMain.getMessagesBundle().getString("system_cannot_play_audio"))
+			);
 			return false;
 		}
 		return true;
 	}
 
 	/**
-	 * Same as {@link #showErrorAlert(String, String)}
-	 * But with default title set to the message property "error_while_playing_audio"
+	 * Set the {@link Consumer} object to execute if there is an error WHILE playing audio
+	 * <p>
+	 * The {@link Consumer#accept(Object)}} method will be invoked only when there is an error while playing audio, not if
+	 * there is an error obtaining the system audio clip or similar errors
+	 *
+	 * @param onError the action to run
+	 */
+	public void setOnError(Consumer<Exception> onError)
+	{
+		this.onError = onError;
+	}
+
+	/**
+	 * Shows an error alert using a JOptionPane as in {@link SWMain#showErrorAlert(String, String)}
+	 *
+	 * Title for the message will be the message property "error_while_playing_audio"
 	 *
 	 * @param message the message for the JOptionPane
 	 */
 	private void showErrorAlert(String message)
 	{
-		this.showErrorAlert(message, SWMain.getMessagesBundle().getString("error_while_playing_audio"));
-	}
-
-	/**
-	 * Show a JOptionPane to the user with type {@link JOptionPane#ERROR_MESSAGE}
-	 * If the SW could be loaded the alert will contain it
-	 *
-	 * @param message the message for the JOptionPane
-	 * @param title   the title for the JOptionPane
-	 */
-	private void showErrorAlert(String message, String title)
-	{
-		Image swImg = SWMain.getSWIcon();
-
-		JOptionPane.showConfirmDialog(
-			null,
-			message,
-			title,
-			JOptionPane.DEFAULT_OPTION,
-			JOptionPane.ERROR_MESSAGE,
-			swImg != null ? new ImageIcon(swImg) : null
-		);
+		SWMain.showErrorAlert(message, SWMain.getMessagesBundle().getString("error_while_playing_audio"));
 	}
 }

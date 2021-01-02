@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,17 +17,19 @@
  */
 package org.fos.core;
 
-import org.fos.Loggers;
-import org.fos.SWMain;
-import org.fos.timers.BreakSettings;
-import org.fos.timers.Clock;
-import org.fos.timers.WorkingTimeTimer;
-
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
+import org.fos.Loggers;
+import org.fos.SWMain;
+import org.fos.timers.BreakConfig;
+import org.fos.timers.WorkingTimeTimer;
 
 public class TimersManager
 {
@@ -68,7 +70,7 @@ public class TimersManager
 	 *
 	 * @return the loaded breaks
 	 */
-	synchronized public static List<BreakSettings> loadBreaksSettings()
+	synchronized public static List<BreakConfig> loadBreaksSettings()
 	{
 		TimersManager.loadPreferences();
 
@@ -83,46 +85,13 @@ public class TimersManager
 	 * Once data is saved, this method will also reload the current timer
 	 * No need to call {@link #reloadTimer(BreakType)}
 	 *
-	 * @param breakSettings the break settings to be saved
+	 * @param breakConfig the break settings to be saved
 	 */
-	synchronized public static void saveBreakSettings(final BreakSettings breakSettings)
+	synchronized public static void saveBreakSettings(final BreakConfig breakConfig)
 	{
-		String breakName = breakSettings.getBreakType().getName();
+		BreakConfig.saveBreakSettings(TimersManager.prefs, breakConfig);
 
-		TimersManager.prefs.putBoolean(breakName + " enabled", breakSettings.isEnabled());
-
-		if (!breakSettings.isEnabled())
-			return;
-
-		Clock breakClock = breakSettings.getBreakTimerSettings();
-		TimersManager.prefs.putInt(
-			breakName + " working time",
-			breakSettings.getWorkTimerSettings().getHMSAsSeconds()
-		);
-		TimersManager.prefs.putInt(
-			breakName + " postpone time",
-			breakSettings.getPostponeTimerSettings().getHMSAsSeconds()
-		);
-		if (breakSettings.getNotificationAudioPath() == null)
-			TimersManager.prefs.remove(breakName + " notification audio");
-		else
-			TimersManager.prefs.put(
-				breakName + " notification audio",
-				breakSettings.getNotificationAudioPath()
-			);
-
-		if (breakClock != null) {
-			TimersManager.prefs.putInt(breakName + " break time", breakClock.getHMSAsSeconds());
-			if (breakSettings.getBreakAudiosDirStr() == null)
-				TimersManager.prefs.remove(breakName + " break audios dir");
-			else
-				TimersManager.prefs.put(
-					breakName + " break audios dir",
-					breakSettings.getBreakAudiosDirStr()
-				);
-		}
-
-		TimersManager.reloadTimer(breakSettings.getBreakType());
+		TimersManager.reloadTimer(breakConfig.getBreakType());
 	}
 
 	/**
@@ -134,7 +103,7 @@ public class TimersManager
 	 *
 	 * @param breaksSettings the array of settings
 	 */
-	synchronized public static void saveBreaksSettings(final List<BreakSettings> breaksSettings)
+	synchronized public static void saveBreaksSettings(final List<BreakConfig> breaksSettings)
 	{
 		TimersManager.loadPreferences();
 
@@ -161,8 +130,8 @@ public class TimersManager
 		if (timer != null) timer.destroy();
 
 		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
-		BreakSettings breakSettings = TimersManager.loadBreakSettings(breakType);
-		if (!breakSettings.isEnabled()) {
+		BreakConfig breakConfig = TimersManager.loadBreakSettings(breakType);
+		if (!breakConfig.isEnabled()) {
 			TimersManager.workingTimeTimers.set(breakType.getIndex(), null);
 			return;
 		}
@@ -170,16 +139,16 @@ public class TimersManager
 		// set and start the new timer
 		TimersManager.workingTimeTimers.set(
 			breakType.getIndex(),
-			breakSettings.getBreakType() == BreakType.DAY_BREAK
+			breakConfig.getBreakType() == BreakType.DAY_BREAK
 				? new WorkingTimeTimer(
-				breakSettings,
+				breakConfig,
 				messagesBundle.getString("time_for_a_day_break"),
 				messagesBundle.getString("day_break_title"),
 				false
 			) : new WorkingTimeTimer(
-				breakSettings,
+				breakConfig,
 				messagesBundle.getString("notification_time_for_a")
-					+ " " + breakSettings.getBreakTimerSettings().getHMSAsString()
+					+ " " + breakConfig.getBreakTimerSettings().getHMSAsString()
 					+ " " + messagesBundle.getString("break"),
 				messagesBundle.getString("time_for_a_small_break")
 			)
@@ -248,7 +217,7 @@ public class TimersManager
 	 */
 	private static void loadTimers()
 	{
-		List<BreakSettings> breaksSettings = TimersManager.loadBreaksSettings();
+		List<BreakConfig> breaksSettings = TimersManager.loadBreaksSettings();
 		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
 		if (TimersManager.workingTimeTimers != null)
@@ -326,39 +295,11 @@ public class TimersManager
 	 *
 	 * @param breakType type of the break, this method will take the name of the break and load the preferences associated with that
 	 *                  name
-	 * @return a {@link BreakSettings} object constructed from the preferences values
+	 * @return a {@link BreakConfig} object constructed from the preferences values
 	 */
-	private static BreakSettings loadBreakSettings(final BreakType breakType)
+	private static BreakConfig loadBreakSettings(final BreakType breakType)
 	{
-		String breakName = breakType.getName();
-		boolean is_enabled = TimersManager.prefs.getBoolean(breakName + " enabled", false);
-
-		int working_time = TimersManager.prefs.getInt(breakName + " working time", 0);
-		int break_time = TimersManager.prefs.getInt(breakName + " break time", 0);
-		int postpone_time = TimersManager.prefs.getInt(breakName + " postpone time", 0);
-		String notificationAudioPath = TimersManager.prefs.get(breakName + " notification audio", null);
-		String breakAudiosDir = TimersManager.prefs.get(breakName + " break audios dir", null);
-
-		if (breakType == BreakType.DAY_BREAK)
-			return new BreakSettings.Builder()
-				.enabled(is_enabled)
-				.workTimerSettings(Clock.from(working_time))
-				.breakTimerSettings(null)
-				.postponeTimerSettings(Clock.from(postpone_time))
-				.breakType(breakType)
-				.notificationAudioPath(notificationAudioPath)
-				.breakAudiosDirStr(breakAudiosDir)
-				.createBreakSettings();
-		else
-			return new BreakSettings.Builder()
-				.enabled(is_enabled)
-				.workTimerSettings(Clock.from(working_time))
-				.breakTimerSettings(Clock.from(break_time))
-				.postponeTimerSettings(Clock.from(postpone_time))
-				.breakType(breakType)
-				.notificationAudioPath(notificationAudioPath)
-				.breakAudiosDirStr(breakAudiosDir)
-				.createBreakSettings();
+		return BreakConfig.fromPrefs(prefs, breakType);
 	}
 
 	/**

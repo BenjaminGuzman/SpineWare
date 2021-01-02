@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.fos;
 
-public interface I18nable
+package org.fos.hooks;
+
+import org.junit.jupiter.api.Test;
+
+class BreakHooksConfigTest
 {
-	void setTextAccordingToLanguage();
+
+	static byte counter = 0;
+
+	@Test
+	void stopHooks()
+	{
+	}
+
+	@Test
+	void onStartBreakHooks()
+	{
+	}
+
+	@Test
+	void onEndBreakHooks()
+	{
+	}
+
+	@Test
+	void onStartNotificationHooks()
+	{
+	}
+
+	@Test
+	void onEndNotificationHooks()
+	{
+	}
 }

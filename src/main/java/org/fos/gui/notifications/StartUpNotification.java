@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,15 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.timers.notifications;
+package org.fos.gui.notifications;
 
-import org.fos.Fonts;
+import java.awt.GridBagConstraints;
+import java.awt.event.ActionEvent;
+import javax.swing.JLabel;
 import org.fos.SWMain;
 import org.fos.core.NotificationLocation;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
+import org.fos.gui.Fonts;
 
 public class StartUpNotification extends Notification
 {

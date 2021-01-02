@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -53,6 +53,19 @@ public enum BreakType
 	public byte getIndex()
 	{
 		return this.index;
+	}
+
+	/**
+	 * Gets a break type from the given index
+	 *
+	 * @param idx the index, this can be 0, 1 or 2. If the index is not in range, this method is likely to throw
+	 *            an ArrayIndexOutOfBoundsException
+	 * @return the break type
+	 * @throws ArrayIndexOutOfBoundsException if the values are not in range (0, 1 or 2)
+	 */
+	public static BreakType fromIndex(byte idx)
+	{
+		return BreakType.values()[idx];
 	}
 
 	/**
