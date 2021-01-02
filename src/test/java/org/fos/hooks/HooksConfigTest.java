@@ -35,11 +35,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class HooksConfigTest
 {
 	static OutputStream backupOS;
-	static Path backupPath = Paths.get("/tmp", "sw_prefs.bak");
+	static Path backupPath = Paths.get(System.getProperty("java.io.tmpdir"), "sw_prefs.bak");
 
 	@BeforeAll
 	public static void beforeAll() throws IOException, BackingStoreException
 	{
+		if (!backupPath.toFile().exists())
+			Files.createFile(backupPath);
 		backupOS = Files.newOutputStream(backupPath);
 
 		Preferences prefs = Preferences.userNodeForPackage(BreakHooksConfig.class);

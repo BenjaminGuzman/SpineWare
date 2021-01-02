@@ -106,6 +106,10 @@ public class SWMain extends JFrame
 
 	public static void main(String[] args)
 	{
+		// TODO: add an explanation on how to debug errors on hook executions (see the HooksExecutor class
+		//  for details
+		// TODO: add an explanation on how to troubleshoot errors in case the file sw.lock exists and
+		//  therefore spineware will no longer start
 		com.formdev.flatlaf.FlatDarkLaf.install();
 
 		// see if another instance of SpineWare is already running
@@ -118,6 +122,7 @@ public class SWMain extends JFrame
 		}
 
 		try {
+			// even though this file has no permissions, it is possible to delete it, try with sudo
 			Set<PosixFilePermission> noPermissionsToAnyone = PosixFilePermissions.fromString("---------");
 			Files.createFile(
 				lockFilePath,
@@ -126,6 +131,12 @@ public class SWMain extends JFrame
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		// add shutdown hook for a clean shutdown
+		// kill all timers, java should take care of the gui, you take care of the timers
+		// this is probably not needed as the JVM GC should collect free resources on exit, including threads
+		// but still it is good to have it
+		Runtime.getRuntime().addShutdownHook(new Thread(TimersManager::killAllTimers));
 
 		SWMain.changeMessagesBundle(Locale.getDefault());
 
