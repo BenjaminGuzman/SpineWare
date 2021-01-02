@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,22 +15,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.fos.panels;
+package org.fos.gui.sections;
 
-import org.fos.Colors;
-import org.fos.Fonts;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.util.List;
+import java.util.ResourceBundle;
+import javax.management.InstanceAlreadyExistsException;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import org.fos.SWMain;
 import org.fos.core.BreakType;
 import org.fos.core.TimersManager;
-import org.fos.timers.BreakSettings;
+import org.fos.gui.Colors;
+import org.fos.gui.Fonts;
+import org.fos.gui.hooksconfig.ConfigureHooksDialog;
+import org.fos.gui.util.TimeInputPanel;
+import org.fos.timers.BreakConfig;
 import org.fos.timers.Clock;
-
-import javax.management.InstanceAlreadyExistsException;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.List;
-import java.util.ResourceBundle;
 
 public class BreaksPanel extends JScrollPane
 {
@@ -40,7 +60,7 @@ public class BreaksPanel extends JScrollPane
 	private final Font FULL_DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
 	private final Font DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 16);
 
-	private final List<BreakSettings> preferredBreakSettings;
+	private final List<BreakConfig> preferredBreakSettings;
 	private final Clock[] minWorkRecommendedTimes = new Clock[]{
 		new Clock((byte) 0, (byte) 5, (byte) 0), // min work time for the small break
 		new Clock((byte) 0, (byte) 30, (byte) 0), // min work time for the stretch break
@@ -195,7 +215,8 @@ public class BreaksPanel extends JScrollPane
 		);
 		workingTimeInput.setEnabled(this.preferredBreakSettings.get(break_idx).isEnabled());
 
-		JButton hooksConfigBtn = new JButton(messagesBundle.getString("notification_hooks_config"));
+		JButton hooksConfigBtn = new JButton(messagesBundle.getString("hooks_config"));
+		hooksConfigBtn.setToolTipText(SWMain.getMessagesBundle().getString("hooks_config_tooltip"));
 		hooksConfigBtn.setIcon(hooksConfigIcon);
 
 		/*
@@ -396,6 +417,11 @@ public class BreaksPanel extends JScrollPane
 		));
 		setRecommendedValuesBtn.addFocusListener(onFocusLostClearLabel);
 
+		hooksConfigBtn.addActionListener(new OnClickHooksSettings(
+			SwingUtilities.getWindowAncestor(this),
+			breakType
+		));
+
 		return panel;
 	}
 
@@ -527,7 +553,7 @@ public class BreaksPanel extends JScrollPane
 
 	private static class OnSaveSettingsListener implements ActionListener
 	{
-		private final BreakSettings.Builder breakSettingsBuilder;
+		private final BreakConfig.Builder breakSettingsBuilder;
 
 		private final TimeInputPanel workingTimeInput;
 		private final TimeInputPanel breakTimeInput;
@@ -548,7 +574,7 @@ public class BreaksPanel extends JScrollPane
 			this.postponeTimeInput = postponeTimeInput;
 			this.statusLabel = statusLabel;
 
-			this.breakSettingsBuilder = new BreakSettings.Builder().breakType(breakType);
+			this.breakSettingsBuilder = new BreakConfig.Builder().breakType(breakType);
 
 		}
 
@@ -582,13 +608,13 @@ public class BreaksPanel extends JScrollPane
 				this.breakSettingsBuilder.breakTimerSettings(Clock.from(this.breakTimeInput.getTime()));
 
 			// save the nw break settings and reload the break
-			BreakSettings newBreakSettings = this.breakSettingsBuilder
+			BreakConfig newBreakConfig = this.breakSettingsBuilder
 				.workTimerSettings(Clock.from(this.workingTimeInput.getTime()))
 				.postponeTimerSettings(Clock.from(this.postponeTimeInput.getTime()))
 				// TODO: add config for hooks
 				.createBreakSettings();
 
-			TimersManager.saveBreakSettings(newBreakSettings);
+			TimersManager.saveBreakSettings(newBreakConfig);
 		}
 	}
 
@@ -671,6 +697,14 @@ public class BreaksPanel extends JScrollPane
 
 	private static class OnClickHooksSettings implements ActionListener
 	{
+		private final Window parentDialogWindow;
+		private final BreakType breakType;
+
+		public OnClickHooksSettings(Window parentDialogWindow, BreakType breakType)
+		{
+			this.parentDialogWindow = parentDialogWindow;
+			this.breakType = breakType;
+		}
 
 		/**
 		 * Invoked when an action occurs.
@@ -680,7 +714,7 @@ public class BreaksPanel extends JScrollPane
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			// TODO: create and open config dialog
+			new ConfigureHooksDialog(this.parentDialogWindow, this.breakType).initComponents();
 		}
 	}
 }

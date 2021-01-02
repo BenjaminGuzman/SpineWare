@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,14 +17,18 @@
  */
 package org.fos;
 
-import org.fos.core.TimersManager;
-import org.fos.panels.BreaksPanel;
-import org.fos.panels.HelpPanel;
-import org.fos.timers.notifications.StartUpNotification;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -32,11 +36,31 @@ import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.TooManyListenersException;
 import java.util.logging.Level;
 import java.util.prefs.Preferences;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import org.fos.core.TimersManager;
+import org.fos.gui.SysTrayMenu;
+import org.fos.gui.notifications.StartUpNotification;
+import org.fos.gui.sections.BreaksPanel;
+import org.fos.gui.sections.HelpPanel;
 
 public class SWMain extends JFrame
 {
@@ -44,6 +68,9 @@ public class SWMain extends JFrame
 	private static final short HELP_PANEL_CACHE_IDX = 1;
 	private static volatile ResourceBundle messagesBundle;
 	private static volatile Image swIcon;
+
+	private static final String OS = System.getProperty("os.name").toLowerCase();
+	public static boolean IS_WINDOWS = OS.contains("win");
 
 	private final JComponent[] mainPanelContentCaches = new JComponent[2];
 	private JComponent activeContentPanel = null;
@@ -79,6 +106,27 @@ public class SWMain extends JFrame
 
 	public static void main(String[] args)
 	{
+		com.formdev.flatlaf.FlatDarkLaf.install();
+
+		// see if another instance of SpineWare is already running
+		String tmpDir = System.getProperty("java.io.tmpdir");
+
+		Path lockFilePath = Paths.get(tmpDir, "sw.lock");
+		if (lockFilePath.toFile().exists()) {
+			SWMain.showErrorAlert("SpineWare is already running", "SpineWare is running");
+			return;
+		}
+
+		try {
+			Set<PosixFilePermission> noPermissionsToAnyone = PosixFilePermissions.fromString("---------");
+			Files.createFile(
+				lockFilePath,
+				PosixFilePermissions.asFileAttribute(noPermissionsToAnyone)
+			).toFile().deleteOnExit();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		SWMain.changeMessagesBundle(Locale.getDefault());
 
 		try {
@@ -97,8 +145,6 @@ public class SWMain extends JFrame
 				e
 			);
 		}
-
-		com.formdev.flatlaf.FlatDarkLaf.install();
 
 		SwingUtilities.invokeLater(SWMain::new);
 		System.setProperty("awt.useSystemAAFontSettings", "on"); // use font antialiasing
@@ -440,5 +486,46 @@ public class SWMain extends JFrame
 
 		//System.exit(0); // this is not needed, when closing all windows and killing all timers, the JVM
 		// should exit gracefully
+	}
+
+	/**
+	 * Show a JOptionPane to the user with type {@link JOptionPane#ERROR_MESSAGE}
+	 * If the SW could be loaded the alert will contain it
+	 * <p>
+	 * This will check if the method is invoked in the correct thread, it is nothing happens
+	 * if doesn't, it will show the alert in the correct thread
+	 *
+	 * @param message the message for the JOptionPane
+	 * @param title   the title for the JOptionPane
+	 */
+	public static void showErrorAlert(String message, String title)
+	{
+		if (!SwingUtilities.isEventDispatchThread())
+			SwingUtilities.invokeLater(() -> _showErrorAlert(message, title));
+		else
+			_showErrorAlert(message, title);
+
+	}
+
+	/**
+	 * The actual thread-safe version of {@link #showErrorAlert(String, String)}
+	 *
+	 * @param message same as in {@link #showErrorAlert(String, String)}
+	 * @param title   same as in {@link #showErrorAlert(String, String)}
+	 */
+	private static void _showErrorAlert(String message, String title)
+	{
+		assert SwingUtilities.isEventDispatchThread();
+
+		Image swImg = SWMain.getSWIcon();
+
+		JOptionPane.showConfirmDialog(
+			null,
+			message,
+			title,
+			JOptionPane.DEFAULT_OPTION,
+			JOptionPane.ERROR_MESSAGE,
+			swImg != null ? new ImageIcon(swImg) : null
+		);
 	}
 }

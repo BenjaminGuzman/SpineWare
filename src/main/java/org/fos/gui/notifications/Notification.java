@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,20 +16,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.timers.notifications;
+package org.fos.gui.notifications;
 
-import org.fos.Loggers;
-import org.fos.SWMain;
-import org.fos.core.NotificationLocation;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
+import org.fos.Loggers;
+import org.fos.SWMain;
+import org.fos.core.NotificationLocation;
 
 public class Notification extends JDialog
 {
@@ -64,7 +75,7 @@ public class Notification extends JDialog
 	 */
 	public Notification(int dispose_timeout_ms, NotificationLocation notificationLocation)
 	{
-		super();
+		super((Window) null); // pass null to create an unowned JDialog
 		assert SwingUtilities.isEventDispatchThread();
 
 		this.dispose_timeout_ms = dispose_timeout_ms;
@@ -115,9 +126,6 @@ public class Notification extends JDialog
 			this.timeoutTimer = new Timer(this.dispose_timeout_ms, (ActionEvent evt) -> this.dispose());
 			this.timeoutTimer.start();
 		}
-
-		if (this.onShown != null)
-			this.onShown.run();
 	}
 
 	/**
@@ -179,9 +187,6 @@ public class Notification extends JDialog
 		super.dispose();
 		if (this.timeoutTimer != null)
 			this.timeoutTimer.stop();
-
-		if (this.onDisposed != null)
-			this.onDisposed.run();
 	}
 
 	@Override

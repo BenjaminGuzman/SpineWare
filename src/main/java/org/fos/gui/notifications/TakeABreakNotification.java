@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,18 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.timers.notifications;
+package org.fos.gui.notifications;
 
-import org.fos.Colors;
-import org.fos.Fonts;
-import org.fos.SWMain;
-import org.fos.core.NotificationLocation;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.Timer;
+import org.fos.SWMain;
+import org.fos.core.NotificationLocation;
+import org.fos.gui.Colors;
+import org.fos.gui.Fonts;
 
 public class TakeABreakNotification extends Notification
 {
@@ -55,8 +58,11 @@ public class TakeABreakNotification extends Notification
 	)
 	{
 		this(takeABreakMessage, countDownLatch, is_not_day_limit_notification, notificationLocation);
-		super.onShown = onShown;
-		super.onDisposed = onDisposed;
+		this.onShown = onShown;
+		this.onDisposed = onDisposed;
+
+		if (this.onShown != null)
+			this.onShown.run();
 	}
 
 	public TakeABreakNotification(
@@ -212,8 +218,13 @@ public class TakeABreakNotification extends Notification
 	public void dispose()
 	{
 		super.dispose();
+
+		if (this.onDisposed != null && this.break_dismissed)
+			this.onDisposed.run();
+
 		if (this.countDownTimer != null)
 			this.countDownTimer.stop();
+
 		this.countDownLatch.countDown();
 	}
 

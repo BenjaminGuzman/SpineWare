@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,36 +18,52 @@
 
 package org.fos.core;
 
-import org.fos.SWMain;
-import org.fos.timers.BreakSettings;
-import org.fos.timers.Clock;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.prefs.BackingStoreException;
+import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.fos.SWMain;
+import org.fos.timers.BreakConfig;
+import org.fos.timers.Clock;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TimersManagerTest
 {
+	static OutputStream backupOS;
+	static Path backupPath = Paths.get("/tmp", "sw_prefs.bak");
+
 	@BeforeAll
-	static void beforeAll() throws BackingStoreException
+	static void beforeAll() throws BackingStoreException, IOException
 	{
+		backupOS = Files.newOutputStream(backupPath);
+
 		Preferences prefs = Preferences.userNodeForPackage(TimersManager.class);
 		SWMain.changeMessagesBundle(Locale.ENGLISH);
 		TimersManager.init();
+		prefs.exportSubtree(backupOS);
 		prefs.clear();
 	}
 
 	@AfterAll
-	static void afterAll() throws BackingStoreException {
+	static void afterAll() throws BackingStoreException, IOException, InvalidPreferencesFormatException
+	{
 		Preferences prefs = Preferences.userNodeForPackage(TimersManager.class);
 		prefs.clear();
+
+		Preferences.importPreferences(Files.newInputStream(backupPath));
 	}
 
 	@Test
@@ -61,31 +77,27 @@ class TimersManagerTest
 		String[] soundsDirs = new String[]{"/tmp", "/root", "/something"};
 		BreakType[] breakTypes = BreakType.values();
 		TimersManager.saveBreaksSettings(Arrays.asList(
-			new BreakSettings.Builder().workTimerSettings(new Clock(hours, minutes, seconds)).breakTimerSettings(new Clock(hours, minutes, seconds)).postponeTimerSettings(new Clock(hours, minutes, seconds)).breakType(breakTypes[0]).notificationAudioPath(notificationAudioPaths[0]).breakAudiosDirStr(soundsDirs[0]).enabled(true).createBreakSettings(),
-			new BreakSettings.Builder().workTimerSettings(new Clock(hours, minutes, seconds)).breakTimerSettings(new Clock(hours, minutes, seconds)).postponeTimerSettings(new Clock(hours, minutes, seconds)).breakType(breakTypes[1]).notificationAudioPath(notificationAudioPaths[1]).breakAudiosDirStr(soundsDirs[1]).enabled(true).createBreakSettings(),
-			new BreakSettings.Builder().workTimerSettings(new Clock(hours, minutes, seconds)).breakTimerSettings(new Clock(hours, minutes, seconds)).postponeTimerSettings(new Clock(hours, minutes, seconds)).breakType(breakTypes[2]).notificationAudioPath(notificationAudioPaths[2]).breakAudiosDirStr(soundsDirs[2]).enabled(true).createBreakSettings()
+			new BreakConfig.Builder().workTimerSettings(new Clock(hours, minutes, seconds)).breakTimerSettings(new Clock(hours, minutes, seconds)).postponeTimerSettings(new Clock(hours, minutes, seconds)).breakType(breakTypes[0]).enabled(true).createBreakSettings(),
+			new BreakConfig.Builder().workTimerSettings(new Clock(hours, minutes, seconds)).breakTimerSettings(new Clock(hours, minutes, seconds)).postponeTimerSettings(new Clock(hours, minutes, seconds)).breakType(breakTypes[1]).enabled(true).createBreakSettings(),
+			new BreakConfig.Builder().workTimerSettings(new Clock(hours, minutes, seconds)).breakTimerSettings(new Clock(hours, minutes, seconds)).postponeTimerSettings(new Clock(hours, minutes, seconds)).breakType(breakTypes[2]).enabled(true).createBreakSettings()
 		));
-		List<BreakSettings> breaksSettings = TimersManager.loadBreaksSettings();
-		BreakSettings breakSettings;
+		List<BreakConfig> breaksSettings = TimersManager.loadBreaksSettings();
+		BreakConfig breakConfig;
 		for (byte i = 0; i < breaksSettings.size(); ++i) {
-			breakSettings = breaksSettings.get(i);
+			breakConfig = breaksSettings.get(i);
 
-			assertEquals(breakSettings.getBreakType(), breakTypes[i]);
+			assertEquals(breakConfig.getBreakType(), breakTypes[i]);
 
 			// DAY BREAK should not have break timer
-			if (breakSettings.getBreakType() != BreakType.DAY_BREAK)
-				assertEquals(breakSettings.getBreakTimerSettings().getHMSAsSeconds(), hms);
+			if (breakConfig.getBreakType() != BreakType.DAY_BREAK)
+				assertEquals(breakConfig.getBreakTimerSettings().getHMSAsSeconds(), hms);
 			else
-				assertNull(breakSettings.getBreakTimerSettings());
-
-			// assert audio stuff
-			assertEquals(breakSettings.getNotificationAudioPath(), notificationAudioPaths[i]);
-			assertEquals(breakSettings.getBreakAudiosDirStr(), soundsDirs[i]);
+				assertNull(breakConfig.getBreakTimerSettings());
 
 			// assert timers
-			assertEquals(breakSettings.getPostponeTimerSettings().getHMSAsSeconds(), hms);
-			assertEquals(breakSettings.getWorkTimerSettings().getHMSAsSeconds(), hms);
-			assertTrue(breakSettings.isEnabled());
+			assertEquals(breakConfig.getPostponeTimerSettings().getHMSAsSeconds(), hms);
+			assertEquals(breakConfig.getWorkTimerSettings().getHMSAsSeconds(), hms);
+			assertTrue(breakConfig.isEnabled());
 		}
 	}
 
