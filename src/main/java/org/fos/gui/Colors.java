@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,13 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos;
+package org.fos.gui;
 
-import java.awt.*;
+import java.awt.Color;
 
-public class Fonts
+public class Colors
 {
-	public static Font SANS_SERIF_BOLD_15 = new Font(Font.SANS_SERIF, Font.BOLD, 15);
-	public static Font SANS_SERIF_BOLD_12 = new Font(Font.SANS_SERIF, Font.BOLD, 12);
-	public static Font MONOSPACED_BOLD_24 = new Font(Font.MONOSPACED, Font.BOLD, 24);
+	public final static Color RED = new Color(0xFF3131);
+	public final static Color RED_WINE = new Color(0x420D0D);
+	public final static Color GREEN_DARK = new Color(0x385F1A);
+	public final static Color GREEN = new Color(0x69BB36);
+	public final static Color WHITE = new Color(0x0CDCDCD);
 }

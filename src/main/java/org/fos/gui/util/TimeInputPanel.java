@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,16 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.panels;
+package org.fos.gui.util;
 
-import org.fos.Colors;
-import org.fos.Fonts;
-import org.fos.SWMain;
-import org.fos.timers.Clock;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.ResourceBundle;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import org.fos.SWMain;
+import org.fos.gui.Colors;
+import org.fos.gui.Fonts;
+import org.fos.timers.Clock;
 
 public class TimeInputPanel extends JPanel
 {

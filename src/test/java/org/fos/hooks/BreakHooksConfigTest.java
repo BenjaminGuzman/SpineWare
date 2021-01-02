@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,18 +16,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.timers;
+package org.fos.hooks;
 
-import org.fos.core.AudioPlayer;
-import org.fos.core.CommandExecutor;
+import org.junit.jupiter.api.Test;
 
-public class HooksExecutor extends HooksConfig
+class BreakHooksConfigTest
 {
-	private AudioPlayer audioPlayer;
-	private CommandExecutor cmdExecutor;
 
-	public HooksExecutor(Builder builder)
+	static byte counter = 0;
+
+	@Test
+	void stopHooks()
 	{
-		super(builder);
+	}
+
+	@Test
+	void onStartBreakHooks()
+	{
+	}
+
+	@Test
+	void onEndBreakHooks()
+	{
+	}
+
+	@Test
+	void onStartNotificationHooks()
+	{
+	}
+
+	@Test
+	void onEndNotificationHooks()
+	{
 	}
 }
