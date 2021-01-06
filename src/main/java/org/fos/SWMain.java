@@ -75,6 +75,7 @@ public class SWMain extends JFrame
 	private final JComponent[] mainPanelContentCaches = new JComponent[2];
 	private JComponent activeContentPanel = null;
 	private JPanel mainContentPanel = null;
+	private TrayIcon trayIcon;
 
 	public SWMain()
 	{
@@ -387,6 +388,25 @@ public class SWMain extends JFrame
 	}
 
 	/**
+	 * Show a JOptionPane to the user with type {@link JOptionPane#ERROR_MESSAGE}
+	 * If the SW could be loaded the alert will contain it
+	 * <p>
+	 * This will check if the method is invoked in the correct thread, if it is the alert is shown
+	 * if doesn't, it will show the alert in the correct thread
+	 *
+	 * @param message the message for the JOptionPane
+	 * @param title   the title for the JOptionPane
+	 */
+	public static void showErrorAlert(String message, String title)
+	{
+		if (!SwingUtilities.isEventDispatchThread())
+			SwingUtilities.invokeLater(() -> _showErrorAlert(message, title));
+		else
+			_showErrorAlert(message, title);
+
+	}
+
+	/**
 	 * Configures and sets the system tray
 	 * this method will also set the jframe icon once it was read
 	 * therefore, if you call this method you will NOT need to read and set the JFrame icon image
@@ -409,7 +429,7 @@ public class SWMain extends JFrame
 		}
 
 		SystemTray sysTray = SystemTray.getSystemTray();
-		TrayIcon trayIcon = new TrayIcon(iconImage, "SpineWare");
+		trayIcon = new TrayIcon(iconImage, "SpineWare");
 		trayIcon.setImageAutoSize(true);
 		try {
 			sysTray.add(trayIcon);
@@ -419,10 +439,7 @@ public class SWMain extends JFrame
 
 		SysTrayMenu sysTrayMenu = new SysTrayMenu(
 			this,
-			(java.awt.event.ActionEvent evt) -> {
-				sysTray.remove(trayIcon);
-				this.exit();
-			},
+			(java.awt.event.ActionEvent evt) -> this.exit(),
 			(java.awt.event.ActionEvent evt) -> {
 				this.setAlwaysOnTop(true);
 				if (!this.isVisible())
@@ -493,29 +510,12 @@ public class SWMain extends JFrame
 	{
 		Loggers.getDebugLogger().log(Level.INFO, "Shutting down...");
 		this.dispose(); // close the main JFrame
+		if (SystemTray.isSupported()) // remove the systray
+			SystemTray.getSystemTray().remove(this.trayIcon);
 		TimersManager.killAllTimers(); // stop all timers
 
 		//System.exit(0); // this is not needed, when closing all windows and killing all timers, the JVM
 		// should exit gracefully
-	}
-
-	/**
-	 * Show a JOptionPane to the user with type {@link JOptionPane#ERROR_MESSAGE}
-	 * If the SW could be loaded the alert will contain it
-	 * <p>
-	 * This will check if the method is invoked in the correct thread, it is nothing happens
-	 * if doesn't, it will show the alert in the correct thread
-	 *
-	 * @param message the message for the JOptionPane
-	 * @param title   the title for the JOptionPane
-	 */
-	public static void showErrorAlert(String message, String title)
-	{
-		if (!SwingUtilities.isEventDispatchThread())
-			SwingUtilities.invokeLater(() -> _showErrorAlert(message, title));
-		else
-			_showErrorAlert(message, title);
-
 	}
 
 	/**

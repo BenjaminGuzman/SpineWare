@@ -73,15 +73,19 @@ public class HooksConfigPanel extends JPanel
 			return;
 		}
 
-		String[] supportedAudioFileExtensions =
-			Arrays.stream(AudioSystem.getAudioFileTypes())
-				.map(AudioFileFormat.Type::getExtension)
-				.toArray(String[]::new);
+		String[] supportedAudioFileExtensions = getSupportedAudioFileExtensions();
 
 		this.onlySoundFilesFilter = new FileNameExtensionFilter(
 			"Supported audio files: " + Arrays.toString(supportedAudioFileExtensions),
 			supportedAudioFileExtensions
 		);
+	}
+
+	public static String[] getSupportedAudioFileExtensions()
+	{
+		return Arrays.stream(AudioSystem.getAudioFileTypes())
+			.map(AudioFileFormat.Type::getExtension)
+			.toArray(String[]::new);
 	}
 
 	public String getSelectedAudio()
@@ -117,6 +121,15 @@ public class HooksConfigPanel extends JPanel
 		this.enabledCheckBox.getActionListeners()[0].actionPerformed(null);
 	}
 
+	/**
+	 * Creates the panel containing all GUI elements
+	 *
+	 * @param hookTitle   the title for the hook (a JLabel will be added to the panel)
+	 * @param audioDesc   the description for the audio
+	 * @param selectAudio the text to display in the "select audio" button
+	 * @param noAudio     the text to display in the "no audio" button
+	 * @param executeCmd  the execute command label to indicate the user he/she can input a command to execute
+	 */
 	public void initComponents(
 		String hookTitle,
 		String audioDesc,

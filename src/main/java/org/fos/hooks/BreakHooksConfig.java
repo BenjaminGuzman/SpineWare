@@ -38,11 +38,11 @@ public class BreakHooksConfig
 	}
 
 	/**
-	 * Use this method when you want ALL hooks threads to be interrupted and therefore stopped
+	 * Use this method when you want ALL hooks threads to be interrupted and therefore stopped/shutdown
 	 * <p>
 	 * In other words, this method will stop the audio and/or the command execution (if exists)
 	 */
-	synchronized public void stopHooks()
+	synchronized public void shutdown()
 	{
 		this.executor.stop();
 	}
