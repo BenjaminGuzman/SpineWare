@@ -62,7 +62,8 @@ public class CommandExecutor extends Thread
 	{
 		super();
 		this.cmd = cmd;
-		this.setDaemon(true);
+		this.setDaemon(true); // this thread should not be a user thread but a daemon thread
+		this.setName("CommandExecutor-Thread"); // give it a name for easy-debugging
 	}
 
 	public CommandExecutor(String cmd, Consumer<Exception> onError)
@@ -93,14 +94,10 @@ public class CommandExecutor extends Thread
 
 	/**
 	 * Interrupts the process execution (if it is executing)
-	 * <p>
-	 * Be sure to interrupt the thread after you called the {@link #start()} method and setup/configure
-	 * everything on this object
 	 */
 	@Override
 	public void interrupt()
 	{
-		super.interrupt();
 		if (this.process != null)
 			this.process.destroy();
 	}
@@ -112,8 +109,6 @@ public class CommandExecutor extends Thread
 	@Override
 	public void run()
 	{
-		super.run();
-
 		ArrayList<String> executionCmd = new ArrayList<>(3);
 
 		// add the shell
@@ -165,7 +160,10 @@ public class CommandExecutor extends Thread
 			}
 
 			this.process.waitFor();
-		} catch (IOException | InterruptedException | SecurityException | IllegalArgumentException e) {
+		} catch (IOException | SecurityException | IllegalArgumentException | InterruptedException e) {
+			if (this.process != null)
+				this.process.destroyForcibly();
+
 			if (this.onError != null)
 				this.onError.accept(e);
 		}

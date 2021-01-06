@@ -58,5 +58,7 @@ The following files
 
 - [`audiotrack_white_18dp.png`](audiotrack_white_18dp.png)
 
+- [`task_white_18dp.png`](task_white_18dp.png)
+
 Are licensed under the [Apache license version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html) and were taken
 from here [https://material.io/resources/icons](https://material.io/resources/icons)

@@ -21,7 +21,6 @@ package org.fos.core;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 class CommandExecutorTest
 {
@@ -30,9 +29,8 @@ class CommandExecutorTest
 	{
 		CommandExecutor cmdExecutor = new CommandExecutor("echo \"hello world\" && echo goodbye && echo " +
 			"multiple");
-		cmdExecutor.start();
-
-		assertNotSame(cmdExecutor.getName(), Thread.currentThread().getName());
+		Thread t = new Thread(cmdExecutor);
+		t.start();
 
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask()
@@ -52,6 +50,6 @@ class CommandExecutorTest
 		}, 0, 1_000); // terminate the command execution after 1 second
 		// the JVM should not terminate before that second!!
 
-		cmdExecutor.join(); // wait for the thread to stop
+		t.join(); // wait for the thread to stop
 	}
 }

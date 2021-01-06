@@ -22,6 +22,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,8 +71,8 @@ public class BreakCountDown extends JDialog
 
 	public BreakCountDown(final String breakMessage, final Clock breakTime, final CountDownLatch countDownLatch)
 	{
-		super();
-		assert !SwingUtilities.isEventDispatchThread();
+		super((Window) null); // make this an unowned dialog
+		assert SwingUtilities.isEventDispatchThread();
 
 		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
@@ -178,6 +179,9 @@ public class BreakCountDown extends JDialog
 
 		this.setContentPane(mainPanel);
 
+		// set default button
+		this.getRootPane().setDefaultButton(cancelButton);
+
 		this.setTitle(breakMessage);
 		this.setResizable(false);
 		this.setUndecorated(true);
@@ -229,15 +233,25 @@ public class BreakCountDown extends JDialog
 	}
 
 	/**
-	 * Same as JDialog#dispose
+	 * Same as {@link JDialog#dispose}
 	 * but this method will also count down the latch
 	 * it will also stop the timer that handles the countdown in the GUI
 	 */
 	@Override
 	public void dispose()
 	{
+		this.disposeNoHooks();
+		if (this.onDisposed != null)
+			this.onDisposed.run();
+	}
+
+	/**
+	 * Same as {@link #dispose()}
+	 * but this method will not run any hooks, e. g. {@link #onDisposed}
+	 */
+	public void disposeNoHooks()
+	{
 		super.dispose();
-		this.onDisposed.run();
 		this.timerCountDown.stop();
 		this.countDownLatch.countDown();
 	}

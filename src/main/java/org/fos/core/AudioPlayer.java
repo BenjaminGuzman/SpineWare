@@ -24,27 +24,43 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.SwingUtilities;
 import org.fos.Loggers;
 import org.fos.SWMain;
+import static javax.sound.sampled.LineEvent.Type.STOP;
 
-public class AudioPlayer extends Thread
+public class AudioPlayer implements Runnable
 {
 	private Clip audioClip;
 	private Consumer<Exception> onError;
+	private Runnable onAudioEnd;
 
 	public AudioPlayer()
 	{
 		super();
-		this.setDaemon(true);
 	}
 
 	public AudioPlayer(Consumer<Exception> onError)
 	{
 		this();
 		this.onError = onError;
+	}
+
+	/**
+	 * Set the hook to execute when the audio ends
+	 * specifically this hook will be executed when
+	 * {@link javax.sound.sampled.LineEvent.Type#STOP} or
+	 * {@link javax.sound.sampled.LineEvent.Type#CLOSE}
+	 * is received in the data line
+	 *
+	 * @param onAudioEnd the hook to execute
+	 */
+	public void onAudioEnd(Runnable onAudioEnd)
+	{
+		this.onAudioEnd = onAudioEnd;
 	}
 
 	/**
@@ -58,8 +74,23 @@ public class AudioPlayer extends Thread
 	 */
 	public void loadAudio(String audioFileAbsPath) throws UnsupportedAudioFileException, LineUnavailableException, IOException
 	{
+		this.audioClip.removeLineListener(this::lineListener);
+		this.audioClip.close();
+		Loggers.getDebugLogger().log(
+			Level.INFO,
+			"Loading audio: " + audioFileAbsPath
+		);
+		this.audioClip.open(AudioSystem.getAudioInputStream(
+			new File(audioFileAbsPath).getAbsoluteFile()
+		));
+		this.audioClip.addLineListener(this::lineListener);
+	}
 
-		this.audioClip.open(AudioSystem.getAudioInputStream(new File(audioFileAbsPath).getAbsoluteFile()));
+	private void lineListener(LineEvent event)
+	{
+		LineEvent.Type evtType = event.getType();
+		if (STOP.equals(evtType) && this.onAudioEnd != null)
+			this.onAudioEnd.run();
 	}
 
 	/**
@@ -81,13 +112,12 @@ public class AudioPlayer extends Thread
 	}
 
 	/**
-	 * Interrupts this thread & stops playing audio
+	 * stops playing audio & close resources
 	 */
-	@Override
-	public void interrupt()
+	public void shutdown()
 	{
-		super.interrupt();
 		if (this.audioClip != null) {
+			this.audioClip.removeLineListener(this::lineListener);
 			this.audioClip.flush();
 			this.audioClip.stop();
 			this.audioClip.close();
@@ -103,7 +133,6 @@ public class AudioPlayer extends Thread
 	@Override
 	public void run()
 	{
-		super.run();
 		try {
 			this.audioClip.start();
 		} catch (Exception e) {

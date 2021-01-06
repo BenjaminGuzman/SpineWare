@@ -24,10 +24,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import org.fos.Loggers;
+import org.fos.core.DaemonThreadFactory;
 import org.fos.core.TimersManager;
 import org.fos.gui.notifications.BreakCountDown;
 import org.fos.gui.notifications.TakeABreakNotification;
@@ -85,10 +84,11 @@ public class WorkingTimeTimer implements Runnable
 
 	/**
 	 * Initiates the executor (the timer)
+	 * It uses a {@link DaemonThreadFactory} so the threads used by the executor are daemon
 	 */
 	public void init()
 	{
-		this.executorService = Executors.newSingleThreadScheduledExecutor();
+		this.executorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 		this.scheduleWorkingTimeExecutor();
 	}
 
@@ -98,20 +98,18 @@ public class WorkingTimeTimer implements Runnable
 	 */
 	public void destroy()
 	{
-		if (this.executorService == null)
-			return;
-
-		this.executorService.shutdownNow();
+		if (this.executorService != null)
+			this.executorService.shutdownNow();
 
 		BreakCountDown breakCountDown = this.breakCountDownRef.get();
 		if (breakCountDown != null)
-			breakCountDown.dispose();
+			breakCountDown.disposeNoHooks();
 
 		TakeABreakNotification notification = this.notificationRef.get();
 		if (notification != null)
-			notification.dispose();
+			notification.disposeNoHooks();
 
-		this.breakConfig.getHooksConfig().stopHooks();
+		this.breakConfig.getHooksConfig().shutdown();
 	}
 
 	/**
@@ -174,19 +172,27 @@ public class WorkingTimeTimer implements Runnable
 		try {
 			this.notificationCountDownLatch.await(); // wait till notification is dismissed
 		} catch (InterruptedException e) {
-			Loggers.getErrorLogger().log(
-				Level.INFO,
-				"The count down latch for the notification was interrupted",
-				e
-			);
+			notificationRef.get().disposeNoHooks();
+			// the notification & countdown should be disposed by now, free reference
+			// not only for memory management but to avoid undesired behaviour in the destroy method
+			// if there exists an object notificationRef, the destroy method will invoke the dispose hooks
+			// even if they were already executed
+			notificationRef.set(null);
+			breakCountDownRef.set(null);
+			this.destroy();
+			return;
 		}
 
-		if (notificationRef.get().breakWasDismissed()) {
+		boolean break_dismissed = notificationRef.get().breakWasDismissed();
+		boolean break_postponed = notificationRef.get().breakWasPostponed();
+		notificationRef.set(null);
+
+		if (break_dismissed) {
 			++this.n_dismisses;
 			// the user will not take the break and will keep working, so start the working timer again
 			this.scheduleWorkingTimeExecutor();
 			return;
-		} else if (notificationRef.get().breakWasPostponed()) {
+		} else if (break_postponed) {
 			++this.n_postponed;
 			// the user has postponed the break, wait the postponed time to show the notification again
 			this.schedulePostponedExecutor();
@@ -224,19 +230,24 @@ public class WorkingTimeTimer implements Runnable
 
 		try {
 			this.breakCountDownLatch.await();
+			breakCountDownRef.set(null);
 		} catch (InterruptedException e) {
-			Loggers.getErrorLogger().log(
-				Level.INFO,
-				"The count down latch for the break count down was interrupted",
-				e
-			);
+			// the break & notification should be disposed by now, free reference
+			// not only for memory management but to avoid undesired behaviour in the destroy method
+			// if there exists an object notificationRef, the destroy method will invoke the dispose hooks
+			// even if they were already executed
+			breakCountDownRef.get().disposeNoHooks();
+			breakCountDownRef.set(null);
+			notificationRef.set(null);
+			this.destroy();
+			return;
 		}
 
 		this.scheduleWorkingTimeExecutor();
 	}
 
 	/**
-	 * Shcedules the executor to run the method {@link #run()}
+	 * Schedules the executor to run the method {@link #run()}
 	 *
 	 * @param seconds_timeout the seconds timeout (number of seconds to wait to execute {@link #run()})
 	 */
@@ -244,7 +255,7 @@ public class WorkingTimeTimer implements Runnable
 	{
 		WorkingTimeTimer.is_break_happening.set(false);
 
-		this.breakConfig.getHooksConfig().stopHooks();
+		//this.breakConfig.getHooksConfig().shutdown();
 
 		this.executorService.schedule(this, seconds_timeout, TimeUnit.SECONDS);
 

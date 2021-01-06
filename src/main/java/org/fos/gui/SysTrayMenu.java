@@ -72,7 +72,6 @@ public class SysTrayMenu extends JDialog
 		this.setUndecorated(true);
 		this.setResizable(false);
 		this.setAlwaysOnTop(true);
-		this.setModal(false);
 		this.setType(Type.POPUP);
 		this.setModalityType(ModalityType.MODELESS);
 		this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
@@ -153,6 +152,8 @@ public class SysTrayMenu extends JDialog
 		mainPanel.add(openButton, gridBagConstraints);
 
 		gridBagConstraints.gridwidth = 1;
+
+		// TODO: ADD PAUSE BUTTON
 
 		// small break progress bar
 		gridBagConstraints.gridx = 0;

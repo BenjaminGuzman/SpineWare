@@ -214,13 +214,24 @@ public class TakeABreakNotification extends Notification
 		return this.break_postponed;
 	}
 
+	/**
+	 * Disposes the jdialog and executes the configured hooks (e. g. {@link #onDisposed})
+	 */
 	@Override
 	public void dispose()
 	{
-		super.dispose();
+		this.disposeNoHooks();
 
-		if (this.onDisposed != null && this.break_dismissed)
+		if (this.onDisposed != null && (this.break_dismissed || this.break_postponed))
 			this.onDisposed.run();
+	}
+
+	/**
+	 * Disposes the jdialog but executes no hooks (e. g. {@link #onDisposed})
+	 */
+	public void disposeNoHooks()
+	{
+		super.dispose();
 
 		if (this.countDownTimer != null)
 			this.countDownTimer.stop();
