@@ -23,6 +23,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.swing.JButton;
@@ -83,9 +85,13 @@ public class HooksConfigPanel extends JPanel
 
 	public static String[] getSupportedAudioFileExtensions()
 	{
-		return Arrays.stream(AudioSystem.getAudioFileTypes())
+		Set<String> supportedExtensions = Arrays.stream(AudioSystem.getAudioFileTypes())
 			.map(AudioFileFormat.Type::getExtension)
-			.toArray(String[]::new);
+			.collect(Collectors.toSet());
+
+		supportedExtensions.add("mp3");
+
+		return supportedExtensions.toArray(new String[0]);
 	}
 
 	public String getSelectedAudio()

@@ -1,0 +1,11 @@
+[Unit]
+Description=SpineWare Service. SpineWare is the app that takes care of your health while using the computer
+Requires=graphical.target
+
+[Service]
+Environment="DISPLAY=:0"
+Type=simple
+User=
+ExecStart=
+Restart=on-failure
+RestartSec=10
