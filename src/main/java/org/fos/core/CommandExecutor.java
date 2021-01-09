@@ -121,6 +121,8 @@ public class CommandExecutor extends Thread
 		// add the command (or commands)
 		executionCmd.add(cmd);
 
+		String executionCmdStr = executionCmd.get(0) + " " + executionCmd.get(1) + " " + executionCmd.get(2);
+
 		try {
 			this.process = Runtime.getRuntime().exec(executionCmd.toArray(new String[0]));
 
@@ -142,8 +144,15 @@ public class CommandExecutor extends Thread
 
 				// write stdout output
 				stdoutBuff.write(
-					(lineSeparator + "--- EXECUTION STDOUT ---" + lineSeparator)
-						.getBytes(StandardCharsets.UTF_8)
+					(
+						lineSeparator
+							+ "--- EXECUTION STDOUT ---"
+							+ lineSeparator
+							+ "--- COMMAND: "
+							+ executionCmdStr
+							+ " ---"
+							+ lineSeparator
+					).getBytes(StandardCharsets.UTF_8)
 				);
 				while ((read = processStdout.read()) != -1) {
 					stdoutBuff.write(read);
@@ -152,8 +161,15 @@ public class CommandExecutor extends Thread
 
 				// write stderr output
 				stderrBuff.write(
-					(lineSeparator + "--- EXECUTION STDERR ---" + lineSeparator)
-						.getBytes(StandardCharsets.UTF_8)
+					(
+						lineSeparator
+							+ "--- EXECUTION STDERR ---"
+							+ lineSeparator
+							+ "--- COMMAND: "
+							+ executionCmdStr
+							+ " ---"
+							+ lineSeparator
+					).getBytes(StandardCharsets.UTF_8)
 				);
 				while ((read = processStderr.read()) != -1)
 					stderrBuff.write(read);
