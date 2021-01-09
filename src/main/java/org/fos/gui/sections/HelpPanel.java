@@ -64,7 +64,8 @@ public class HelpPanel extends JScrollPane
 			swLogoImageLabel = new JLabel("SpineWare");
 
 		// copyright message
-		JLabel copyrightLabel = new JLabel("Copyright (c) 2020. Benjamín Guzmán <bg@benjaminguzman.dev>");
+		JLabel copyrightLabel = new JLabel("Copyright (c) 2020, 2021. Benjamín Guzmán <9benjaminguzman@gmail" +
+			".com>");
 		copyrightLabel.setHorizontalTextPosition(SwingConstants.CENTER);
 		copyrightLabel.setHorizontalAlignment(SwingConstants.CENTER);
 

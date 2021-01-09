@@ -19,6 +19,7 @@
 package org.fos.core;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -28,6 +29,8 @@ import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.SwingUtilities;
+import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.player.Player;
 import org.fos.Loggers;
 import org.fos.SWMain;
 import static javax.sound.sampled.LineEvent.Type.STOP;
@@ -35,7 +38,11 @@ import static javax.sound.sampled.LineEvent.Type.STOP;
 public class AudioPlayer implements Runnable
 {
 	private Clip audioClip;
+	private Player mp3Player = null;
 	private Consumer<Exception> onError;
+	/**
+	 * Executed when an audio stops playing
+	 */
 	private Runnable onAudioEnd;
 
 	public AudioPlayer()
@@ -66,13 +73,13 @@ public class AudioPlayer implements Runnable
 	/**
 	 * Plays the given audio
 	 * <p>
-	 * this should be invoked only if {@link #readyToPlayAudio()} is invoked
-	 * otherwise, this method is likely to throw {@link NullPointerException}
+	 * This method will use the java sound API or the java layer library to play files
+	 * Specifically it will use the java layer library if the audio is an mp3
 	 *
 	 * @param audioFileAbsPath the absolute path for the audio file to be played
 	 * @throws NullPointerException if the audio clip has not been loaded
 	 */
-	public void loadAudio(String audioFileAbsPath) throws UnsupportedAudioFileException, LineUnavailableException, IOException
+	public void loadAudio(String audioFileAbsPath) throws UnsupportedAudioFileException, LineUnavailableException, IOException, JavaLayerException
 	{
 		this.audioClip.removeLineListener(this::lineListener);
 		this.audioClip.close();
@@ -80,6 +87,13 @@ public class AudioPlayer implements Runnable
 			Level.INFO,
 			"Loading audio: " + audioFileAbsPath
 		);
+
+		// if the audio is an mp3, play it with java layer, because the native java API does not support mp3
+		if (audioFileAbsPath.endsWith(".mp3")) {
+			this.mp3Player = new Player(new FileInputStream(audioFileAbsPath));
+			return;
+		}
+
 		this.audioClip.open(AudioSystem.getAudioInputStream(
 			new File(audioFileAbsPath).getAbsoluteFile()
 		));
@@ -98,17 +112,10 @@ public class AudioPlayer implements Runnable
 	 */
 	public void stopAudio()
 	{
-		this.audioClip.stop();
-	}
-
-	/**
-	 * Same as {@link Clip#getMicrosecondPosition()}
-	 *
-	 * @return the number of microseconds of data processed since the line was opened (since audio started playing)
-	 */
-	public long getMicroSecondsPosition()
-	{
-		return this.audioClip.getMicrosecondPosition();
+		if (this.audioClip != null)
+			this.audioClip.stop();
+		if (this.mp3Player != null)
+			this.mp3Player.close();
 	}
 
 	/**
@@ -122,6 +129,9 @@ public class AudioPlayer implements Runnable
 			this.audioClip.stop();
 			this.audioClip.close();
 		}
+		if (this.mp3Player != null) {
+			this.mp3Player.close();
+		}
 	}
 
 	/**
@@ -134,23 +144,19 @@ public class AudioPlayer implements Runnable
 	public void run()
 	{
 		try {
-			this.audioClip.start();
-		} catch (Exception e) {
-			if (this.onError != null)
-				this.onError.accept(e);
+			if (this.mp3Player != null) {
+				this.mp3Player.play(); // this is a blocking call
+				if (this.onAudioEnd != null)
+					this.onAudioEnd.run();
+				this.mp3Player = null;
+				return;
+			}
+		} catch (JavaLayerException e) {
+			this.onError.accept(e);
+			return;
 		}
-	}
 
-	/**
-	 * Tells if the system audio clip has already loaded
-	 * <p>
-	 * If this methods returns false, you can try to load the system audio clip with {@link #init()}
-	 *
-	 * @return true if the system audio clip has been loaded and can be used to play audio, false otherwise
-	 */
-	public boolean readyToPlayAudio()
-	{
-		return this.audioClip != null;
+		this.audioClip.start();
 	}
 
 	/**

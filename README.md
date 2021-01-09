@@ -18,37 +18,61 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # SpineWare
 
-![SpineWare image](media/SpineWare.png)
+![SpineWare image](media/SpineWare.svg)
 
-A Java application to take care of you while you're using the computer.
-
-## TODO's
-
-- Add pause timers button to systray
-- Improve the user experience in the break panel. Change GUI to select music. Change the save & set defaults button, one
-  button per break
-- Change logic of synchronization.
+A Java application to take care of your health while you're using the computer.
 
 ## Main features
 
-- **Timer to let you know you've been working hard and need a small break or stop working**:
-    + The program has 3 "break types":
-        * To relax the eyes and move a little. Sometimes while you're working you have to blink, believe it or not.
-        * To stretch your muscles: You need to move from time to time to avoid atrophying your muscular and bone
-          structure.
-        * To stop working: It is good you are passionate about your job but still, you have to rest a little bit.
+### Timer to let you know you've been working hard and need break:
 
-SCREENSHOT HERE
+- The program has 3 types of breaks:
+  + **micro break**: To relax the eyes and move a little. Sometimes while we've been working hard for a long time we
+    blink less than usual and don't move much. This will remind you to do so.
+  + **rest break**: To stretch your muscles. You need to move from time to time to avoid atrophying your muscular and
+    bone structure.
+  + **day break**: To stop working. It is good you are passionate about your job but still, you have to rest and sleep.
 
-- **Computer Vision program to check if you're getting too close to the screen**: Haven't you had that sensation of knowing that you're in a bad posture but do not remember how you got it? This feature can help you out to avoid adopting that bad posture.
+![Break notification image](media/break_notification.png)
 
-SCREENSHOT HERE
+![Breaks configuration image](media/breaks_config.png)
 
-Check the [Requirements document](requirements) to see a full list of main features.
+- Each break can have configured hooks that can be executed when a break ends/starts.
 
-## Contribute
+This feature is specifically useful to remind you with a sound (along with a notification) to take a break or play music
+while you're taking the break.
 
-Main contributors are [Benjamín Guzmán](https://github.com/BenjaminGuzman) and [Mauricio Montaño](https://github.com/Mauswoosh) who as developers we are concerned about our physical health, so we developed SpineWare to help us and want to share it with others.
+A hook can be configured to execute commands too!
+
+![Breaks hooks configuration image](media/break_hooks_config.png)
+
+The status for each break is shown in the system tray.
+
+![System tray image](media/systray.png)
+
+**WARNING** and **TODO**: If your system does not support Systray, you can't use SpineWare.
+
+**Known list of incompatible Operatives Systems**:
+
+- Ubuntu 18.04
+
+Please, if you try SpineWare and discover that your SO is not compatible, try making a GitHub issue.
+
+### List of exercises you can do while taking a break
+
+**TODO**: Complete this docs & make the feature.
+
+### Computer Vision program to check if you're getting too close to the screen
+
+Haven't you had that sensation of knowing that you're in a bad posture but do not remember how you got it? This feature
+can help you out to avoid adopting that bad posture.
+
+**TODO**: SCREENSHOT HERE, complete the feature.
+
+## Contributors
+
+Main contributor is [Benjamín Guzmán](https://github.com/BenjaminGuzman) who as a developer is concerned about the
+health habits of developers while using a computer.
 
 This software is under the GPLv3 License, thus you're free to modify and improve the code.
 
@@ -56,19 +80,13 @@ This software is under the GPLv3 License, thus you're free to modify and improve
 
 There are three main areas where you can contribute:
 
-- **Help to bring SpineWare to Windows and MacOS**: We love free software and mainly used GNU/Linux to run and test SpineWare, but we believe is part of the freedom of the user to choose what software to use and in which platform. A great advantage is that SpineWare is written in Java.
-- **Translations**: Currently SpineWare is available only in 2 languages: English and Spanish.
-
-### Audios
-
-All sounds placed under the `media/sounds` directory or `src/main/resources/media/sounds` are licensed under the [Creative Commons license](http://creativecommons.org/licenses/by/3.0/)
-
-These are the authors for some audio files:
-
-- **Kjartan Abel**, [https://freesound.org/people/kjartan_abel/](https://freesound.org/people/kjartan_abel/)
-- **Sami Hiltunen** [https://freesound.org/people/SamiHil/](https://freesound.org/people/SamiHil/)
-- [https://freesound.org/people/Erokia/](https://freesound.org/people/Erokia/)
-- [https://freesound.org/people/DaveJf/](https://freesound.org/people/DaveJf/)
+- **Help to bring SpineWare to Windows and MacOS**: We love free software and mainly use GNU/Linux to run and test
+  SpineWare, but we believe is part of the freedom of the user to choose what software to use and in which platform. A
+  great advantage is that SpineWare is written in Java.
+- **Translations**: Currently SpineWare is available only in 1 language: English. It'd be great if you contribute with
+  translations of the [messages.properties](src/main/resources/bundles)
+- **Ideas & code**: I (Benjamín Guzmán) wrote SpineWare according to my needs as developer, but maybe you've some other
+  needs & ideas, you can contribute with that and even modify the source code to make it a reality.
 
 ## Dependencies
 
@@ -76,8 +94,50 @@ These are the authors for some audio files:
 
 - [FlatLaf](https://github.com/JFormDesigner/FlatLaf) to have a nice Look & Feel
 
-- [OpenCV](https://github.com/opencv/opencv)
+- [OpenCV](https://github.com/opencv/opencv) mainly for the CV features.
 
-## Future ideas
+- [javalayer](http://www.javazoom.net/javalayer/javalayer.html) to add support for mp3 audio files (specially in hooks
+  config)
 
-- **Tasks timer to keep track on all the activities you should complete**: With this you can set timers to allocate part of your time to perform tasks you need to complete. This way you can finish everything you gotta do in a timely manner! (feature postponed, we're not currently working on it, but if you want, you can help us)
+- [commons-cli](https://commons.apache.org/proper/commons-cli/) to parse cli arguments
+
+Possible dependencies:
+
+- [SystemTray](https://github.com/dorkbox/SystemTray) to have a better system tray more compatible & modern.
+
+- [log4j2](https://logging.apache.org/log4j/2.x/) to have better logging mechanisms
+
+## Troubleshooting
+
+### SpineWare won't start anymore
+
+To avoid collisions, when an instance of SpineWare is created, it creates a `sw.lock` file in the `java.io.tmpdir` with
+no permissions to anyone (POSIX `---------`). The file should be deleted when the JVM exits gracefully.
+
+If something weird happens, the `sw.lock` file may not be deleted. In such case **you can safely delete it**.
+
+Delete it with `rm -f /tmp/sw.lock` on *nix systems, use the `-f` flag to force the removal of the file as the command
+will ask for confirmation since you don't have permission to read/write the file.
+
+**If that doesn't work, try rebooting your system**. This should delete the file as it is located in the temp
+directory (unless you've modified your SO behaviour).
+
+### Logs and errors
+
+**Only `SEVERE`, `ERROR` & `WARNING`** logs will be saved in a temporary file in the temp folder.
+
+You can see those logs if something is not working correctly, e. g. a configured audio hook is not playing.
+
+If you want you can open a GitHub issue and upload the log.
+
+**All other logs will be logged to `stdout`**.
+
+### Logs and errors for execution hooks
+
+When a hook command is executed, the
+
+- **stdout** of the command is redirected to the file `SW_hooks_stdout.log` inside the temp directory
+- **stderr** of the command is redirected to the file `SW_hooks_stderr.log` inside the temp directory
+
+These files are **NOT overwritten** but **appended**, therefore, there you can see all the logs for all executions. (
+since you powered up your computer, remember they're in the temp dir).

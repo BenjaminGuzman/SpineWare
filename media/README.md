@@ -29,6 +29,14 @@ The following files
 
 - `SW.png`
 
+- `break_notification.png`
+
+- `breaks_config.png`
+
+- `break_hooks_config.png`
+
+- `systray.png`
+
 Are licensed under
 the [Creative Commons Attribution-ShareAlike license (CC BY-SA) 4.0](https://creativecommons.org/licenses/by-sa/4.0/),
 and were made by Benjamín Guzmán <bg@benjaminguzman.dev>, therefore they ALL have the following copyright notice

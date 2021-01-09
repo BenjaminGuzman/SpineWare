@@ -32,6 +32,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javazoom.jl.decoder.JavaLayerException;
 import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.core.AudioPlayer;
@@ -143,8 +144,14 @@ public class HooksExecutor
 				this.audioPlayer.loadAudio(audioFile.getAbsolutePath());
 				this.audioPlayTask = this.audioThreadExecutor.submit(this.audioPlayer);
 				return;
+			} else if (!audioFile.exists()) {
+				Loggers.getErrorLogger().log(
+					Level.WARNING,
+					"Audio file: " + audioFile.getAbsolutePath() + " does not exists"
+				);
+				return;
 			}
-		} catch (UnsupportedAudioFileException | LineUnavailableException | IOException e) {
+		} catch (UnsupportedAudioFileException | LineUnavailableException | IOException | JavaLayerException e) {
 			Loggers.getErrorLogger().log(
 				Level.SEVERE,
 				"Error while playing audio",
@@ -169,7 +176,7 @@ public class HooksExecutor
 			return this.supportedAudioExtensions.contains(extension);
 		});
 
-		if (supportedAudioFiles == null) {
+		if (supportedAudioFiles == null || supportedAudioFiles.length == 0) {
 			SWMain.showErrorAlert(
 				"No playable audio files in directory: " + audioPath
 					+ "\nAudio files should have one of the following formats: "
@@ -195,7 +202,7 @@ public class HooksExecutor
 
 			try {
 				this.audioPlayer.loadAudio(file.getAbsolutePath());
-			} catch (UnsupportedAudioFileException | LineUnavailableException | IOException e) {
+			} catch (UnsupportedAudioFileException | LineUnavailableException | IOException | JavaLayerException e) {
 				Loggers.getErrorLogger().log(
 					Level.SEVERE,
 					"Error while playing audio: " + file.getAbsolutePath(),
@@ -210,6 +217,7 @@ public class HooksExecutor
 			try {
 				latch.await();
 			} catch (InterruptedException e) {
+				this.audioPlayTask.cancel(true);
 				return;
 			}
 
