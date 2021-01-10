@@ -1,11 +1,14 @@
 [Unit]
 Description=SpineWare Service. SpineWare is the app that takes care of your health while using the computer
-Requires=graphical.target
+Requires=graphical.target sound.target
 
 [Service]
+User=dipierro
 Environment="DISPLAY=:0"
 Type=simple
-User=
-ExecStart=
+ExecStart=/usr/bin/java -jar "/home/dipierro/bin/SpineWareV1.0-SNAPSHOT.jar"
 Restart=on-failure
 RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
