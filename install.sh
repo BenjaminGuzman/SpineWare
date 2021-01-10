@@ -32,11 +32,15 @@ function ask_input() {
 function check_dir() {
 	if [ ! -d "$1" ]; then
 		echo "$1 does not exists, trying to create it"
-		mkdir -p "$1"
+		mkdir -p "$1" "$1/sw"
 		return $? # return exit status code from mkdir
 	fi
 
 	return 0
+}
+
+function escape_slashes() {
+	echo "$1" | sed 's/\//\\\//g'
 }
 
 # ask and check the installation dir
@@ -61,7 +65,24 @@ fi
 jar_filename=$(find target -type f -name "SpineWareV*.jar" -exec basename {} \;) # find the name of the jar
 
 echo "Copying jar file to installation directory ($installation_dir)..."
-cp "./target/$jar_filename" "$installation_dir"
+sed -i "s/jar_installation_dir=.*/jar_installation_dir=$(escape_slashes "$installation_dir/sw")/" installation/spineware
+cp "./installation/spineware" "$installation_dir"  # copy the command
+cp "./target/$jar_filename" "$installation_dir/sw" # copy the jar
+cp "./media/SW_white.svg" "$installation_dir/sw"   # copy the icon image
+chmod u+x "$installation_dir/spineware"            # set correct permissions to allow user to execute the command
+
+icon_image="$installation_dir/sw/SW_white.svg"
+echo "Copying the .desktop file..."
+sed -i "s/Icon=.*/Icon=$(escape_slashes "$icon_image")/" installation/spineware.desktop
+sed -i "s/Exec=.*/Exec=$(escape_slashes "$installation_dir/spineware")/" installation/spineware.desktop
+cp "./installation/spineware.desktop" "$HOME/.local/share/applications"
+
+if ! kbuildsycoca5; then # refresh kde5 cache and see if everything went ok
+	echo "You're not using KDE 5. You may want to refresh your applications cache so SpineWare appears in your apps menu"
+fi
+
+echo "Execute the following if you're on KDE 5 and want SpineWare to autostart:"
+echo -e "\033[96;1mln ./installation/spineware.desktop $HOME/.config/autostart/spineware.desktop\033[0m"
 
 # Add to the path the installation dir
 case :$PATH: in
@@ -74,6 +95,8 @@ case :$PATH: in
 	;;
 esac
 
+echo -en "\033[93;1;5m Warning: \033[0m"
+echo -e "\033[93;1mInstalling to systemd may not work on all systems, there is some problem with audio\033[0m"
 create_sys_service=$(ask_input "Do you want to create a system service to run SpineWare at startup (Y/n)" "n")
 
 if [ "$create_sys_service" != "Y" ]; then
@@ -89,8 +112,8 @@ run_with_sudo=false
 # check if user has rights to write in the systemd dir
 if [ ! -w "$systemd_service_dir" ]; then
 	echo -e "\033[91;1mYou don't have rights to install the system service in the $systemd_service_dir\033[0m"
-	echo -e "\033[91;1mMaybe you wanna try again with \"sudo\"? (just remember, sudo doesn't always fix everything, use it with care)\033[0m"
-	echo -e "\033[93;1mThe commands that need writing privileges will be executed with \"sudo\" ok? (press Ctrl-C if you're not ok)\033[0m"
+	echo -e "\033[91;1mMaybe you wanna try again with \"sudo\"? (just remember, sudo doesn't always fix everything, use it with care) \033[0m"
+	echo -e "\033[93;1mThe commands that need writing privileges will be executed with \"sudo\" ok? (press Ctrl-C if you're not ok) \033[0m"
 	read -r
 	run_with_sudo=true
 fi
@@ -99,13 +122,14 @@ echo "Creating .service config file..."
 java_location=$(which java)                                   # find the java command location
 
 cmd="$java_location -jar \"$installation_dir/$jar_filename\"" # construct the complete command
-cmd=$(echo "$cmd" | sed 's/\//\\\//g')                        # escape forward slashes
+cmd=$(escape_slashes "$cmd")                                  # escape forward slashes
 
+username=$(whoami)
 sed -i "s/^ExecStart=.*/ExecStart=$cmd/" installation/spineware.service
-sed -i "s/^User=.*/User=$(whoami | sed 's/\//\\\//g')/" installation/spineware.service
+sed -i "s/^User=.*/User=$(escape_slashes "$username")/" installation/spineware.service
 
 # copy the service file
-echo "Installing the service..."
+echo "Installing the service in $systemd_service_dir..."
 if [ "$run_with_sudo" == "true" ]; then
 	sudo cp installation/spineware.service "$systemd_service_dir"
 else
@@ -121,10 +145,10 @@ fi
 
 echo "Starting the service..."
 if [ "$run_with_sudo" == "true" ]; then
-	sudo systemctl start spineware
+	sudo systemctl enable --now spineware
 	sudo systemctl status spineware
 else
-	systemctl start spineware
+	systemctl enable --now spineware
 	systemctl status spineware
 fi
 

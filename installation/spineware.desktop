@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=SpineWare
+Icon=/home/dipierro/bin/sw/SW_white.svg
+Comment=The app to take care of your health
+Exec=/home/dipierro/bin/spineware
+Type=Application
+Categories=Utilities;
+Terminal=false
+StartupNotify=true

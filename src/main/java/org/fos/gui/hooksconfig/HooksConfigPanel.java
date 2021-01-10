@@ -262,7 +262,7 @@ public class HooksConfigPanel extends JPanel
 
 			int choice = fileChooser.showSaveDialog(this);
 
-			if (choice == JFileChooser.CANCEL_OPTION || choice == JFileChooser.ERROR_OPTION) {
+			if (choice == JFileChooser.CANCEL_OPTION) {
 				selectedAudioLabel.setText(" ");
 				return;
 			}
