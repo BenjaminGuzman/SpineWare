@@ -27,6 +27,8 @@ The following files
 
 - `SW_white.png`
 
+- `SW_white.svg`
+
 - `SW.png`
 
 - `break_notification.png`
