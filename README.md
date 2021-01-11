@@ -83,7 +83,7 @@ There are three main areas where you can contribute:
 - **Help to bring SpineWare to Windows and MacOS**: We love free software and mainly use GNU/Linux to run and test
   SpineWare, but we believe is part of the freedom of the user to choose what software to use and in which platform. A
   great advantage is that SpineWare is written in Java.
-- **Translations**: Currently SpineWare is available only in 1 language: English. It'd be great if you contribute with
+- **Translations**: Currently SpineWare is available only in 2 language: English and Spanish. It'd be great if you contribute with
   translations of the [messages.properties](src/main/resources/bundles)
 - **Ideas & code**: I (Benjamín Guzmán) wrote SpineWare according to my needs as developer, but maybe you've some other
   needs & ideas, you can contribute with that and even modify the source code to make it a reality.
