@@ -41,6 +41,7 @@ import javax.swing.border.EmptyBorder;
 import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.core.NotificationLocation;
+import org.jetbrains.annotations.Nullable;
 
 public class Notification extends JDialog
 {
@@ -50,7 +51,9 @@ public class Notification extends JDialog
 	protected JLabel swIconLabel; // icon that contains the SW image
 	protected JButton closeBtn; // button to close the notification
 	protected JPanel mainPanel; // panel that will contain everything in the JDialog
+	@Nullable
 	protected Runnable onShown; // runnable when the notification is shown
+	@Nullable
 	protected Runnable onDisposed; // runnable when the notification is disposed
 	private Timer timeoutTimer; // timer to automatically dispose the dialog
 

@@ -31,6 +31,8 @@ import org.fos.SWMain;
 import org.fos.core.NotificationLocation;
 import org.fos.gui.Colors;
 import org.fos.gui.Fonts;
+import org.fos.timers.BreakDecision;
+import org.jetbrains.annotations.Nullable;
 
 public class TakeABreakNotification extends Notification
 {
@@ -53,8 +55,8 @@ public class TakeABreakNotification extends Notification
 		final CountDownLatch countDownLatch,
 		final boolean is_not_day_limit_notification,
 		final NotificationLocation notificationLocation,
-		final Runnable onShown,
-		final Runnable onDisposed
+		final @Nullable Runnable onShown,
+		final @Nullable Runnable onDisposed
 	)
 	{
 		this(takeABreakMessage, countDownLatch, is_not_day_limit_notification, notificationLocation);
@@ -203,6 +205,18 @@ public class TakeABreakNotification extends Notification
 	public boolean breakWasDismissed()
 	{
 		return this.break_dismissed;
+	}
+
+	/**
+	 * @return a value of the enum {@link BreakDecision} depending on what the user chose
+	 */
+	public BreakDecision getBreakDecision()
+	{
+		if (this.break_dismissed)
+			return BreakDecision.DISMISS;
+		if (this.break_postponed)
+			return BreakDecision.POSTPONE;
+		return BreakDecision.TAKE_BREAK;
 	}
 
 	/**
