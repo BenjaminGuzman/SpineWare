@@ -25,6 +25,8 @@ import org.fos.Loggers;
 import org.fos.core.BreakType;
 import org.fos.hooks.BreakHooksConfig;
 import org.fos.hooks.HooksConfig;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Wrapper class containing information about the break settings including
@@ -34,25 +36,35 @@ import org.fos.hooks.HooksConfig;
  */
 public class BreakConfig
 {
-	private final BreakType breakType;
-	private final BreakHooksConfig hooksConfig;
-	private Clock workClock;
-	private Clock breakClock;
-	private Clock postponeClock;
+	@NotNull
+	private BreakType breakType;
+
+	@Nullable
+	private BreakHooksConfig hooksConfig;
+
+	@NotNull
+	private WallClock workWallClock;
+	/**
+	 * This field may be null if {@link #breakType} is of type {@link BreakType#DAY_BREAK}
+	 */
+	@Nullable
+	private WallClock breakWallClock;
+	@NotNull
+	private WallClock postponeWallClock;
 	private boolean is_enabled;
 
 	private BreakConfig(
-		final Clock workClock,
-		final Clock breakClock,
-		final Clock postponeClock,
-		final BreakType breakType,
-		final BreakHooksConfig hooksConfig,
+		final @NotNull WallClock workWallClock,
+		final @Nullable WallClock breakWallClock,
+		final @NotNull WallClock postponeWallClock,
+		final @NotNull BreakType breakType,
+		final @Nullable BreakHooksConfig hooksConfig,
 		final boolean is_enabled
 	)
 	{
-		this.workClock = Objects.requireNonNull(workClock);
-		this.breakClock = breakClock;
-		this.postponeClock = Objects.requireNonNull(postponeClock);
+		this.workWallClock = Objects.requireNonNull(workWallClock);
+		this.breakWallClock = breakWallClock;
+		this.postponeWallClock = Objects.requireNonNull(postponeWallClock);
 		this.breakType = Objects.requireNonNull(breakType);
 		this.is_enabled = is_enabled;
 		this.hooksConfig = hooksConfig;
@@ -82,57 +94,12 @@ public class BreakConfig
 			breakName + " postpone time",
 			config.getPostponeTimerSettings().getHMSAsSeconds()
 		);
-		Clock breakClock = config.getBreakTimerSettings();
-		if (breakClock != null)
-			prefs.putInt(breakName + " break time", breakClock.getHMSAsSeconds());
+		WallClock breakWallClock = config.getBreakTimerSettings();
+		if (breakWallClock != null)
+			prefs.putInt(breakName + " break time", breakWallClock.getHMSAsSeconds());
 
 		// technically here the hook settings should be saved too
 		// but they're being saved in the ConfigureHooksDialog, so no need to save them again here
-	}
-
-	public BreakType getBreakType()
-	{
-		return this.breakType;
-	}
-
-	public Clock getWorkTimerSettings()
-	{
-		return workClock;
-	}
-
-	public void setWorkTimerSettings(Clock workClock)
-	{
-		this.workClock = workClock;
-	}
-
-	public Clock getBreakTimerSettings()
-	{
-		return breakClock;
-	}
-
-	public void setBreakTimerSettings(Clock breakClock)
-	{
-		this.breakClock = breakClock;
-	}
-
-	public Clock getPostponeTimerSettings()
-	{
-		return this.postponeClock;
-	}
-
-	public void setPostponeTimerSettings(Clock postponeClock)
-	{
-		this.postponeClock = postponeClock;
-	}
-
-	public boolean isEnabled()
-	{
-		return this.is_enabled;
-	}
-
-	public void setEnabled(final boolean is_enabled)
-	{
-		this.is_enabled = is_enabled;
 	}
 
 	/**
@@ -151,7 +118,7 @@ public class BreakConfig
 		int postpone_time = prefs.getInt(breakName + " postpone time", 0);
 
 		// load hooks settings
-		HooksConfig notifHooksConf = null;
+		HooksConfig notifHooksConf;
 		try {
 			notifHooksConf = HooksConfig.fromPrefs(breakType, true);
 		} catch (InstantiationException e) {
@@ -161,6 +128,7 @@ public class BreakConfig
 					+ " and notification hooks not saved correctly",
 				e
 			);
+			return null;
 		}
 
 		HooksConfig breakHooksConf = null;
@@ -177,17 +145,87 @@ public class BreakConfig
 
 		BreakConfig.Builder builder = new Builder()
 			.enabled(is_enabled)
-			.workTimerSettings(Clock.from(working_time))
-			.postponeTimerSettings(Clock.from(postpone_time))
+			.workTimerSettings(WallClock.from(working_time))
+			.postponeTimerSettings(WallClock.from(postpone_time))
 			.hooksConfig(new BreakHooksConfig(notifHooksConf, breakHooksConf))
 			.breakType(breakType);
 
 		return breakType == BreakType.DAY_BREAK
 			? builder.breakTimerSettings(null).createBreakSettings()
-			: builder.breakTimerSettings(Clock.from(break_time)).createBreakSettings();
+			: builder.breakTimerSettings(WallClock.from(break_time)).createBreakSettings();
 	}
 
-	public BreakHooksConfig getHooksConfig()
+	public @NotNull BreakType getBreakType()
+	{
+		return this.breakType;
+	}
+
+	public WallClock getWorkTimerSettings()
+	{
+		return workWallClock;
+	}
+
+	public void setWorkTimerSettings(WallClock workWallClock)
+	{
+		this.workWallClock = workWallClock;
+	}
+
+	public WallClock getBreakTimerSettings()
+	{
+		return breakWallClock;
+	}
+
+	public void setBreakTimerSettings(WallClock breakWallClock)
+	{
+		this.breakWallClock = breakWallClock;
+	}
+
+	public WallClock getPostponeTimerSettings()
+	{
+		return this.postponeWallClock;
+	}
+
+	public void setPostponeTimerSettings(WallClock postponeWallClock)
+	{
+		this.postponeWallClock = postponeWallClock;
+	}
+
+	public boolean isEnabled()
+	{
+		return this.is_enabled;
+	}
+
+	public void setEnabled(final boolean is_enabled)
+	{
+		this.is_enabled = is_enabled;
+	}
+
+	public void updateAll(BreakConfig newConfig)
+	{
+		this.workWallClock.updateAll(
+			newConfig.workWallClock.getHours(),
+			newConfig.workWallClock.getMinutes(),
+			newConfig.workWallClock.getSeconds()
+		);
+		if (newConfig.breakWallClock != null && breakWallClock != null) {
+			this.breakWallClock.updateAll(
+				newConfig.breakWallClock.getHours(),
+				newConfig.breakWallClock.getMinutes(),
+				newConfig.breakWallClock.getSeconds()
+			);
+		}
+		this.postponeWallClock.updateAll(
+			newConfig.postponeWallClock.getHours(),
+			newConfig.postponeWallClock.getMinutes(),
+			newConfig.postponeWallClock.getSeconds()
+		);
+		this.breakType = newConfig.breakType;
+		this.is_enabled = newConfig.is_enabled;
+
+		this.hooksConfig = newConfig.getHooksConfig();
+	}
+
+	public @Nullable BreakHooksConfig getHooksConfig()
 	{
 		return this.hooksConfig;
 	}
@@ -197,9 +235,9 @@ public class BreakConfig
 	{
 		return "BreakSettings{" +
 			"breakType=" + breakType +
-			", workClock=" + workClock +
-			", breakClock=" + breakClock +
-			", postponeClock=" + postponeClock +
+			", workWallClock=" + workWallClock +
+			", breakWallClock=" + breakWallClock +
+			", postponeWallClock=" + postponeWallClock +
 			", is_enabled=" + is_enabled +
 			'}';
 	}
@@ -209,29 +247,29 @@ public class BreakConfig
 	 */
 	public static class Builder
 	{
-		private Clock workClock;
-		private Clock breakClock;
-		private Clock postponeClock;
+		private WallClock workWallClock;
+		private WallClock breakWallClock;
+		private WallClock postponeWallClock;
 		private BreakType breakType;
 		private boolean is_enabled = true;
 
 		private BreakHooksConfig hooksConfig;
 
-		public Builder workTimerSettings(Clock workClock)
+		public Builder workTimerSettings(WallClock workWallClock)
 		{
-			this.workClock = workClock;
+			this.workWallClock = workWallClock;
 			return this;
 		}
 
-		public Builder breakTimerSettings(Clock breakClock)
+		public Builder breakTimerSettings(WallClock breakWallClock)
 		{
-			this.breakClock = breakClock;
+			this.breakWallClock = breakWallClock;
 			return this;
 		}
 
-		public Builder postponeTimerSettings(Clock postponeClock)
+		public Builder postponeTimerSettings(WallClock postponeWallClock)
 		{
-			this.postponeClock = postponeClock;
+			this.postponeWallClock = postponeWallClock;
 			return this;
 		}
 
@@ -256,9 +294,9 @@ public class BreakConfig
 		public BreakConfig createBreakSettings()
 		{
 			return new BreakConfig(
-				this.workClock,
-				this.breakClock,
-				this.postponeClock,
+				this.workWallClock,
+				this.breakWallClock,
+				this.postponeWallClock,
 				this.breakType,
 				this.hooksConfig,
 				this.is_enabled

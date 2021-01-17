@@ -29,6 +29,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 import javax.management.InstanceAlreadyExistsException;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -42,6 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.core.BreakType;
 import org.fos.core.TimersManager;
@@ -49,8 +51,10 @@ import org.fos.gui.Colors;
 import org.fos.gui.Fonts;
 import org.fos.gui.hooksconfig.ConfigureHooksDialog;
 import org.fos.gui.util.TimeInputPanel;
+import org.fos.hooks.BreakHooksConfig;
+import org.fos.hooks.HooksConfig;
 import org.fos.timers.BreakConfig;
-import org.fos.timers.Clock;
+import org.fos.timers.WallClock;
 
 public class BreaksPanel extends JScrollPane
 {
@@ -61,26 +65,26 @@ public class BreaksPanel extends JScrollPane
 	private final Font DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 16);
 
 	private final List<BreakConfig> preferredBreakSettings;
-	private final Clock[] minWorkRecommendedTimes = new Clock[]{
-		new Clock((byte) 0, (byte) 5, (byte) 0), // min work time for the small break
-		new Clock((byte) 0, (byte) 30, (byte) 0), // min work time for the stretch break
-		new Clock((byte) 8, (byte) 0, (byte) 0), // min work time for the day break
+	private final WallClock[] minWorkRecommendedTimes = new WallClock[]{
+		new WallClock((byte) 0, (byte) 5, (byte) 0), // min work time for the small break
+		new WallClock((byte) 0, (byte) 30, (byte) 0), // min work time for the stretch break
+		new WallClock((byte) 8, (byte) 0, (byte) 0), // min work time for the day break
 	};
-	private final Clock[] maxWorkRecommendedTimes = new Clock[]{
-		new Clock((byte) 0, (byte) 30, (byte) 0), // max work time for the small break
-		new Clock((byte) 2, (byte) 0, (byte) 0), // max work time for the stretch break
-		new Clock((byte) 12, (byte) 0, (byte) 0), // max work time for the day break
+	private final WallClock[] maxWorkRecommendedTimes = new WallClock[]{
+		new WallClock((byte) 0, (byte) 30, (byte) 0), // max work time for the small break
+		new WallClock((byte) 2, (byte) 0, (byte) 0), // max work time for the stretch break
+		new WallClock((byte) 12, (byte) 0, (byte) 0), // max work time for the day break
 	};
-	private final Clock[] minBreakRecommendedTimes = new Clock[]{
-		new Clock((byte) 0, (byte) 0, (byte) 10), // min break time for the small break
-		new Clock((byte) 0, (byte) 10, (byte) 0), // min break time for the stretch break
+	private final WallClock[] minBreakRecommendedTimes = new WallClock[]{
+		new WallClock((byte) 0, (byte) 0, (byte) 10), // min break time for the small break
+		new WallClock((byte) 0, (byte) 10, (byte) 0), // min break time for the stretch break
 	};
-	private final Clock[] maxBreakRecommendedTimes = new Clock[]{
-		new Clock((byte) 0, (byte) 5, (byte) 0), // max break time for the small break
-		new Clock((byte) 1, (byte) 0, (byte) 0), // max break time for the stretch break
+	private final WallClock[] maxBreakRecommendedTimes = new WallClock[]{
+		new WallClock((byte) 0, (byte) 5, (byte) 0), // max break time for the small break
+		new WallClock((byte) 1, (byte) 0, (byte) 0), // max break time for the stretch break
 	};
-	private final Clock minRequiredPostponeTime = new Clock((byte) 0, (byte) 0, (byte) 6);
-	private final Clock maxRequiredPostponeTime = new Clock((byte) 0, (byte) 30, (byte) 0);
+	private final WallClock minRequiredPostponeTime = new WallClock((byte) 0, (byte) 0, (byte) 6);
+	private final WallClock maxRequiredPostponeTime = new WallClock((byte) 0, (byte) 30, (byte) 0);
 
 	// configuration stuff
 	private JComboBox<String> notificationLocationCombobox;
@@ -95,7 +99,7 @@ public class BreaksPanel extends JScrollPane
 		BreaksPanel.instantiated = true;
 
 		// load preferred times
-		this.preferredBreakSettings = TimersManager.loadBreaksSettings();
+		this.preferredBreakSettings = TimersManager.getPrefsIO().loadBreaksConfig();
 
 		// load icon images that will be used by the createBreakPanel method
 		ImageIcon hooksConfigIcon = SWMain.readAndScaleIcon("/resources/media/task_white_18dp.png");
@@ -109,9 +113,9 @@ public class BreaksPanel extends JScrollPane
 			BreakType.SMALL_BREAK,
 			hooksConfigIcon,
 			saveConfigIcon,
-			new Clock((byte) 0, (byte) 10, (byte) 0), // recommended value for working time
-			new Clock((byte) 0, (byte) 0, (byte) 10), // recommended value for break time
-			new Clock((byte) 0, (byte) 0, (byte) 10) // recommended value for postpone time
+			new WallClock((byte) 0, (byte) 10, (byte) 0), // recommended value for working time
+			new WallClock((byte) 0, (byte) 0, (byte) 10), // recommended value for break time
+			new WallClock((byte) 0, (byte) 0, (byte) 10) // recommended value for postpone time
 		));
 		panel.add(Box.createVerticalStrut(10));
 
@@ -122,9 +126,9 @@ public class BreaksPanel extends JScrollPane
 			BreakType.STRETCH_BREAK,
 			hooksConfigIcon,
 			saveConfigIcon,
-			new Clock((byte) 2, (byte) 0, (byte) 0), // recommended value for working time
-			new Clock((byte) 0, (byte) 30, (byte) 0), // recommended value for break time
-			new Clock((byte) 0, (byte) 0, (byte) 10) // recommended value for postpone time)
+			new WallClock((byte) 2, (byte) 0, (byte) 0), // recommended value for working time
+			new WallClock((byte) 0, (byte) 30, (byte) 0), // recommended value for break time
+			new WallClock((byte) 0, (byte) 0, (byte) 10) // recommended value for postpone time)
 		));
 		panel.add(Box.createVerticalStrut(10));
 
@@ -135,9 +139,9 @@ public class BreaksPanel extends JScrollPane
 			BreakType.DAY_BREAK,
 			hooksConfigIcon,
 			saveConfigIcon,
-			new Clock((byte) 8, (byte) 0, (byte) 0), // recommended value for working time
+			new WallClock((byte) 8, (byte) 0, (byte) 0), // recommended value for working time
 			null, // recommended value for break time
-			new Clock((byte) 0, (byte) 0, (byte) 10) // recommended value for postpone time)
+			new WallClock((byte) 0, (byte) 0, (byte) 10) // recommended value for postpone time)
 		));
 		panel.add(Box.createVerticalStrut(10));
 
@@ -167,8 +171,8 @@ public class BreaksPanel extends JScrollPane
 	 * @return the JPanel containing all the elements mentioned above
 	 */
 	private JPanel createBreakPanel(final BreakType breakType, final ImageIcon hooksConfigIcon,
-	                                final ImageIcon saveConfigIcon, final Clock recommendedWorkingTime,
-	                                final Clock recommendedBreakTime, final Clock recommendedPostponeTime)
+	                                final ImageIcon saveConfigIcon, final WallClock recommendedWorkingTime,
+	                                final WallClock recommendedBreakTime, final WallClock recommendedPostponeTime)
 	{
 		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
@@ -249,6 +253,7 @@ public class BreaksPanel extends JScrollPane
 		JButton saveConfigBtn = new JButton(messagesBundle.getString("save_changes"));
 		saveConfigBtn.setIcon(saveConfigIcon);
 		saveConfigBtn.setFont(Fonts.SANS_SERIF_BOLD_15);
+		saveConfigBtn.setToolTipText(messagesBundle.getString("save_changes_timers_warning"));
 
 		postponeTimeLabel = new JLabel(
 			messagesBundle.getString("postpone_time_label"),
@@ -417,10 +422,17 @@ public class BreaksPanel extends JScrollPane
 		));
 		setRecommendedValuesBtn.addFocusListener(onFocusLostClearLabel);
 
-		hooksConfigBtn.addActionListener(new OnClickHooksSettings(
+		ActionListener onClickHooksSettings = new OnClickHooksSettings(
 			SwingUtilities.getWindowAncestor(this),
 			breakType
-		));
+		);
+		hooksConfigBtn.addActionListener((ActionEvent evt) -> {
+			// show the modal dialog, this call will block
+			onClickHooksSettings.actionPerformed(evt);
+
+			// once the modal dialog is shown, save the new configuration
+			saveConfigBtn.doClick(60);
+		});
 
 		return panel;
 	}
@@ -446,7 +458,7 @@ public class BreaksPanel extends JScrollPane
 		};
 		this.notificationLocationCombobox = new JComboBox<>(locationOptions);
 		this.notificationLocationCombobox.setSelectedIndex(
-			TimersManager.getNotificationPrefLocation(true).getLocationIdx()
+			TimersManager.getPrefsIO().getNotificationPrefLocation(true).getLocationIdx()
 		);
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
@@ -460,7 +472,7 @@ public class BreaksPanel extends JScrollPane
 
 		// set the listener to automatically save config on changes
 		this.notificationLocationCombobox.addActionListener((ActionEvent evt) ->
-			TimersManager.saveNotificationPrefLocation(
+			TimersManager.getPrefsIO().saveNotificationPrefLocation(
 				(byte) this.notificationLocationCombobox.getSelectedIndex()
 			)
 		);
@@ -539,10 +551,10 @@ public class BreaksPanel extends JScrollPane
 			for (JButton btn : relatedButtons)
 				btn.setEnabled(this.is_enabled);
 
-			// if the user disables the checkbox, save that preference and stop the timer
-			if (!this.is_enabled)
-				TimersManager.setBreakEnabled(this.breakType, false);
+			// update the preference
+			TimersManager.setBreakEnabled(this.breakType, this.is_enabled);
 
+			statusLabel.setForeground(Colors.WHITE);
 			this.statusLabel.setText(SWMain.getMessagesBundle().getString(
 				this.is_enabled
 					? "break_successfully_enabled"
@@ -553,13 +565,14 @@ public class BreaksPanel extends JScrollPane
 
 	private static class OnSaveSettingsListener implements ActionListener
 	{
-		private final BreakConfig.Builder breakSettingsBuilder;
+		private final BreakType breakType;
 
 		private final TimeInputPanel workingTimeInput;
 		private final TimeInputPanel breakTimeInput;
 		private final TimeInputPanel postponeTimeInput;
 
 		private final JLabel statusLabel;
+		private BreakConfig.Builder breakSettingsBuilder;
 
 		public OnSaveSettingsListener(
 			final TimeInputPanel workingTimeInput,
@@ -573,6 +586,7 @@ public class BreaksPanel extends JScrollPane
 			this.breakTimeInput = breakTimeInput;
 			this.postponeTimeInput = postponeTimeInput;
 			this.statusLabel = statusLabel;
+			this.breakType = breakType;
 
 			this.breakSettingsBuilder = new BreakConfig.Builder().breakType(breakType);
 
@@ -605,16 +619,27 @@ public class BreaksPanel extends JScrollPane
 			this.statusLabel.setForeground(Colors.GREEN);
 
 			if (this.breakTimeInput != null)
-				this.breakSettingsBuilder.breakTimerSettings(Clock.from(this.breakTimeInput.getTime()));
+				this.breakSettingsBuilder.breakTimerSettings(WallClock.from(this.breakTimeInput.getTime()));
 
-			// save the nw break settings and reload the break
-			BreakConfig newBreakConfig = this.breakSettingsBuilder
-				.workTimerSettings(Clock.from(this.workingTimeInput.getTime()))
-				.postponeTimerSettings(Clock.from(this.postponeTimeInput.getTime()))
-				// TODO: add config for hooks
-				.createBreakSettings();
+			// save the new break settings and reload the break
+			breakSettingsBuilder = breakSettingsBuilder
+				.workTimerSettings(WallClock.from(this.workingTimeInput.getTime()))
+				.postponeTimerSettings(WallClock.from(this.postponeTimeInput.getTime()));
+			try {
+				breakSettingsBuilder = breakSettingsBuilder
+					.hooksConfig(new BreakHooksConfig(
+						HooksConfig.fromPrefs(breakType, true),
+						HooksConfig.fromPrefs(breakType, false)
+					));
+			} catch (InstantiationException ex) {
+				Loggers.getErrorLogger().log(
+					Level.SEVERE,
+					"Error while loading preferences for hook of break " + breakType,
+					ex
+				);
+			}
 
-			TimersManager.saveBreakSettings(newBreakConfig);
+			TimersManager.saveBreakConfig(breakSettingsBuilder.createBreakSettings());
 		}
 	}
 
@@ -624,9 +649,9 @@ public class BreaksPanel extends JScrollPane
 		private final TimeInputPanel breakTimeInput;
 		private final TimeInputPanel postponeTimeInput;
 
-		private final Clock workingRecommendedValues;
-		private final Clock breakRecommendedValues;
-		private final Clock postponeRecommendedValues;
+		private final WallClock workingRecommendedValues;
+		private final WallClock breakRecommendedValues;
+		private final WallClock postponeRecommendedValues;
 		private final JLabel statusLabel;
 
 		public OnSetRecommendedValues(
@@ -634,9 +659,9 @@ public class BreaksPanel extends JScrollPane
 			final TimeInputPanel breakTimeInput,
 			final TimeInputPanel postponeTimeInput,
 			final JLabel statusLabel,
-			final Clock recommendedWorkingTime,
-			final Clock recommendedBreakTime,
-			final Clock recommendedPostponeTime
+			final WallClock recommendedWorkingTime,
+			final WallClock recommendedBreakTime,
+			final WallClock recommendedPostponeTime
 		)
 		{
 			this.workingTimeInput = workingTimeInput;

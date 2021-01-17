@@ -19,6 +19,7 @@
 package org.fos.gui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -29,10 +30,11 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -42,19 +44,17 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.Timer;
-import org.fos.Loggers;
 import org.fos.SWMain;
+import org.fos.core.BreakToDo;
 import org.fos.core.BreakType;
 import org.fos.core.TimersManager;
-import org.fos.timers.Clock;
-import org.fos.timers.WorkingTimeTimer;
+import org.fos.timers.WallClock;
 
 public class SysTrayMenu extends JDialog
 {
 	private final ActionListener onClickExitButton;
 	private final ActionListener onClickOpenButton;
 
-	private final Clock[] remainingNotificationTimes;
 	private final List<JProgressBar> breaksProgressBars;
 	private Timer statusTimer;
 
@@ -93,8 +93,6 @@ public class SysTrayMenu extends JDialog
 				SysTrayMenu.this.setVisible(false);
 			}
 		});
-
-		this.remainingNotificationTimes = new Clock[3];
 	}
 
 	/**
@@ -201,104 +199,72 @@ public class SysTrayMenu extends JDialog
 			return;
 		}
 
-		List<WorkingTimeTimer> activeWorkingTimers = TimersManager.getActiveWorkingTimers();
-		BreakType[] breakTypes = BreakType.values();
+		ConcurrentHashMap<BreakType, BreakToDo> toDoList = TimersManager.getToDoList();
 
-		if (activeWorkingTimers.size() != breakTypes.length) {
-			Loggers.getErrorLogger().severe(
-				"The activeWorkingTimers list object doesn't has exact same size as the enum break types, current size: "
-					+ activeWorkingTimers.size()
-			);
-			return;
-		}
-
+		long curr_s_since_epoch = System.currentTimeMillis() / 1_000;
 		boolean set_timer = false;
-		for (BreakType breakType : breakTypes) {
-			byte break_idx = breakType.getIndex();
-			JProgressBar progressBar = this.breaksProgressBars.get(break_idx);
+		for (Map.Entry<BreakType, BreakToDo> entry : toDoList.entrySet()) {
+			byte break_idx = entry.getKey().getIndex();
 
+			JProgressBar progressBar = this.breaksProgressBars.get(break_idx);
 			progressBar.setStringPainted(true);
 			progressBar.setForeground(Colors.GREEN_DARK);
 			progressBar.setBackground(Colors.RED_WINE);
 
-			this.remainingNotificationTimes[break_idx] = null;
-			if (activeWorkingTimers.get(break_idx) == null) { // that timer is disabled
+			BreakToDo toDo = entry.getValue();
+
+			if (!toDo.getBreakConfig().isEnabled()) {
 				progressBar.setString(messagesBundle.getString("feature_disabled"));
 				progressBar.setValue(0);
 				progressBar.setEnabled(false);
 				progressBar.setBackground(Color.DARK_GRAY);
 				continue;
-			} else if (activeWorkingTimers.get(break_idx).getRemainingSToShowNotif() < 0) {
-				// notification is showing
+			} else if (toDo.remainingSecondsForExecution(curr_s_since_epoch) <= 0) { // the break notification or
+				// the break count down is showing
 
 				progressBar.setString(messagesBundle.getString("notification_is_showing"));
 				progressBar.setValue(0);
-				progressBar.setBackground(Colors.RED_WINE);
-				progressBar.setMaximum(activeWorkingTimers.get(break_idx).getWorkingTimeSeconds());
-				set_timer = true;
-				continue;
+				progressBar.setMaximum(toDo.getBreakConfig().getWorkTimerSettings().getHMSAsSeconds());
 			}
 
-			this.remainingNotificationTimes[break_idx] =
-				Clock.from(activeWorkingTimers.get(break_idx).getRemainingSToShowNotif());
-
-			progressBar.setMaximum(activeWorkingTimers.get(break_idx).getWorkingTimeSeconds());
+			progressBar.setMaximum(toDo.getBreakConfig().getWorkTimerSettings().getHMSAsSeconds());
 
 			set_timer = true;
 		}
 
+		// if there is no enabled timer
 		if (!set_timer)
 			return;
 
-		final byte one = 1;
 		// set timer to update progress bar value each second
-		this.statusTimer = new Timer(1_000, (ActionEvent evt) -> {
-			for (BreakType breakType : breakTypes) {
-				byte i = breakType.getIndex();
-				if (this.remainingNotificationTimes[i] != null &&
-					this.remainingNotificationTimes[i].getHMSAsSeconds() > 0) {
-					// update the progress bar
-					this.breaksProgressBars.get(i).setString(
-						this.remainingNotificationTimes[i].getHMSAsString()
-					);
-					this.breaksProgressBars.get(i).setValue(
-						this.remainingNotificationTimes[i].getHMSAsSeconds()
-					);
+		statusTimer = new Timer(1_000, (ActionEvent evt) -> {
+			// if a break is happening right now, stop all count downs
+			if (TimersManager.isBreakHappening()) {
+				String notificationIsShowing = messagesBundle.getString("notification_is_showing");
 
-					// update the remaining notification time
-					this.remainingNotificationTimes[i].subtractSeconds(one);
-				} else if (activeWorkingTimers.get(i) != null) { // if notification is enabled and the
-					// notification is showing
+				breaksProgressBars.stream()
+					.filter(Component::isEnabled)
+					.forEach(progressBar -> progressBar.setString(notificationIsShowing));
+				return;
+			}
 
-					this.breaksProgressBars.get(i).setString(
-						messagesBundle.getString("notification_is_showing")
-					);
-					this.breaksProgressBars.get(i).setValue(0);
+			long curr_s = System.currentTimeMillis() / 1_000;
+			BreakType breakType;
+			BreakToDo toDo;
+			for (Map.Entry<BreakType, BreakToDo> entry : toDoList.entrySet()) {
+				breakType = entry.getKey();
+				toDo = entry.getValue();
 
-					// negate the value as the notification should be shown
-					int elapsed_s_since_notification_shown =
-						-activeWorkingTimers.get(i).getRemainingSToShowNotif();
+				// skip the breaks that are not enabled
+				if (!toDo.getBreakConfig().isEnabled())
+					continue;
 
-					// helpful log to understand the code:
-					// System.out.println("Elapsed seconds since notification was shown: " +
-					// elapsed_s_since_notification_shown);
+				//
+				long remaining_seconds = toDo.remainingSecondsForExecution(curr_s);
+				JProgressBar progressBar = this.breaksProgressBars.get(breakType.getIndex());
 
-					if (elapsed_s_since_notification_shown >= 0)
-						return;
-
-					// reset the timer if the notification has been disposed
-					this.remainingNotificationTimes[i] = Clock.from(
-						activeWorkingTimers.get(i).getRemainingSToShowNotif() - 1
-					);
-
-					// update the progressbar
-					this.breaksProgressBars.get(i).setString(
-						this.remainingNotificationTimes[i].getHMSAsString()
-					);
-					this.breaksProgressBars.get(i).setValue(
-						this.remainingNotificationTimes[i].getHMSAsSeconds()
-					);
-				}
+				progressBar.setString(WallClock.getHMSFromSecondsAsString(remaining_seconds));
+				progressBar.setValue((int) remaining_seconds);
 			}
 		});
 		this.statusTimer.setInitialDelay(0);
@@ -319,7 +285,6 @@ public class SysTrayMenu extends JDialog
 		return "SysTrayMenu{" +
 			"onClickExitButton=" + onClickExitButton +
 			", onClickOpenButton=" + onClickOpenButton +
-			", remaining_seconds_for_notifications=" + Arrays.toString(this.remainingNotificationTimes) +
 			", breaksProgressBars=" + breaksProgressBars +
 			", statusTimer=" + statusTimer +
 			'}';
