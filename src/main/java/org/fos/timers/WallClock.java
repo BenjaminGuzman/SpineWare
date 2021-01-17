@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 
 package org.fos.timers;
 
-public class Clock
+public class WallClock
 {
 	private byte hours;
 	private byte minutes;
@@ -34,7 +34,7 @@ public class Clock
 	 * @param minutes configured minutes
 	 * @param seconds configured seconds
 	 */
-	public Clock(final byte hours, final byte minutes, final byte seconds)
+	public WallClock(final byte hours, final byte minutes, final byte seconds)
 	{
 		this.hours = hours < 0 ? 1 : hours;
 		this.minutes = minutes < 0 ? 5 : minutes;
@@ -44,12 +44,12 @@ public class Clock
 	/**
 	 * Copy constructor
 	 *
-	 * @param clock the original object from which all values will be copied
+	 * @param wallClock the original object from which all values will be copied
 	 */
-	public Clock(final Clock clock)
+	public WallClock(final WallClock wallClock)
 	{
-		this(clock.getHours(), clock.getMinutes(), clock.getSeconds());
-		this.hms_cache = clock.hms_cache;
+		this(wallClock.getHours(), wallClock.getMinutes(), wallClock.getSeconds());
+		this.hms_cache = wallClock.hms_cache;
 	}
 
 	/**
@@ -58,11 +58,11 @@ public class Clock
 	 * @param hms_as_seconds the hours minutes and seconds as seconds
 	 * @return a new clock created based on the given seconds
 	 */
-	public static Clock from(final int hms_as_seconds)
+	public static WallClock from(final int hms_as_seconds)
 	{
-		byte[] hms = Clock.getHMSFromSeconds(hms_as_seconds);
+		byte[] hms = WallClock.getHMSFromSeconds(hms_as_seconds);
 
-		return new Clock(hms[0], hms[1], hms[2]);
+		return new WallClock(hms[0], hms[1], hms[2]);
 	}
 
 	/**
@@ -74,10 +74,10 @@ public class Clock
 	 * @param hms_as_seconds the hours minutes and seconds as seconds
 	 * @return the byte array
 	 */
-	private static byte[] getHMSFromSeconds(int hms_as_seconds)
+	private static byte[] getHMSFromSeconds(long hms_as_seconds)
 	{
-		int seconds = hms_as_seconds % 60;
-		int hours_and_minutes_as_seconds = hms_as_seconds - seconds;
+		int seconds = (int) (hms_as_seconds % 60);
+		int hours_and_minutes_as_seconds = (int) (hms_as_seconds - seconds);
 
 		int minutes = (hours_and_minutes_as_seconds / 60) % 60;
 		int hours_as_seconds = hours_and_minutes_as_seconds - minutes;
@@ -85,6 +85,37 @@ public class Clock
 		int hours = hours_as_seconds / 60 / 60; // no modulus because it should be less than 24, also no need to call Math.floor
 
 		return new byte[]{(byte) hours, (byte) minutes, (byte) seconds};
+	}
+
+	/**
+	 * Converts the given amount of seconds to a string containing the number of hours, minutes and seconds
+	 * equivalent to the given amount of seconds
+	 *
+	 * @param hms_as_seconds the hours minutes and seconds as seconds
+	 * @return the string
+	 */
+	public static String getHMSFromSecondsAsString(long hms_as_seconds)
+	{
+		byte[] hms = getHMSFromSeconds(hms_as_seconds);
+		return getHMSAsString(hms);
+	}
+
+	/**
+	 * @param HMSAsSeconds the hours minutes and seconds as an array. The first index corresponds to the hours
+	 * @return the given hours minutes and seconds concatenaded in a string separated by the corresponding SI units
+	 */
+	public static String getHMSAsString(byte[] HMSAsSeconds)
+	{
+		StringBuilder builder = new StringBuilder(20);
+
+		if (HMSAsSeconds[0] != 0)
+			builder.append(HMSAsSeconds[0]).append("h ");
+		if (HMSAsSeconds[1] != 0)
+			builder.append(HMSAsSeconds[1]).append("m ");
+		if (HMSAsSeconds[2] != 0)
+			builder.append(HMSAsSeconds[2]).append('s');
+
+		return builder.toString().trim();
 	}
 
 	/**
@@ -118,6 +149,13 @@ public class Clock
 
 	}
 
+	public void updateAll(byte hours, byte minutes, byte seconds)
+	{
+		this.hours = hours;
+		this.minutes = minutes;
+		this.seconds = seconds;
+	}
+
 	/**
 	 * This method will subtract n_seconds to the internal hours, minutes and seconds
 	 * If the total number of seconds is 0 already, this method will do nothing and return false
@@ -131,7 +169,7 @@ public class Clock
 		if (new_hms_as_seconds < 0)
 			return false;
 
-		byte[] hms = Clock.getHMSFromSeconds(new_hms_as_seconds);
+		byte[] hms = WallClock.getHMSFromSeconds(new_hms_as_seconds);
 
 		this.hours = hms[0];
 		this.minutes = hms[1];
@@ -159,7 +197,7 @@ public class Clock
 	@Override
 	public String toString()
 	{
-		return "Clock{" +
+		return "WallClock{" +
 			"hours=" + hours +
 			", minutes=" + minutes +
 			", seconds=" + seconds +

@@ -333,7 +333,7 @@ public class MainFrame extends JFrame
 		});
 
 		// start the timers
-		TimersManager.createExecutorsFromPrefs();
+		TimersManager.startMainLoop();
 	}
 
 	@Override

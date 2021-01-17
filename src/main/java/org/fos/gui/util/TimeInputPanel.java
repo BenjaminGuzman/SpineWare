@@ -30,7 +30,7 @@ import javax.swing.SpinnerNumberModel;
 import org.fos.SWMain;
 import org.fos.gui.Colors;
 import org.fos.gui.Fonts;
-import org.fos.timers.Clock;
+import org.fos.timers.WallClock;
 
 public class TimeInputPanel extends JPanel
 {
@@ -40,14 +40,14 @@ public class TimeInputPanel extends JPanel
 
 	private final JLabel warningLabel;
 
-	private final Clock minRecommendedTime;
-	private final Clock maxRecommendedTime;
+	private final WallClock minRecommendedTime;
+	private final WallClock maxRecommendedTime;
 	private final boolean use_hard_limits; // check the constructor for details
 
 	public TimeInputPanel(
-		final Clock minRecommendedTime,
-		final Clock maxRecommendedTime,
-		final Clock preferredTime
+		final WallClock minRecommendedTime,
+		final WallClock maxRecommendedTime,
+		final WallClock preferredTime
 	)
 	{
 		this(minRecommendedTime, maxRecommendedTime, preferredTime, false);
@@ -67,9 +67,9 @@ public class TimeInputPanel extends JPanel
 	 *                           of warning messages
 	 */
 	public TimeInputPanel(
-		final Clock minRecommendedTime,
-		final Clock maxRecommendedTime,
-		final Clock preferredTime,
+		final WallClock minRecommendedTime,
+		final WallClock maxRecommendedTime,
+		final WallClock preferredTime,
 		final boolean use_hard_limits
 	)
 	{
@@ -193,11 +193,11 @@ public class TimeInputPanel extends JPanel
 		this.secondsSpinner.setValue((int) seconds);
 	}
 
-	public void setValues(final Clock clock)
+	public void setValues(final WallClock wallClock)
 	{
-		if (clock == null)
+		if (wallClock == null)
 			return;
-		this.setValues(clock.getHours(), clock.getMinutes(), clock.getSeconds());
+		this.setValues(wallClock.getHours(), wallClock.getMinutes(), wallClock.getSeconds());
 	}
 
 	/**
@@ -207,8 +207,8 @@ public class TimeInputPanel extends JPanel
 	 */
 	public void showRecommendedValueWarning(boolean show_upper_bound)
 	{
-		Clock clock = show_upper_bound ? this.maxRecommendedTime : this.minRecommendedTime;
-		this.warningLabel.setText(clock.getHMSAsString() + " " + SWMain.getMessagesBundle().getString("is_recommended"));
+		WallClock wallClock = show_upper_bound ? this.maxRecommendedTime : this.minRecommendedTime;
+		this.warningLabel.setText(wallClock.getHMSAsString() + " " + SWMain.getMessagesBundle().getString("is_recommended"));
 	}
 
 	/**

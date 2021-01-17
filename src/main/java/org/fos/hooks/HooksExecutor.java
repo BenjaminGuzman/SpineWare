@@ -104,6 +104,8 @@ public class HooksExecutor
 	synchronized public void runHooks(String audioPath, String cmd)
 	{
 		this.stop(); // stop everything currently running
+		if (Thread.currentThread().isInterrupted())
+			return;
 
 		if (cmd != null) {
 			this.cmdExecutor = new CommandExecutor(cmd, this::onCMDError);

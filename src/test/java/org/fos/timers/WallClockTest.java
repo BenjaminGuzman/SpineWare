@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
+ * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
  * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,15 +18,13 @@
 
 package org.fos.timers;
 
-import org.junit.jupiter.api.Test;
-
 import java.util.Random;
-
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ClockTest
+class WallClockTest
 {
 	private final int N_TESTS = 100;
 
@@ -34,13 +32,13 @@ class ClockTest
 	void getHMSAsSeconds()
 	{
 		Random random = new Random();
-		Clock obj;
+		WallClock obj;
 
 		for (int i = 0; i < N_TESTS; ++i) {
 			int hours = random.nextInt(60);
 			int minutes = random.nextInt(60);
 			int seconds = random.nextInt(60);
-			obj = new Clock((byte) hours, (byte) minutes, (byte) seconds);
+			obj = new WallClock((byte) hours, (byte) minutes, (byte) seconds);
 			int hms_as_seconds = hours * 60 * 60 + minutes * 60 + seconds;
 			// multiple asserts to test the cache effectiveness
 			assertEquals(hms_as_seconds, obj.getHMSAsSeconds());
@@ -49,11 +47,11 @@ class ClockTest
 		}
 
 		// try limit values 0
-		obj = Clock.from(0);
+		obj = WallClock.from(0);
 		assertEquals(0, obj.getHMSAsSeconds());
 
 		// try limit values 60
-		obj = new Clock((byte) 24, (byte) 59, (byte) 59);
+		obj = new WallClock((byte) 24, (byte) 59, (byte) 59);
 		assertEquals(24 * 60 * 60 + 59 * 60 + 59, obj.getHMSAsSeconds());
 	}
 
@@ -61,14 +59,14 @@ class ClockTest
 	void seconds2HoursMinutesSeconds()
 	{
 		Random random = new Random();
-		Clock obj = new Clock((byte) 0, (byte) 0, (byte) 0);
+		WallClock obj = new WallClock((byte) 0, (byte) 0, (byte) 0);
 
 		for (int i = 0; i < N_TESTS; ++i) {
 			int hours = random.nextInt(60);
 			int minutes = random.nextInt(60);
 			int seconds = random.nextInt(60);
 			int hms_as_seconds = hours * 60 * 60 + minutes * 60 + seconds;
-			Clock actual = Clock.from(hms_as_seconds);
+			WallClock actual = WallClock.from(hms_as_seconds);
 
 			assertEquals(hours, actual.getHours());
 			assertEquals(minutes, actual.getMinutes());
@@ -76,13 +74,13 @@ class ClockTest
 		}
 
 		// try limit values 0
-		Clock actual = Clock.from(0);
+		WallClock actual = WallClock.from(0);
 		assertEquals(0, actual.getHours());
 		assertEquals(0, actual.getMinutes());
 		assertEquals(0, actual.getSeconds());
 
 		// try limit values 60
-		actual = Clock.from(24 * 60 * 60 + 59 * 60 + 59);
+		actual = WallClock.from(24 * 60 * 60 + 59 * 60 + 59);
 		assertEquals(24, actual.getHours());
 		assertEquals(59, actual.getMinutes());
 		assertEquals(59, actual.getSeconds());
@@ -92,14 +90,14 @@ class ClockTest
 	void getHMSAsString()
 	{
 		Random random = new Random();
-		Clock obj;
+		WallClock obj;
 		String expectedStr;
 
 		for (int i = 0; i < N_TESTS; ++i) {
 			int hours = random.nextInt(60);
 			int minutes = random.nextInt(60);
 			int seconds = random.nextInt(60);
-			obj = new Clock((byte) hours, (byte) minutes, (byte) seconds);
+			obj = new WallClock((byte) hours, (byte) minutes, (byte) seconds);
 
 			expectedStr = "";
 			if (hours != 0)
@@ -113,11 +111,11 @@ class ClockTest
 		}
 
 		// try limit values 0
-		obj = Clock.from(0);
+		obj = WallClock.from(0);
 		assertEquals("", obj.getHMSAsString());
 
 		// try limit values 60
-		obj = new Clock((byte) 24, (byte) 59, (byte) 59);
+		obj = new WallClock((byte) 24, (byte) 59, (byte) 59);
 		assertEquals("24h 59m 59s", obj.getHMSAsString());
 	}
 
@@ -127,7 +125,7 @@ class ClockTest
 		int hms_as_seconds = 24 * 60 * 60 + 59 * 60 + 59;
 		int remaining_seconds = hms_as_seconds;
 
-		Clock timer = Clock.from(hms_as_seconds);
+		WallClock timer = WallClock.from(hms_as_seconds);
 
 		while (remaining_seconds > 0) {
 			// if the subtraction will result in a non-negative number, the method should return true

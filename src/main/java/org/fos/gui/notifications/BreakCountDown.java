@@ -45,13 +45,14 @@ import javax.swing.border.EmptyBorder;
 import org.fos.Loggers;
 import org.fos.SWMain;
 import org.fos.gui.Fonts;
-import org.fos.timers.Clock;
+import org.fos.timers.WallClock;
+import org.jetbrains.annotations.Nullable;
 
 public class BreakCountDown extends JDialog
 {
 	private static ImageIcon spineWareIcon; // static to avoid reading the image each time the dialog is shown
 
-	private final Clock breakTime;
+	private final WallClock breakTime;
 	private final CountDownLatch countDownLatch;
 
 	private final JLabel[] hmsRemainingTimeLabels;
@@ -59,24 +60,35 @@ public class BreakCountDown extends JDialog
 
 	private final Timer timerCountDown;
 
+	@Nullable
 	private Runnable onDisposed;
 
-	public BreakCountDown(final String breakMessage, final Clock breakTime,
-	                      final CountDownLatch countDownLatch, final Runnable onShown, final Runnable onDisposed)
+	public BreakCountDown(
+		final String breakMessage,
+		final WallClock breakTime,
+		final CountDownLatch countDownLatch,
+		final @Nullable Runnable onShown,
+		final @Nullable Runnable onDisposed
+	)
 	{
 		this(breakMessage, breakTime, countDownLatch);
 		this.onDisposed = onDisposed;
-		onShown.run();
+		if (onShown != null)
+			onShown.run();
 	}
 
-	public BreakCountDown(final String breakMessage, final Clock breakTime, final CountDownLatch countDownLatch)
+	public BreakCountDown(
+		final String breakMessage,
+		final WallClock breakTime,
+		final CountDownLatch countDownLatch
+	)
 	{
 		super((Window) null); // make this an unowned dialog
 		assert SwingUtilities.isEventDispatchThread();
 
 		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
-		this.breakTime = new Clock(breakTime); // we need a copy because this class will modify it
+		this.breakTime = new WallClock(breakTime); // we need a copy because this class will modify it
 		this.countDownLatch = countDownLatch;
 
 		JPanel mainPanel = new JPanel(new GridBagLayout());

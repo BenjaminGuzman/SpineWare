@@ -24,15 +24,17 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import org.fos.Loggers;
 import org.fos.core.BreakType;
+import org.jetbrains.annotations.NotNull;
 
 public final class HooksConfig
 {
-	private final boolean start_audio_is_dir;
-	private final BreakType breakType;
-	private final boolean is_notification_hook;
+	private boolean start_audio_is_dir;
+	@NotNull
+	private BreakType breakType;
+	private boolean is_notification_hook;
 
-	private final boolean start_enabled; // flag to know if the start hooks should execute
-	private final boolean end_enabled; // flag to know if the end hooks should execute
+	private boolean start_enabled; // flag to know if the start hooks should execute
+	private boolean end_enabled; // flag to know if the end hooks should execute
 
 	/**
 	 * If {@link #start_audio_is_dir} is true this attribute will hold the directory path
@@ -47,20 +49,20 @@ public final class HooksConfig
 	 * <p>
 	 * If this is null, then no sound should be played
 	 */
-	private final String onStartAudioStr;
+	private String onStartAudioStr;
 
 	/**
 	 * Path to the file to be played on notification/break termination
 	 * <p>
 	 * This WILL always contain a filepath regardless the {@link #start_audio_is_dir}
 	 */
-	private final String onEndAudioStr;
+	private String onEndAudioStr;
 
 	// the command (and arguments) to execute on break/notification start
-	private final String onStartCmdStr;
+	private String onStartCmdStr;
 
 	// the command (and arguments) to execute on break/notification termination
-	private final String onEndCmdStr;
+	private String onEndCmdStr;
 
 	public HooksConfig(
 		boolean start_audio_is_dir,
@@ -70,7 +72,7 @@ public final class HooksConfig
 		String onEndCmdStr,
 		boolean start_enabled,
 		boolean end_enabled,
-		BreakType breakType,
+		@NotNull BreakType breakType,
 		boolean is_notification_hook
 	) throws InstantiationException
 	{
@@ -97,7 +99,7 @@ public final class HooksConfig
 	 * @param breakType            the break type for which the preferences will be loaded
 	 * @param is_notification_hook tells if the preference you're looking for is a notification hook or a break hook
 	 * @return the created object from preferences
-	 * @see #savePrefs() the analogous function
+	 * @see #savePrefs() savePrefs()
 	 */
 	synchronized public static HooksConfig fromPrefs(BreakType breakType, boolean is_notification_hook) throws InstantiationException
 	{
@@ -121,6 +123,19 @@ public final class HooksConfig
 			.onStartCmdStr(prefs.get(prefix + "on start cmd str", null))
 			.onEndCmdStr(prefs.get(prefix + "on end cmd str", null))
 			.createHooksConfig();
+	}
+
+	public void updateAll(HooksConfig config)
+	{
+		this.start_audio_is_dir = config.start_audio_is_dir;
+		this.onStartAudioStr = config.onStartAudioStr;
+		this.onEndAudioStr = config.onEndAudioStr;
+		this.onStartCmdStr = config.onStartCmdStr;
+		this.onEndCmdStr = config.onEndCmdStr;
+		this.start_enabled = config.start_enabled;
+		this.end_enabled = config.end_enabled;
+		this.breakType = config.breakType;
+		this.is_notification_hook = config.is_notification_hook;
 	}
 
 	/**
@@ -224,7 +239,7 @@ public final class HooksConfig
 		return onEndCmdStr;
 	}
 
-	public BreakType getBreakType()
+	public @NotNull BreakType getBreakType()
 	{
 		return this.breakType;
 	}

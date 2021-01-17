@@ -18,6 +18,9 @@
 
 package org.fos.hooks;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Wrapper class containing two {@link HooksConfig} objects
  * <p>
@@ -25,16 +28,36 @@ package org.fos.hooks;
  */
 public class BreakHooksConfig
 {
+	@NotNull
 	private final HooksConfig notificationHooksConf;
-	private final HooksConfig breakHooksConf; // can be null if the break type is DAY_BREAK
+	@Nullable
+	private HooksConfig breakHooksConf; // can be null if the break type is DAY_BREAK
 
-	private final HooksExecutor executor;
+	private HooksExecutor executor;
 
-	public BreakHooksConfig(HooksConfig notificationHooksConf, HooksConfig breakHooksConf)
+	public BreakHooksConfig(@NotNull HooksConfig notificationHooksConf, @Nullable HooksConfig breakHooksConf)
 	{
 		this.notificationHooksConf = notificationHooksConf;
 		this.breakHooksConf = breakHooksConf;
-		this.executor = new HooksExecutor();
+	}
+
+	public void updateAll(HooksConfig notificationHooksConf, HooksConfig breakHooksConf)
+	{
+		this.notificationHooksConf.updateAll(notificationHooksConf);
+		if (this.breakHooksConf != null)
+			this.breakHooksConf.updateAll(breakHooksConf);
+		else
+			this.breakHooksConf = breakHooksConf;
+	}
+
+	public @NotNull HooksConfig getNotificationHooksConf()
+	{
+		return notificationHooksConf;
+	}
+
+	public @Nullable HooksConfig getBreakHooksConf()
+	{
+		return breakHooksConf;
 	}
 
 	/**
@@ -44,7 +67,8 @@ public class BreakHooksConfig
 	 */
 	synchronized public void shutdown()
 	{
-		this.executor.stop();
+		if (executor != null)
+			this.executor.stop();
 	}
 
 	/**
@@ -52,9 +76,10 @@ public class BreakHooksConfig
 	 */
 	synchronized public void onStartBreakHooks()
 	{
-		this.executor.stop();
-		this.executor.setConfig(this.breakHooksConf);
-		this.executor.runStart();
+		ensureExecutorExists();
+		executor.stop();
+		executor.setConfig(breakHooksConf);
+		executor.runStart();
 	}
 
 	/**
@@ -62,9 +87,10 @@ public class BreakHooksConfig
 	 */
 	synchronized public void onEndBreakHooks()
 	{
-		this.executor.stop();
-		this.executor.setConfig(this.breakHooksConf);
-		this.executor.runEnd();
+		ensureExecutorExists();
+		executor.stop();
+		executor.setConfig(breakHooksConf);
+		executor.runEnd();
 	}
 
 	/**
@@ -72,9 +98,10 @@ public class BreakHooksConfig
 	 */
 	synchronized public void onStartNotificationHooks()
 	{
-		this.executor.stop();
-		this.executor.setConfig(this.notificationHooksConf);
-		this.executor.runStart();
+		ensureExecutorExists();
+		executor.stop();
+		executor.setConfig(notificationHooksConf);
+		executor.runStart();
 	}
 
 	/**
@@ -82,8 +109,15 @@ public class BreakHooksConfig
 	 */
 	synchronized public void onEndNotificationHooks()
 	{
-		this.executor.stop();
-		this.executor.setConfig(this.notificationHooksConf);
-		this.executor.runEnd();
+		ensureExecutorExists();
+		executor.stop();
+		executor.setConfig(notificationHooksConf);
+		executor.runEnd();
+	}
+
+	private void ensureExecutorExists()
+	{
+		if (executor == null)
+			executor = new HooksExecutor();
 	}
 }

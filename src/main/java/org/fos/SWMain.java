@@ -112,7 +112,7 @@ public class SWMain
 				"You shouldn't be calling the init method on Loggers more than once",
 				e
 			);
-		} catch (RuntimeException e) {
+		} catch (RuntimeException | InstantiationException e) {
 			Loggers.getErrorLogger().log(
 				Level.SEVERE,
 				"You shouldn't be calling the init method on TimersManager more than once",
