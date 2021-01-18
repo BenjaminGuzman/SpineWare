@@ -115,7 +115,7 @@ public class BreaksPanel extends JScrollPane
 			saveConfigIcon,
 			new WallClock((byte) 0, (byte) 10, (byte) 0), // recommended value for working time
 			new WallClock((byte) 0, (byte) 0, (byte) 10), // recommended value for break time
-			new WallClock((byte) 0, (byte) 0, (byte) 10) // recommended value for postpone time
+			new WallClock((byte) 0, (byte) 5, (byte) 0) // recommended value for postpone time
 		));
 		panel.add(Box.createVerticalStrut(10));
 
@@ -128,7 +128,7 @@ public class BreaksPanel extends JScrollPane
 			saveConfigIcon,
 			new WallClock((byte) 2, (byte) 0, (byte) 0), // recommended value for working time
 			new WallClock((byte) 0, (byte) 30, (byte) 0), // recommended value for break time
-			new WallClock((byte) 0, (byte) 0, (byte) 10) // recommended value for postpone time)
+			new WallClock((byte) 0, (byte) 15, (byte) 0) // recommended value for postpone time
 		));
 		panel.add(Box.createVerticalStrut(10));
 
@@ -141,7 +141,7 @@ public class BreaksPanel extends JScrollPane
 			saveConfigIcon,
 			new WallClock((byte) 8, (byte) 0, (byte) 0), // recommended value for working time
 			null, // recommended value for break time
-			new WallClock((byte) 0, (byte) 0, (byte) 10) // recommended value for postpone time)
+			new WallClock((byte) 0, (byte) 20, (byte) 0) // recommended value for postpone time
 		));
 		panel.add(Box.createVerticalStrut(10));
 
@@ -170,9 +170,14 @@ public class BreaksPanel extends JScrollPane
 	 * @param saveConfigIcon  the icon to display in the save configurations button
 	 * @return the JPanel containing all the elements mentioned above
 	 */
-	private JPanel createBreakPanel(final BreakType breakType, final ImageIcon hooksConfigIcon,
-	                                final ImageIcon saveConfigIcon, final WallClock recommendedWorkingTime,
-	                                final WallClock recommendedBreakTime, final WallClock recommendedPostponeTime)
+	private JPanel createBreakPanel(
+		final BreakType breakType,
+		final ImageIcon hooksConfigIcon,
+		final ImageIcon saveConfigIcon,
+		final WallClock recommendedWorkingTime,
+		final WallClock recommendedBreakTime,
+		final WallClock recommendedPostponeTime
+	)
 	{
 		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
