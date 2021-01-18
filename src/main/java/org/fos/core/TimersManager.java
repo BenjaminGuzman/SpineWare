@@ -83,7 +83,9 @@ public class TimersManager
 	 */
 	public static void startMainLoop()
 	{
-		mainLoopExecutor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
+		mainLoopExecutor = Executors.newSingleThreadScheduledExecutor(
+			new DaemonThreadFactory("Main-Loop-Timer-Thread")
+		);
 		mainLoopExecutor.scheduleAtFixedRate(
 			mainTimerLoop,
 			0,

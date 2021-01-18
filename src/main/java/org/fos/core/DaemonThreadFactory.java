@@ -19,9 +19,22 @@
 package org.fos.core;
 
 import java.util.concurrent.ThreadFactory;
+import org.jetbrains.annotations.NotNull;
 
 public class DaemonThreadFactory implements ThreadFactory
 {
+	protected String threadsName;
+
+	public DaemonThreadFactory()
+	{
+		threadsName = "Daemon-Thread";
+	}
+
+	public DaemonThreadFactory(String threadsName)
+	{
+		this.threadsName = threadsName;
+	}
+
 	/**
 	 * Constructs a new {@code Thread}.  Implementations may also initialize
 	 * priority, name, daemon status, {@code ThreadGroup}, etc.
@@ -31,10 +44,10 @@ public class DaemonThreadFactory implements ThreadFactory
 	 * create a thread is rejected
 	 */
 	@Override
-	public Thread newThread(Runnable r)
+	public Thread newThread(@NotNull Runnable r)
 	{
 		Thread t = new Thread(r);
-		t.setName("Thread-Daemon");
+		t.setName(threadsName);
 		t.setDaemon(true);
 		return t;
 	}
