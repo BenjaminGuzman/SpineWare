@@ -102,7 +102,7 @@ public class TimersPrefsIO
 	/////////////////
 	public void setBreakEnabled(BreakType breakType, boolean enabled)
 	{
-		prefs.putBoolean(breakType.getName(), enabled);
+		prefs.putBoolean(breakType.getName() + " enabled", enabled);
 	}
 
 	/**

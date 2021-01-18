@@ -58,6 +58,8 @@ public class SysTrayMenu extends JDialog
 	private final List<JProgressBar> breaksProgressBars;
 	private Timer statusTimer;
 
+	private JButton pauseButton;
+
 	public SysTrayMenu(final JFrame owner, final ActionListener onClickExitButton, final ActionListener onClickOpenButton)
 	{
 		super(owner, "SpineWare");
@@ -120,8 +122,15 @@ public class SysTrayMenu extends JDialog
 		else
 			swLogoImageLabel = new JLabel("SW");
 
+		ImageIcon pauseIcon = SWMain.readAndScaleIcon("/resources/media/pause_white_18dp.png");
+		ImageIcon continueIcon = SWMain.readAndScaleIcon("/resources/media/play_arrow_white_18dp.png");
+		String pauseStr = messagesBundle.getString("pause");
+		String continueStr = messagesBundle.getString("continue");
+
 		JButton exitButton = new JButton(messagesBundle.getString("systray_exit"));
 		JButton openButton = new JButton(messagesBundle.getString("systray_open"));
+		pauseButton = new JButton(pauseStr);
+		pauseButton.setIcon(pauseIcon);
 
 		exitButton.addActionListener((ActionEvent evt) -> {
 			this.dispose();
@@ -130,6 +139,13 @@ public class SysTrayMenu extends JDialog
 		openButton.addActionListener((ActionEvent evt) -> {
 			this.setVisible(false);
 			this.onClickOpenButton.actionPerformed(evt);
+		});
+		pauseButton.addActionListener((ActionEvent evt) -> {
+			boolean main_loop_stopped = !TimersManager.mainLoopIsStopped();
+			TimersManager.setMainLoopStopped(main_loop_stopped);
+
+			pauseButton.setIcon(main_loop_stopped ? continueIcon : pauseIcon);
+			pauseButton.setText(main_loop_stopped ? continueStr : pauseStr);
 		});
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
@@ -149,9 +165,10 @@ public class SysTrayMenu extends JDialog
 		++gridBagConstraints.gridy;
 		mainPanel.add(openButton, gridBagConstraints);
 
-		gridBagConstraints.gridwidth = 1;
+		++gridBagConstraints.gridy;
+		mainPanel.add(pauseButton, gridBagConstraints);
 
-		// TODO: ADD PAUSE BUTTON
+		gridBagConstraints.gridwidth = 1;
 
 		// small break progress bar
 		gridBagConstraints.gridx = 0;
@@ -245,8 +262,11 @@ public class SysTrayMenu extends JDialog
 				breaksProgressBars.stream()
 					.filter(Component::isEnabled)
 					.forEach(progressBar -> progressBar.setString(notificationIsShowing));
+
+				pauseButton.setEnabled(false);
 				return;
-			}
+			} else
+				pauseButton.setEnabled(true);
 
 			long curr_s = System.currentTimeMillis() / 1_000;
 			BreakType breakType;

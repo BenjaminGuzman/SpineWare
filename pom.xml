@@ -121,12 +121,12 @@
 						</manifest>
 					</archive>
 
-					<finalName>SpineWareV${project.version}</finalName>
+					<!--					<finalName>SpineWareV${project.version}</finalName>-->
 
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
-					<appendAssemblyId>false</appendAssemblyId>
+					<!--					<appendAssemblyId>false</appendAssemblyId>-->
 				</configuration>
 				<executions>
 					<execution>
@@ -145,6 +145,7 @@
 					<excludes>
 						<!-- Exclude this test (only for GitHub Actions) -->
 						<exclude>**/PostureCheckerTest.java</exclude>
+						<exclude>**/MainTimerLoopTest.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
