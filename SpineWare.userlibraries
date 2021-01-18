@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eclipse-userlibraries>
+  <library name="Maven: org.junit.platform:junit-platform-commons:1.6.3">
+    <archive path="/home/dipierro/.m2/repository/org/junit/platform/junit-platform-commons/1.6.3/junit-platform-commons-1.6.3.jar" />
+  </library>
+  <library name="Maven: org.junit.platform:junit-platform-engine:1.6.3">
+    <archive path="/home/dipierro/.m2/repository/org/junit/platform/junit-platform-engine/1.6.3/junit-platform-engine-1.6.3.jar" />
+  </library>
+  <library name="Maven: org.openpnp:opencv:4.3.0-0">
+    <archive path="/home/dipierro/.m2/repository/org/openpnp/opencv/4.3.0-0/opencv-4.3.0-0.jar" />
+  </library>
+  <library name="Maven: org.opentest4j:opentest4j:1.2.0">
+    <archive path="/home/dipierro/.m2/repository/org/opentest4j/opentest4j/1.2.0/opentest4j-1.2.0.jar" />
+  </library>
+  <library name="Maven: javazoom:jlayer:1.0.1">
+    <archive path="/home/dipierro/.m2/repository/javazoom/jlayer/1.0.1/jlayer-1.0.1.jar" />
+  </library>
+  <library name="Maven: commons-cli:commons-cli:1.4">
+    <archive path="/home/dipierro/.m2/repository/commons-cli/commons-cli/1.4/commons-cli-1.4.jar" />
+  </library>
+  <library name="Maven: org.jetbrains:annotations:20.1.0">
+    <archive path="/home/dipierro/.m2/repository/org/jetbrains/annotations/20.1.0/annotations-20.1.0.jar" />
+  </library>
+  <library name="Maven: com.formdev:flatlaf:0.44">
+    <archive path="/home/dipierro/.m2/repository/com/formdev/flatlaf/0.44/flatlaf-0.44.jar" />
+  </library>
+  <library name="Maven: org.apiguardian:apiguardian-api:1.1.0">
+    <archive path="/home/dipierro/.m2/repository/org/apiguardian/apiguardian-api/1.1.0/apiguardian-api-1.1.0.jar" />
+  </library>
+  <library name="Maven: org.junit.jupiter:junit-jupiter:5.6.3">
+    <archive path="/home/dipierro/.m2/repository/org/junit/jupiter/junit-jupiter/5.6.3/junit-jupiter-5.6.3.jar" />
+  </library>
+  <library name="Maven: org.junit.jupiter:junit-jupiter-api:5.6.3">
+    <archive path="/home/dipierro/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.6.3/junit-jupiter-api-5.6.3.jar" />
+  </library>
+  <library name="Maven: org.junit.jupiter:junit-jupiter-engine:5.6.3">
+    <archive path="/home/dipierro/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.6.3/junit-jupiter-engine-5.6.3.jar" />
+  </library>
+  <library name="Maven: org.junit.jupiter:junit-jupiter-params:5.6.3">
+    <archive path="/home/dipierro/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.6.3/junit-jupiter-params-5.6.3.jar" />
+  </library>
+</eclipse-userlibraries>
+

@@ -17,6 +17,7 @@ target/
 # editor configurations
 .idea/
 .vscode/
+.metadata/
 
 # IntelliJ Idea config
 *.iml
