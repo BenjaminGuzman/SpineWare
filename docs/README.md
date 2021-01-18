@@ -23,6 +23,8 @@ The following files
 
 - [`threads.odg`](threads.odg)
 
+- `performance/*` (all files inside the performance directory)
+
 Are licensed under
 the [Creative Commons Attribution-ShareAlike license (CC BY-SA) 4.0](https://creativecommons.org/licenses/by-sa/4.0/),
 and were made by Benjamín Guzmán <bg@benjaminguzman.dev>, therefore they ALL have the following copyright notice
