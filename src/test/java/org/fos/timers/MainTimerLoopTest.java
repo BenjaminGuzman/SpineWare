@@ -45,7 +45,7 @@ class MainTimerLoopTest
 		SWMain.changeMessagesBundle(Locale.ENGLISH);
 		try {
 			TimersManager.init(false);
-		} catch (InstantiationException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

@@ -31,6 +31,11 @@ public class MainTimerLoop implements Runnable
 	private static boolean instantiated = false;
 
 	/**
+	 * The number of seconds to wait before the {@link #run()} is invoked again
+	 */
+	public static final int UPDATE_RATE_S = 1;
+
+	/**
 	 * Flag to tell if the {@link #run()} should be stopped or not
 	 * <p>
 	 * It is an {@link AtomicBoolean} to avoid concurrency problems while reding in the {@link #run()} method
@@ -93,13 +98,33 @@ public class MainTimerLoop implements Runnable
 	public void run()
 	{
 		// if there is already another break running, do nothing
-		if (isBreakHappening())
-			return;
+		if (isBreakHappening()) {
+			// if a break is happening, postpone all other breaks
+			for (BreakToDo breakToDo : breaksToDoList.values()) {
+				if (breakToDo.isCancelled()
+					|| !breakToDo.getBreakConfig().isEnabled()
+					|| breakToDo.getBreakConfig().getBreakType() == breakTypeRunning)
+					continue;
 
-		if (stopped.get())
+				breakToDo.postponeExecution(UPDATE_RATE_S);
+			}
+
 			return;
+		}
 
 		long curr_s_since_epoch = System.currentTimeMillis() / 1_000;
+
+		if (stopped.get()) {
+			// if the main loop is stopped
+			// postpone the execution of every to do
+			for (BreakToDo breakToDo : breaksToDoList.values()) {
+				if (breakToDo.isCancelled() || !breakToDo.getBreakConfig().isEnabled())
+					continue;
+
+				breakToDo.postponeExecution(UPDATE_RATE_S);
+			}
+			return;
+		}
 
 		// run the break that should be executed by now
 		for (BreakToDo breakToDo : breaksToDoList.values()) {
@@ -179,5 +204,9 @@ public class MainTimerLoop implements Runnable
 	public boolean isBreakHappening()
 	{
 		return breakThreadRunning != null && breakThreadRunning.isAlive() && !breakThreadRunning.isInterrupted();
+	}
+
+	public boolean isStopped() {
+		return stopped.get();
 	}
 }

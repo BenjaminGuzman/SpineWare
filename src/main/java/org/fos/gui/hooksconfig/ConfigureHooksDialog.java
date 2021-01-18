@@ -50,6 +50,8 @@ public class ConfigureHooksDialog extends JDialog
 	private final HooksConfigPanel[] notificationHooksPanel;
 	private final HooksConfigPanel[] breakHooksPanel;
 
+	private boolean save_configs = false;
+
 	/**
 	 * Constructs the object
 	 *
@@ -233,9 +235,12 @@ public class ConfigureHooksDialog extends JDialog
 	public JPanel createActionsPanel()
 	{
 		JPanel panel = new JPanel();
+		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
-		JButton saveBtn = new JButton(SWMain.getMessagesBundle().getString("save_changes"));
-		JButton cancelBtn = new JButton(SWMain.getMessagesBundle().getString("cancel"));
+		JButton saveBtn = new JButton(messagesBundle.getString("save_changes"));
+		saveBtn.setToolTipText(messagesBundle.getString("save_changes_timers_warning"));
+
+		JButton cancelBtn = new JButton(messagesBundle.getString("cancel"));
 
 		panel.add(saveBtn);
 		panel.add(cancelBtn);
@@ -255,6 +260,8 @@ public class ConfigureHooksDialog extends JDialog
 	 */
 	private void saveConfiguration(ActionEvent evt)
 	{
+		save_configs = true;
+
 		// create notification hooks configuration & save preferences
 		try {
 			new HooksConfig.Builder()
@@ -303,5 +310,15 @@ public class ConfigureHooksDialog extends JDialog
 		}
 
 		this.dispose();
+	}
+
+	/**
+	 * Tells whether or not the user clicked the "save changes" button
+	 * and therefore changes should be saved
+	 *
+	 * @return true if the user clicked the button
+	 */
+	public boolean shouldSaveChanges() {
+		return save_configs;
 	}
 }

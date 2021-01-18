@@ -422,7 +422,7 @@ public class BreaksPanel extends JScrollPane
 		));
 		setRecommendedValuesBtn.addFocusListener(onFocusLostClearLabel);
 
-		ActionListener onClickHooksSettings = new OnClickHooksSettings(
+		OnClickHooksSettings onClickHooksSettings = new OnClickHooksSettings(
 			SwingUtilities.getWindowAncestor(this),
 			breakType
 		);
@@ -430,8 +430,9 @@ public class BreaksPanel extends JScrollPane
 			// show the modal dialog, this call will block
 			onClickHooksSettings.actionPerformed(evt);
 
-			// once the modal dialog is shown, save the new configuration
-			saveConfigBtn.doClick(60);
+			if (onClickHooksSettings.shouldSaveChanges())
+				// save the new configuration
+				saveConfigBtn.doClick(60);
 		});
 
 		return panel;
@@ -725,6 +726,8 @@ public class BreaksPanel extends JScrollPane
 		private final Window parentDialogWindow;
 		private final BreakType breakType;
 
+		private boolean save_changes = false;
+
 		public OnClickHooksSettings(Window parentDialogWindow, BreakType breakType)
 		{
 			this.parentDialogWindow = parentDialogWindow;
@@ -739,7 +742,14 @@ public class BreaksPanel extends JScrollPane
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			new ConfigureHooksDialog(this.parentDialogWindow, this.breakType).initComponents();
+			ConfigureHooksDialog hooksDialog = new ConfigureHooksDialog(parentDialogWindow, breakType);
+			hooksDialog.initComponents();
+			save_changes = hooksDialog.shouldSaveChanges();
+		}
+
+		public boolean shouldSaveChanges()
+		{
+			return save_changes;
 		}
 	}
 }
