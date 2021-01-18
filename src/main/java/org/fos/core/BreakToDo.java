@@ -165,6 +165,17 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 	}
 
 	/**
+	 * Postpone the execution of this to do by a given amount of seconds
+	 *
+	 * @param postponed_seconds the number of seconds to postpone the to do
+	 */
+	public void postponeExecution(int postponed_seconds)
+	{
+		last_execution_at += postponed_seconds;
+		next_execution_at += postponed_seconds;
+	}
+
+	/**
 	 * Tell if the {@link #run()} should be executed or not
 	 * <p>
 	 * This method will take into account if the to do is cancelled

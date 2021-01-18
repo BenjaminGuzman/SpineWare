@@ -84,7 +84,29 @@ public class TimersManager
 	public static void startMainLoop()
 	{
 		mainLoopExecutor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
-		mainLoopExecutor.scheduleAtFixedRate(mainTimerLoop, 0, 1, TimeUnit.SECONDS);
+		mainLoopExecutor.scheduleAtFixedRate(
+			mainTimerLoop,
+			0,
+			MainTimerLoop.UPDATE_RATE_S,
+			TimeUnit.SECONDS
+		);
+	}
+
+	/**
+	 * Sets whether or not the main loop should be stopped
+	 * <p>
+	 * This will not cancel the main loop, it will just indicate that the main loop should do nothing
+	 *
+	 * @param stopped the stopped status of the main loop
+	 */
+	public static void setMainLoopStopped(boolean stopped)
+	{
+		mainTimerLoop.setStopped(stopped);
+	}
+
+	public static boolean mainLoopIsStopped()
+	{
+		return mainTimerLoop.isStopped();
 	}
 
 	/**
