@@ -57,12 +57,12 @@ fi
 
 # Compile and copy built jar in installation dir
 
-if [ ! -d "./target" ]; then
+jar_filename=$(find target -type f -name "SpineWareV*.jar" -exec basename {} \;) # find the name of the jar
+
+if [ ! -d "./target" ] || [ ! -f "./target/$jar_filename" ]; then
 	echo "target directory (with the built jar) was not found, running maven to compile from source..."
 	mvn clean package
 fi
-
-jar_filename=$(find target -type f -name "SpineWareV*.jar" -exec basename {} \;) # find the name of the jar
 
 echo "Copying jar file to installation directory ($installation_dir)..."
 sed -i "s/jar_installation_dir=.*/jar_installation_dir=$(escape_slashes "$installation_dir/sw")/" installation/spineware
