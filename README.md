@@ -52,7 +52,7 @@ The status for each break is shown in the system tray.
 
 **WARNING** and **TODO**: If your system does not support Systray, you can't use SpineWare.
 
-**Known list of incompatible Operatives Systems**:
+**Known list of incompatible Operative Systems**:
 
 - Ubuntu 18.04
 
@@ -141,3 +141,27 @@ When a hook command is executed, the
 
 These files are **NOT overwritten** but **appended**, therefore, there you can see all the logs for all executions. (
 since you powered up your computer, remember they're in the temp dir).
+
+## How it works
+
+### Thread model
+
+The following model is the one used within SpineWare
+
+![Thread model](docs/threads.jpg)
+
+The diagram is self-explanatory.
+
+#### FAQs
+
+- Is it better to use a single main loop timer thread than creating a timer for each break?
+
+Yes. It is most efficient in most cases. It may have no difference or may be even worse if the user configures a single
+break, but because the application is meant to have multiple breaks it was done that way. Remember each timer creates a
+thread, it is better to have a single thread (a single main loop timer) than multiple timers.
+
+- Why don't put the posture checker and the main loop timer in a single thread?
+
+Since the posture checker does some calculations more expensive than the calculations done in the main loop timer, it
+was preferred to do those "expensive" calculations in a separate thread.
+

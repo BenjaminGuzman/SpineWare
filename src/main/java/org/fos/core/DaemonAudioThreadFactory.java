@@ -18,11 +18,23 @@
 
 package org.fos.core;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Factory to create daemon threads with the highest priority
  */
 public class DaemonAudioThreadFactory extends DaemonThreadFactory
 {
+	public DaemonAudioThreadFactory()
+	{
+		threadsName = "Daemon-Audio-Thread";
+	}
+
+	public DaemonAudioThreadFactory(String threadsName)
+	{
+		super(threadsName);
+	}
+
 	/**
 	 * Constructs a new {@code Thread}.  Implementations may also initialize
 	 * priority, name, daemon status, {@code ThreadGroup}, etc.
@@ -32,7 +44,7 @@ public class DaemonAudioThreadFactory extends DaemonThreadFactory
 	 * create a thread is rejected
 	 */
 	@Override
-	public Thread newThread(Runnable r)
+	public Thread newThread(@NotNull Runnable r)
 	{
 		Thread t = super.newThread(r);
 		t.setName("Thread-Audio-Daemon");
