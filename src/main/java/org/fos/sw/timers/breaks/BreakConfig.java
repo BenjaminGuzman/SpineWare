@@ -19,6 +19,7 @@
 package org.fos.sw.timers.breaks;
 
 import java.util.Objects;
+import java.util.Optional;
 import org.fos.sw.hooks.BreakHooksConfig;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
@@ -44,8 +45,7 @@ public class BreakConfig
 	/**
 	 * This field may be null if {@link #breakType} is of type {@link BreakType#DAY_BREAK}
 	 */
-	@Nullable
-	private WallClock breakWallClock;
+	private Optional<WallClock> breakWallClock;
 	@NotNull
 	private WallClock postponeWallClock;
 	private boolean is_enabled;
@@ -60,7 +60,7 @@ public class BreakConfig
 	)
 	{
 		this.workWallClock = Objects.requireNonNull(workWallClock);
-		this.breakWallClock = breakWallClock;
+		this.breakWallClock = Optional.ofNullable(breakWallClock);
 		this.postponeWallClock = Objects.requireNonNull(postponeWallClock);
 		this.breakType = Objects.requireNonNull(breakType);
 		this.is_enabled = is_enabled;
@@ -82,14 +82,14 @@ public class BreakConfig
 		this.workWallClock = workWallClock;
 	}
 
-	public WallClock getBreakTimerSettings()
+	public Optional<WallClock> getBreakTimerSettings()
 	{
 		return breakWallClock;
 	}
 
-	public void setBreakTimerSettings(WallClock breakWallClock)
+	public void setBreakTimerSettings(@Nullable WallClock breakWallClock)
 	{
-		this.breakWallClock = breakWallClock;
+		this.breakWallClock = Optional.ofNullable(breakWallClock);
 	}
 
 	public WallClock getPostponeTimerSettings()
@@ -119,11 +119,11 @@ public class BreakConfig
 			newConfig.workWallClock.getMinutes(),
 			newConfig.workWallClock.getSeconds()
 		);
-		if (newConfig.breakWallClock != null && breakWallClock != null) {
-			this.breakWallClock.updateAll(
-				newConfig.breakWallClock.getHours(),
-				newConfig.breakWallClock.getMinutes(),
-				newConfig.breakWallClock.getSeconds()
+		if (newConfig.breakWallClock.isPresent() && breakWallClock.isPresent()) {
+			this.breakWallClock.get().updateAll(
+				newConfig.breakWallClock.get().getHours(),
+				newConfig.breakWallClock.get().getMinutes(),
+				newConfig.breakWallClock.get().getSeconds()
 			);
 		}
 		this.postponeWallClock.updateAll(
