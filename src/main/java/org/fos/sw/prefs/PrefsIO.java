@@ -16,17 +16,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.cv;
+package org.fos.sw.prefs;
 
-import org.fos.sw.cv.PostureChecker;
-import org.junit.jupiter.api.Test;
+import java.util.logging.Level;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
+import org.fos.sw.Loggers;
 
-class PostureCheckerTest
+public abstract class PrefsIO
 {
+	protected Preferences prefs;
 
-	@Test
-	void start()
+	protected void syncPrefs()
 	{
-		new PostureChecker().start();
+		try {
+			prefs.sync(); // ensure we read updated values
+		} catch (BackingStoreException e) {
+			Loggers.getErrorLogger().log(
+				Level.SEVERE,
+				"Couldn't sync preferences for class " + this.getClass(),
+				e
+			);
+		}
 	}
 }

@@ -19,6 +19,7 @@
 package org.fos.timers;
 
 import java.util.Random;
+import org.fos.sw.timers.WallClock;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

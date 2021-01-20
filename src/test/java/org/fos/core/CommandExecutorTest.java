@@ -20,6 +20,7 @@ package org.fos.core;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import org.fos.sw.utils.CommandExecutor;
 import org.junit.jupiter.api.Test;
 
 class CommandExecutorTest
