@@ -16,17 +16,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.cv;
+package org.fos.sw.core;
 
-import org.fos.sw.cv.PostureChecker;
-import org.junit.jupiter.api.Test;
+import java.util.Arrays;
+import java.util.Optional;
 
-class PostureCheckerTest
+public enum NotificationLocation
 {
+	BOTTOM_RIGHT(0),
+	BOTTOM_LEFT(1),
+	TOP_RIGHT(2),
+	TOP_LEFT(3);
 
-	@Test
-	void start()
+	private final int location_idx;
+
+	NotificationLocation(int location_idx)
 	{
-		new PostureChecker().start();
+		this.location_idx = location_idx;
+	}
+
+	public static Optional<NotificationLocation> getInstance(int preference_idx)
+	{
+		return Arrays.stream(NotificationLocation.values())
+			.filter(notificationLocation -> notificationLocation.location_idx == preference_idx)
+			.findAny();
+	}
+
+	/**
+	 * @return the location index for the current notification
+	 */
+	public int getLocationIdx()
+	{
+		return this.location_idx;
+	}
+
+	@Override
+	public String toString()
+	{
+		return "NotificationLocation{" +
+			"location_idx=" + location_idx +
+			'}';
 	}
 }
