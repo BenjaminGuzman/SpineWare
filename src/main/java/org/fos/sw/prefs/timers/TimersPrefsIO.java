@@ -150,9 +150,9 @@ public class TimersPrefsIO extends PrefsIO
 			breakName + " postpone time",
 			breakConfig.getPostponeTimerSettings().getHMSAsSeconds()
 		);
-		WallClock breakWallClock = breakConfig.getBreakTimerSettings();
-		if (breakWallClock != null)
-			prefs.putInt(breakName + " break time", breakWallClock.getHMSAsSeconds());
+		breakConfig.getBreakTimerSettings().ifPresent(
+			wallClock -> prefs.putInt(breakName + " break time", wallClock.getHMSAsSeconds())
+		);
 
 		// save hook configs
 		if (breakConfig.getHooksConfig() != null)

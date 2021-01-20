@@ -247,7 +247,7 @@ public class BreaksPanel extends JScrollPane
 			breakTimeInput = new TimeInputPanel(
 				this.minBreakRecommendedTimes[break_idx],
 				this.maxBreakRecommendedTimes[break_idx],
-				this.preferredBreakSettings.get(break_idx).getBreakTimerSettings()
+				this.preferredBreakSettings.get(break_idx).getBreakTimerSettings().get()
 			);
 			breakTimeInput.setEnabled(this.preferredBreakSettings.get(break_idx).isEnabled());
 		}

@@ -101,7 +101,7 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 
 		return new BreakToDo(
 			messagesBundle.getString("notification_time_for_a")
-				+ " " + breakConfig.getBreakTimerSettings().getHMSAsString()
+				+ " " + breakConfig.getBreakTimerSettings().get().getHMSAsString()
 				+ " " + messagesBundle.getString("break"),
 			messagesBundle.getString("time_for_a_small_break"),
 			breakConfig,
@@ -227,7 +227,7 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 			this.n_dismisses = 0;
 			this.n_postponed = 0;
 
-			if (this.breakConfig.getBreakTimerSettings() == null) { // in case of the day limit timer
+			if (!this.breakConfig.getBreakTimerSettings().isPresent()) { // in case of the day limit timer
 				// this should almost never happen
 				SwingUtilities.invokeLater(() -> {
 					JOptionPane.showMessageDialog(
@@ -288,7 +288,7 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 		SwingUtilities.invokeLater(() -> breakCountDownRef.set(
 			new BreakCountDown(
 				this.breakName,
-				this.breakConfig.getBreakTimerSettings(),
+				this.breakConfig.getBreakTimerSettings().get(),
 				breakCountDownLatch,
 				hooksConfig != null ? hooksConfig::onStartBreakHooks : null,
 				hooksConfig != null ? hooksConfig::onEndBreakHooks : null
