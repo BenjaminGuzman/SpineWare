@@ -15,18 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package org.fos.sw.gui;
 
-package org.fos.cv;
-
-import org.fos.sw.cv.PostureChecker;
-import org.junit.jupiter.api.Test;
-
-class PostureCheckerTest
+public interface I18nable
 {
-
-	@Test
-	void start()
-	{
-		new PostureChecker().start();
-	}
+	void setTextAccordingToLanguage();
 }

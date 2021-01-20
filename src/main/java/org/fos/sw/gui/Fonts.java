@@ -16,17 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.cv;
+package org.fos.sw.gui;
 
-import org.fos.sw.cv.PostureChecker;
-import org.junit.jupiter.api.Test;
+import java.awt.Font;
 
-class PostureCheckerTest
+public class Fonts
 {
-
-	@Test
-	void start()
-	{
-		new PostureChecker().start();
-	}
+	public static Font SANS_SERIF_BOLD_12 = new Font(Font.SANS_SERIF, Font.BOLD, 12);
+	public static Font SANS_SERIF_BOLD_15 = new Font(Font.SANS_SERIF, Font.BOLD, 15);
+	public static Font MONOSPACED_BOLD_12 = new Font(Font.MONOSPACED, Font.BOLD, 12);
+	public static Font MONOSPACED_BOLD_24 = new Font(Font.MONOSPACED, Font.BOLD, 24);
 }
