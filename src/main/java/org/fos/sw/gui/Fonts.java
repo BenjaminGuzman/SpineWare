@@ -26,4 +26,17 @@ public class Fonts
 	public static Font SANS_SERIF_BOLD_15 = new Font(Font.SANS_SERIF, Font.BOLD, 15);
 	public static Font MONOSPACED_BOLD_12 = new Font(Font.MONOSPACED, Font.BOLD, 12);
 	public static Font MONOSPACED_BOLD_24 = new Font(Font.MONOSPACED, Font.BOLD, 24);
+
+	/*static {
+		String fontPath = "/resources/fonts/Timeburner/Timeburner.ttf";
+		try {
+			SANS_SERIF_BOLD_12 = Font.createFont(Font.TRUETYPE_FONT, SWMain.getFileAsStream(fontPath));
+		} catch (FontFormatException | IOException e) {
+			Loggers.getErrorLogger().log(
+				Level.WARNING,
+				"Couldn't load font: " + fontPath,
+				e
+			);
+		}
+	}*/
 }

@@ -18,12 +18,14 @@
 package org.fos.sw.timers;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.fos.sw.prefs.timers.TimersPrefsIO;
+import org.fos.sw.timers.breaks.ActiveHours;
 import org.fos.sw.timers.breaks.BreakConfig;
 import org.fos.sw.timers.breaks.BreakToDo;
 import org.fos.sw.timers.breaks.BreakType;
@@ -76,7 +78,14 @@ public class TimersManager
 		prefsIO = new TimersPrefsIO();
 		initialized = true;
 		List<BreakToDo> toDoList = loadAndCreateBreakToDos();
-		if (create_main_timer_loop)
+		Optional<ActiveHours> activeHours = prefsIO.getActiveHoursPrefsIO().loadActiveHours();
+
+		if (!create_main_timer_loop)
+			return;
+
+		if (activeHours.isPresent())
+			mainTimerLoop = MainTimerLoop.createMainTimer(toDoList, activeHours.get());
+		else
 			mainTimerLoop = MainTimerLoop.createMainTimer(toDoList);
 	}
 
@@ -86,7 +95,7 @@ public class TimersManager
 	public static void startMainLoop()
 	{
 		mainLoopExecutor = Executors.newSingleThreadScheduledExecutor(
-			new DaemonThreadFactory("Main-Loop-Timer-Thread")
+			new DaemonThreadFactory("Main-Loop-Timer-Thread", Thread.MAX_PRIORITY)
 		);
 		mainLoopExecutor.scheduleAtFixedRate(
 			mainTimerLoop,

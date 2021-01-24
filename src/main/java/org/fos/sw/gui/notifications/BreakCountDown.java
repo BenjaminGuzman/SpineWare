@@ -252,9 +252,9 @@ public class BreakCountDown extends JDialog
 	@Override
 	public void dispose()
 	{
-		this.disposeNoHooks();
 		if (this.onDisposed != null)
 			this.onDisposed.run();
+		this.disposeNoHooks();
 	}
 
 	/**

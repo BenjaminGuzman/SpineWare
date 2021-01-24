@@ -27,6 +27,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class NotificationPrefsIO extends PrefsIO
 {
+	private static final String NOTIFICATION_LOCATION = "notification location";
+
 	@NotNull
 	private NotificationLocation notificationLocationCache = NotificationLocation.BOTTOM_RIGHT;
 
@@ -44,7 +46,7 @@ public class NotificationPrefsIO extends PrefsIO
 	 */
 	public void saveNotificationPrefLocation(byte location)
 	{
-		prefs.putInt("notification location", location);
+		prefs.putInt(NOTIFICATION_LOCATION, location);
 
 		NotificationLocation.getInstance(location).ifPresent(
 			notificationLocation -> notificationLocationCache = notificationLocation
@@ -62,7 +64,7 @@ public class NotificationPrefsIO extends PrefsIO
 		if (reload) {
 			syncPrefs();
 			Optional<NotificationLocation> optNotificationLocation = NotificationLocation.getInstance(
-				prefs.getInt("notification location", 0)
+				prefs.getInt(NOTIFICATION_LOCATION, 0)
 			);
 			if (optNotificationLocation.isPresent())
 				notificationLocationCache = optNotificationLocation.get();

@@ -27,10 +27,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
 import org.fos.sw.SWMain;
 import org.fos.sw.gui.Colors;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.timers.WallClock;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class TimeInputPanel extends JPanel
 {
@@ -45,32 +48,20 @@ public class TimeInputPanel extends JPanel
 	private final boolean use_hard_limits; // check the constructor for details
 
 	public TimeInputPanel(
-		final WallClock minRecommendedTime,
-		final WallClock maxRecommendedTime,
-		final WallClock preferredTime
+		@NotNull final WallClock minRecommendedTime,
+		@NotNull final WallClock maxRecommendedTime,
+		@Nullable final WallClock preferredTime
 	)
 	{
 		this(minRecommendedTime, maxRecommendedTime, preferredTime, false);
 	}
 
-	/**
-	 * Constructs the time input panel by adding the corresponding inputs
-	 * (three spinners)
-	 * and adding a label to each input
-	 *
-	 * @param minRecommendedTime the minimum recommended time for this input
-	 * @param maxRecommendedTime the maximum recommended time for this input
-	 * @param preferredTime      the preferred time for this input, this is obtained from the user preferences
-	 *                           if this is null, the preferences does not exists
-	 * @param use_hard_limits    if true, the min and max recommended times will not be treated as a nice to have
-	 *                           but as a MUST have, therefore, if this is true error messages will appear instead
-	 *                           of warning messages
-	 */
 	public TimeInputPanel(
-		final WallClock minRecommendedTime,
-		final WallClock maxRecommendedTime,
-		final WallClock preferredTime,
-		final boolean use_hard_limits
+		@NotNull final WallClock minRecommendedTime,
+		@NotNull final WallClock maxRecommendedTime,
+		@Nullable final WallClock preferredTime,
+		final boolean use_hard_limits,
+		@NotNull TimeInputPanel.WarningLabelPosition warningLabelPosition
 	)
 	{
 		super();
@@ -86,11 +77,15 @@ public class TimeInputPanel extends JPanel
 		this.minRecommendedTime = minRecommendedTime;
 		this.maxRecommendedTime = maxRecommendedTime;
 
-		this.hoursSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[0], 0, 16, 1));
-		this.minutesSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[1], 0, 59, 1));
-		this.secondsSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[2], 0, 59, 1));
+		hoursSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[0], 0, 16, 1));
+		minutesSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[1], 0, 59, 1));
+		secondsSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[2], 0, 59, 1));
 
-		this.warningLabel = new JLabel();
+		hoursSpinner.addChangeListener(this::onStateChangeTimeInput);
+		minutesSpinner.addChangeListener(this::onStateChangeTimeInput);
+		secondsSpinner.addChangeListener(this::onStateChangeTimeInput);
+
+		this.warningLabel = new JLabel(" ");
 		this.warningLabel.setFont(Fonts.SANS_SERIF_BOLD_12);
 
 		this.setLayout(new GridBagLayout());
@@ -123,11 +118,51 @@ public class TimeInputPanel extends JPanel
 		this.add(new JLabel(messagesBundle.getString("seconds")), gridBagConstraints);
 
 		// add warning / error label
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 1;
+		if (warningLabelPosition == WarningLabelPosition.RIGHT) {
+			gridBagConstraints.gridx = 3;
+			gridBagConstraints.gridy = 0;
+		} else if (warningLabelPosition == WarningLabelPosition.BOTTOM) {
+			gridBagConstraints.gridx = 0;
+			gridBagConstraints.gridy = 2;
+			gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;
+		}
 
-		this.add(this.warningLabel);
+		this.add(this.warningLabel, gridBagConstraints);
 		this.warningLabel.setForeground(Color.YELLOW);
+	}
+
+	/**
+	 * Constructs the time input panel by adding the corresponding inputs
+	 * (three spinners)
+	 * and adding a label to each input
+	 *
+	 * @param minRecommendedTime the minimum recommended time for this input
+	 * @param maxRecommendedTime the maximum recommended time for this input
+	 * @param preferredTime      the preferred time for this input, this is obtained from the user preferences
+	 *                           if this is null, the preferences does not exists
+	 * @param use_hard_limits    if true, the min and max recommended times will not be treated as a nice to have
+	 *                           but as a MUST have, therefore, if this is true error messages will appear instead
+	 *                           of warning messages
+	 */
+	public TimeInputPanel(
+		@NotNull final WallClock minRecommendedTime,
+		@NotNull final WallClock maxRecommendedTime,
+		@Nullable final WallClock preferredTime,
+		final boolean use_hard_limits
+	)
+	{
+		this(
+			minRecommendedTime,
+			maxRecommendedTime,
+			preferredTime,
+			use_hard_limits,
+			WarningLabelPosition.BOTTOM
+		);
+	}
+
+	public void onStateChangeTimeInput(ChangeEvent evt)
+	{
+		this.checkInputValidity();
 	}
 
 	/**
@@ -147,18 +182,26 @@ public class TimeInputPanel extends JPanel
 		}
 
 		if (this.use_hard_limits) {
-			if (selected_value > max_recommended_value)
-				this.warningLabel.setText(this.maxRecommendedTime.getHMSAsString()
-					+ " " + SWMain.getMessagesBundle().getString("is_the_maximum"));
-			else if (selected_value < min_recommended_value)
-				this.warningLabel.setText(this.minRecommendedTime.getHMSAsString()
-					+ " " + SWMain.getMessagesBundle().getString("is_the_minimum"));
-			else
-				return true; // if the value is between min and max
 			this.warningLabel.setForeground(Colors.RED);
+			if (selected_value > max_recommended_value)
+				this.warningLabel.setText(
+					this.maxRecommendedTime.getHMSAsString()
+						+ " " + SWMain.getMessagesBundle().getString("is_the_maximum")
+				);
+			else if (selected_value < min_recommended_value)
+				this.warningLabel.setText(
+					this.minRecommendedTime.getHMSAsString()
+						+ " " + SWMain.getMessagesBundle().getString("is_the_minimum")
+				);
+			else {
+				clearWarning();
+				return true; // if the value is between min and max
+			}
+
 			return false;
 		}
 
+		clearWarning();
 		if (selected_value > max_recommended_value)
 			this.showRecommendedValueWarning(true);
 		else if (selected_value < min_recommended_value)
@@ -168,15 +211,25 @@ public class TimeInputPanel extends JPanel
 	}
 
 	/**
-	 * Sets the enabled param on all the inputs
+	 * Sets the enabled param on all the spinner inputs
 	 *
-	 * @param enabled same param that will be passed to javax.swing.JComponent#setEnabled
+	 * @param enabled same param that will be passed to {@link javax.swing.JComponent#setEnabled(boolean)}
 	 */
 	public void setEnabled(boolean enabled)
 	{
 		this.hoursSpinner.setEnabled(enabled);
 		this.minutesSpinner.setEnabled(enabled);
 		this.secondsSpinner.setEnabled(enabled);
+	}
+
+	/**
+	 * Set the enabled param only in the hours spinner input
+	 *
+	 * @param enabled same para that will be passed to {@link javax.swing.JComponent#setEnabled(boolean)}
+	 */
+	public void setHoursEnabled(boolean enabled)
+	{
+		this.hoursSpinner.setEnabled(enabled);
 	}
 
 	/**
@@ -217,7 +270,7 @@ public class TimeInputPanel extends JPanel
 	public void clearWarning()
 	{
 		this.warningLabel.setForeground(Color.YELLOW);
-		this.warningLabel.setText(null);
+		this.warningLabel.setText(" ");
 	}
 
 	/**
@@ -253,5 +306,10 @@ public class TimeInputPanel extends JPanel
 	public int getSeconds()
 	{
 		return (int) this.secondsSpinner.getModel().getValue();
+	}
+
+	public enum WarningLabelPosition
+	{
+		RIGHT, BOTTOM
 	}
 }
