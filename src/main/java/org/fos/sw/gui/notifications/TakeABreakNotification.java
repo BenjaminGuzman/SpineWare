@@ -20,35 +20,50 @@ package org.fos.sw.gui.notifications;
 
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.NotificationLocation;
 import org.fos.sw.gui.Colors;
 import org.fos.sw.gui.Fonts;
+import org.fos.sw.timers.WallClock;
 import org.fos.sw.timers.breaks.BreakDecision;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TakeABreakNotification extends Notification
 {
 	// Milliseconds for the notification timeout
-	public static final int MS_NOTIFICATION_TIMEOUT = 15_000;
+	public static final int MS_NOTIFICATION_TIMEOUT = 30_000;
 
 	// Milliseconds for the DAY notification timeout
 	public static final int MS_DAY_NOTIFICATION_TIMEOUT = 60_000 * 30; // half an hour
 
-	// this countdown latch should be decremented when the dialog ends (its closed or "take a break" is clicked)
+	/**
+	 * this countdown latch should be decremented when the dialog ends (its closed or "take a break" is clicked)
+	 */
+	@NotNull
 	private final CountDownLatch countDownLatch;
+	@NotNull
 	private final JProgressBar progressBarCountDown;
-	private Timer countDownTimer;
+	@Nullable
+	private Timer countDownTimer; // may be null if break type is day
 	private boolean break_dismissed = false;
 	private boolean break_postponed = true; // default behaviour is postponed
 	private int remaining_seconds;
+
+	@Nullable
+	private WallClock postponeTimeOverride;
+
+	private volatile boolean pause_countdown;
 
 	public TakeABreakNotification(
 		final String takeABreakMessage,
@@ -69,13 +84,13 @@ public class TakeABreakNotification extends Notification
 
 	public TakeABreakNotification(
 		final String takeABreakMessage,
-		final CountDownLatch countDownLatch,
+		final @NotNull CountDownLatch countDownLatch,
 		final boolean is_not_day_limit_notification,
 		final NotificationLocation notificationLocation
 	)
 	{
 		super(
-			is_not_day_limit_notification ? MS_NOTIFICATION_TIMEOUT : MS_DAY_NOTIFICATION_TIMEOUT,
+			is_not_day_limit_notification ? -1 : MS_DAY_NOTIFICATION_TIMEOUT,
 			notificationLocation
 		);
 
@@ -83,7 +98,7 @@ public class TakeABreakNotification extends Notification
 
 		this.countDownLatch = countDownLatch;
 
-		this.remaining_seconds = super.getDisposeTimeout() / 1_000;
+		this.remaining_seconds = MS_NOTIFICATION_TIMEOUT / 1_000;
 
 		// create take a break label
 		JLabel takeABreakLabel = new JLabel(takeABreakMessage);
@@ -102,7 +117,15 @@ public class TakeABreakNotification extends Notification
 
 		JButton postponeButton = new JButton(messagesBundle.getString("notification_postpone_break"));
 		postponeButton.setToolTipText(messagesBundle.getString("notification_postpone_tooltip"));
-		postponeButton.addActionListener(this::onClickPostpone);
+		postponeButton.addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				super.mouseClicked(e);
+				TakeABreakNotification.this.onClickPostpone(e);
+			}
+		});
 		buttonsPanel.add(postponeButton);
 
 		JButton dismissButton = new JButton(messagesBundle.getString("notification_dismiss_break"));
@@ -146,6 +169,9 @@ public class TakeABreakNotification extends Notification
 			super.mainPanel.add(this.progressBarCountDown, gridBagConstraints);
 
 			this.countDownTimer = new Timer(1_000, (ActionEvent evt) -> {
+				if (pause_countdown)
+					return;
+
 				if (this.remaining_seconds <= 0) {
 					this.dispose();
 					return;
@@ -191,9 +217,22 @@ public class TakeABreakNotification extends Notification
 	 *
 	 * @param evt event
 	 */
-	private void onClickPostpone(ActionEvent evt)
+	private void onClickPostpone(MouseEvent evt)
 	{
-		this.break_postponed = true;
+		if (SwingUtilities.isRightMouseButton(evt)) {
+			pause_countdown = true;
+			this.setAlwaysOnTop(false);
+			PostponeTimeDialog postponeTimeDialog = new PostponeTimeDialog(this); // this will block
+			this.setAlwaysOnTop(true);
+			pause_countdown = false;
+
+			if (postponeTimeDialog.wasCancelled())
+				return;
+
+			postponeTimeOverride = postponeTimeDialog.getPostponeTime();
+		} else
+			this.break_postponed = true;
+
 		this.dispose();
 	}
 
@@ -226,6 +265,15 @@ public class TakeABreakNotification extends Notification
 	public boolean breakWasPostponed()
 	{
 		return this.break_postponed;
+	}
+
+	/**
+	 * @return the new postpone time the user chose
+	 * This may be null if {@link #getBreakDecision()} does not return {@link BreakDecision#POSTPONE}
+	 */
+	public @Nullable WallClock getPostponeTimeOverride()
+	{
+		return postponeTimeOverride;
 	}
 
 	/**

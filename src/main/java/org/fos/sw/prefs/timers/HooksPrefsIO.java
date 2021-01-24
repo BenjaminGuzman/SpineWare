@@ -30,6 +30,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class HooksPrefsIO extends PrefsIO
 {
+	private static final String START_ENABLED = "start enabled";
+	private static final String END_ENABLED = "end enabled";
+	private static final String START_AUDIO_IS_DIR = "start audio is dir";
+	private static final String ON_START_AUDIO_STR = "on start audio str";
+	private static final String ON_END_AUDIO_STR = "on end audio str";
+	private static final String ON_START_CMD_STR = "on start cmd str";
+	private static final String ON_END_CMD_STR = "on end cmd str";
+
 	HooksPrefsIO(@NotNull Preferences prefs)
 	{
 		this.prefs = prefs;
@@ -54,14 +62,14 @@ public class HooksPrefsIO extends PrefsIO
 
 		return new HooksConfig.Builder()
 			.isNotificationHook(is_notification_hook)
-			.startEnabled(prefs.getBoolean(prefix + "start enabled", false))
-			.endEnabled(prefs.getBoolean(prefix + "end enabled", false))
-			.startAudioIsDir(prefs.getBoolean(prefix + "start audio is dir", false))
+			.startEnabled(prefs.getBoolean(prefix + START_ENABLED, false))
+			.endEnabled(prefs.getBoolean(prefix + END_ENABLED, false))
+			.startAudioIsDir(prefs.getBoolean(prefix + START_AUDIO_IS_DIR, false))
 			.breakType(breakType)
-			.onStartAudioStr(prefs.get(prefix + "on start audio str", null))
-			.onEndAudioStr(prefs.get(prefix + "on end audio str", null))
-			.onStartCmdStr(prefs.get(prefix + "on start cmd str", null))
-			.onEndCmdStr(prefs.get(prefix + "on end cmd str", null))
+			.onStartAudioStr(prefs.get(prefix + ON_START_AUDIO_STR, null))
+			.onEndAudioStr(prefs.get(prefix + ON_END_AUDIO_STR, null))
+			.onStartCmdStr(prefs.get(prefix + ON_START_CMD_STR, null))
+			.onEndCmdStr(prefs.get(prefix + ON_END_CMD_STR, null))
 			.createHooksConfig();
 	}
 
@@ -77,35 +85,31 @@ public class HooksPrefsIO extends PrefsIO
 		// add a prefix to each key to avoid collisions
 		String prefix = hookPrefPrefix(hooksConfig.getBreakType(), hooksConfig.isNotificationHook());
 
-		prefs.putBoolean(prefix + "start enabled", hooksConfig.isStartEnabled());
-		prefs.putBoolean(prefix + "end enabled", hooksConfig.isEndEnabled());
-		prefs.putBoolean(prefix + "start audio is dir", hooksConfig.isStartAudioADirectory());
+		prefs.putBoolean(prefix + START_ENABLED, hooksConfig.isStartEnabled());
+		prefs.putBoolean(prefix + END_ENABLED, hooksConfig.isEndEnabled());
+		prefs.putBoolean(prefix + START_AUDIO_IS_DIR, hooksConfig.isStartAudioADirectory());
 
 		if (hooksConfig.getOnStartAudioStr() == null)
-			prefs.remove(prefix + "on start audio str");
+			prefs.remove(prefix + ON_START_AUDIO_STR);
 		else
-			prefs.put(prefix + "on start audio str", hooksConfig.getOnStartAudioStr());
+			prefs.put(prefix + ON_START_AUDIO_STR, hooksConfig.getOnStartAudioStr());
 
 		if (hooksConfig.getOnEndAudioStr() == null)
-			prefs.remove(prefix + "on end audio str");
+			prefs.remove(prefix + ON_END_AUDIO_STR);
 		else
-			prefs.put(prefix + "on end audio str", hooksConfig.getOnEndAudioStr());
+			prefs.put(prefix + ON_END_AUDIO_STR, hooksConfig.getOnEndAudioStr());
 
 		if (hooksConfig.getOnStartCmdStr() == null)
-			prefs.remove(prefix + "on start cmd str");
+			prefs.remove(prefix + ON_START_CMD_STR);
 		else
-			prefs.put(prefix + "on start cmd str", hooksConfig.getOnStartCmdStr());
+			prefs.put(prefix + ON_START_CMD_STR, hooksConfig.getOnStartCmdStr());
 
 		if (hooksConfig.getOnEndCmdStr() == null)
-			prefs.remove(prefix + "on end cmd str");
+			prefs.remove(prefix + ON_END_CMD_STR);
 		else
-			prefs.put(prefix + "on end cmd str", hooksConfig.getOnEndCmdStr());
+			prefs.put(prefix + ON_END_CMD_STR, hooksConfig.getOnEndCmdStr());
 
-		try {
-			prefs.flush();
-		} catch (BackingStoreException e) {
-			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't force preferences to be saved", e);
-		}
+		flushPrefs();
 	}
 
 	public void save(@NotNull BreakHooksConfig breakHooksConfig)

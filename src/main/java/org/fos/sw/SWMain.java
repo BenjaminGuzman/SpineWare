@@ -143,7 +143,9 @@ public class SWMain
 
 		try {
 			// even though this file has no permissions, it is possible to delete it, try with sudo
-			Set<PosixFilePermission> noPermissionsToAnyone = PosixFilePermissions.fromString("---------");
+			Set<PosixFilePermission> noPermissionsToAnyone = PosixFilePermissions.fromString(
+				"---------"
+			);
 			Files.createFile(
 				lockFilePath,
 				PosixFilePermissions.asFileAttribute(noPermissionsToAnyone)
@@ -152,6 +154,13 @@ public class SWMain
 			Loggers.getErrorLogger().log(
 				Level.SEVERE,
 				"Error while creating sw.lock file",
+				e
+			);
+		} catch (UnsupportedOperationException e) {
+			Loggers.getErrorLogger().log(
+				Level.SEVERE,
+				"Why are you using a system not POSIX-compliant? It is more difficult to write " +
+					"software to your platform. SpineWare may not work well in your system",
 				e
 			);
 		}

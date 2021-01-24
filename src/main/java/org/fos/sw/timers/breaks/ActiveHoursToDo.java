@@ -16,27 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.sw.gui;
+package org.fos.sw.timers.breaks;
 
-import java.awt.Font;
-
-public class Fonts
+public class ActiveHoursToDo
 {
-	public static Font SANS_SERIF_BOLD_12 = new Font(Font.SANS_SERIF, Font.BOLD, 12);
-	public static Font SANS_SERIF_BOLD_15 = new Font(Font.SANS_SERIF, Font.BOLD, 15);
-	public static Font MONOSPACED_BOLD_12 = new Font(Font.MONOSPACED, Font.BOLD, 12);
-	public static Font MONOSPACED_BOLD_24 = new Font(Font.MONOSPACED, Font.BOLD, 24);
-
-	/*static {
-		String fontPath = "/resources/fonts/Timeburner/Timeburner.ttf";
-		try {
-			SANS_SERIF_BOLD_12 = Font.createFont(Font.TRUETYPE_FONT, SWMain.getFileAsStream(fontPath));
-		} catch (FontFormatException | IOException e) {
-			Loggers.getErrorLogger().log(
-				Level.WARNING,
-				"Couldn't load font: " + fontPath,
-				e
-			);
-		}
-	}*/
 }

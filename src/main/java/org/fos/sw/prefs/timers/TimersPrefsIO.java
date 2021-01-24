@@ -21,7 +21,6 @@ package org.fos.sw.prefs.timers;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import org.fos.sw.Loggers;
@@ -34,8 +33,14 @@ import org.fos.sw.timers.breaks.BreakType;
 
 public class TimersPrefsIO extends PrefsIO
 {
+	private static final String ENABLED = " enabled";
+	private static final String WORKING_TIME = " working time";
+	private static final String BREAK_TIME = " break time";
+	private static final String POSTPONE_TIME = " postpone time";
+
 	private final HooksPrefsIO hooksPrefsIO;
 	private final NotificationPrefsIO notificationPrefsIO;
+	private final ActiveHoursPrefsIO activeHoursPrefsIO;
 
 	public TimersPrefsIO()
 	{
@@ -43,6 +48,7 @@ public class TimersPrefsIO extends PrefsIO
 		prefs = Preferences.userNodeForPackage(this.getClass());
 		hooksPrefsIO = new HooksPrefsIO(prefs);
 		notificationPrefsIO = new NotificationPrefsIO(prefs);
+		activeHoursPrefsIO = new ActiveHoursPrefsIO(prefs);
 	}
 
 	/////////////////
@@ -73,12 +79,12 @@ public class TimersPrefsIO extends PrefsIO
 	private BreakConfig loadBreakConfig(final BreakType breakType)
 	{
 		String breakName = breakType.getName();
-		boolean is_enabled = prefs.getBoolean(breakName + " enabled", false);
+		boolean is_enabled = prefs.getBoolean(breakName + ENABLED, false);
 
 		// load timer settings
-		int working_time = prefs.getInt(breakName + " working time", 0);
-		int break_time = prefs.getInt(breakName + " break time", 0);
-		int postpone_time = prefs.getInt(breakName + " postpone time", 0);
+		int working_time = prefs.getInt(breakName + WORKING_TIME, 0);
+		int break_time = prefs.getInt(breakName + BREAK_TIME, 0);
+		int postpone_time = prefs.getInt(breakName + POSTPONE_TIME, 0);
 
 		// load hooks settings
 		HooksConfig notifHooksConf;
@@ -123,7 +129,7 @@ public class TimersPrefsIO extends PrefsIO
 	/////////////////
 	public void setBreakEnabled(BreakType breakType, boolean enabled)
 	{
-		prefs.putBoolean(breakType.getName() + " enabled", enabled);
+		prefs.putBoolean(breakType.getName() + ENABLED, enabled);
 	}
 
 	/**
@@ -136,22 +142,22 @@ public class TimersPrefsIO extends PrefsIO
 	{
 		String breakName = breakConfig.getBreakType().getName();
 
-		prefs.putBoolean(breakName + " enabled", breakConfig.isEnabled());
+		prefs.putBoolean(breakName + ENABLED, breakConfig.isEnabled());
 
 		if (!breakConfig.isEnabled())
 			return;
 
 		// save timer settings
 		prefs.putInt(
-			breakName + " working time",
+			breakName + WORKING_TIME,
 			breakConfig.getWorkTimerSettings().getHMSAsSeconds()
 		);
 		prefs.putInt(
-			breakName + " postpone time",
+			breakName + POSTPONE_TIME,
 			breakConfig.getPostponeTimerSettings().getHMSAsSeconds()
 		);
 		breakConfig.getBreakTimerSettings().ifPresent(
-			wallClock -> prefs.putInt(breakName + " break time", wallClock.getHMSAsSeconds())
+			wallClock -> prefs.putInt(breakName + BREAK_TIME, wallClock.getHMSAsSeconds())
 		);
 
 		// save hook configs
@@ -170,11 +176,7 @@ public class TimersPrefsIO extends PrefsIO
 
 		breaksSettings.forEach(this::saveBreakConfig);
 
-		try {
-			prefs.flush(); // ensure preferences are saved
-		} catch (BackingStoreException e) {
-			Loggers.getErrorLogger().log(Level.WARNING, "Couldn't ensure preferences were saved", e);
-		}
+		flushPrefs();
 	}
 
 	/////////////
@@ -190,5 +192,10 @@ public class TimersPrefsIO extends PrefsIO
 	public NotificationPrefsIO getNotificationPrefsIO()
 	{
 		return notificationPrefsIO;
+	}
+
+	public ActiveHoursPrefsIO getActiveHoursPrefsIO()
+	{
+		return activeHoursPrefsIO;
 	}
 }

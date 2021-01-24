@@ -55,6 +55,7 @@ public class Notification extends JDialog
 	protected Runnable onShown; // runnable when the notification is shown
 	@Nullable
 	protected Runnable onDisposed; // runnable when the notification is disposed
+	@Nullable
 	private Timer timeoutTimer; // timer to automatically dispose the dialog
 
 	public Notification()

@@ -27,14 +27,35 @@ public abstract class PrefsIO
 {
 	protected Preferences prefs;
 
+	/**
+	 * Same as {@link Preferences#sync()} but this method will handle the exception by just logging a simple
+	 * message and the exception
+	 */
 	protected void syncPrefs()
 	{
 		try {
 			prefs.sync(); // ensure we read updated values
 		} catch (BackingStoreException e) {
 			Loggers.getErrorLogger().log(
-				Level.SEVERE,
+				Level.WARNING,
 				"Couldn't sync preferences for class " + this.getClass(),
+				e
+			);
+		}
+	}
+
+	/**
+	 * Same as {@link Preferences#flush()} but this method will handle the exception by just logging a simple
+	 * message and the exception
+	 */
+	protected void flushPrefs()
+	{
+		try {
+			prefs.flush(); // ensure preferences are saved
+		} catch (BackingStoreException e) {
+			Loggers.getErrorLogger().log(
+				Level.WARNING,
+				"Couldn't ensure preferences were saved",
 				e
 			);
 		}

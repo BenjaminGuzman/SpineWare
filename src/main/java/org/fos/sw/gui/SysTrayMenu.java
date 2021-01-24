@@ -124,8 +124,8 @@ public class SysTrayMenu extends JDialog
 
 		ImageIcon pauseIcon = SWMain.readAndScaleIcon("/resources/media/pause_white_18dp.png");
 		ImageIcon continueIcon = SWMain.readAndScaleIcon("/resources/media/play_arrow_white_18dp.png");
-		String pauseStr = messagesBundle.getString("pause");
-		String continueStr = messagesBundle.getString("continue");
+		String pauseStr = messagesBundle.getString("pause_timers");
+		String continueStr = messagesBundle.getString("resume_timers");
 
 		JButton exitButton = new JButton(messagesBundle.getString("systray_exit"));
 		JButton openButton = new JButton(messagesBundle.getString("systray_open"));

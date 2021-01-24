@@ -86,11 +86,11 @@ public class ConfigureHooksDialog extends JDialog
 
 		this.setContentPane(panel);
 
+		this.setMinimumSize(new Dimension(600, 600)); // in case resizable is true
+		this.setPreferredSize(new Dimension(900, 700));
+		this.setMaximumSize(new Dimension(900, 800)); // in case resizable is true
 		this.pack();
 		this.setIconImage(SWMain.getSWIcon());
-		this.setMinimumSize(new Dimension(500, 500)); // in case resizable is true
-		this.setPreferredSize(new Dimension(600, 600));
-		this.setMaximumSize(new Dimension(800, 800)); // in case resizable is true
 		this.setModal(true);
 		this.setModalityType(ModalityType.APPLICATION_MODAL);
 		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
