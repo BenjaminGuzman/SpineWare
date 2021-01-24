@@ -165,3 +165,9 @@ thread, it is better to have a single thread (a single main loop timer) than mul
 Since the posture checker does some calculations more expensive than the calculations done in the main loop timer, it
 was preferred to do those "expensive" calculations in a separate thread.
 
+- Why Swing and not JavaFX?
+
+I tried to use JavaFX, although I think GUI programming would have been simpler, it doesn't have some features required
+by SpineWare. For example, you cannot have a Stage undecorated and of type POPUP (which allows not to show the
+application icon in the taskbar)
+at the same time.
