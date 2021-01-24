@@ -21,10 +21,12 @@ package org.fos.sw.timers;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.fos.sw.timers.breaks.ActiveHours;
 import org.fos.sw.timers.breaks.BreakToDo;
 import org.fos.sw.timers.breaks.BreakType;
 import org.fos.sw.utils.DaemonThreadFactory;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class MainTimerLoop implements Runnable
 {
@@ -63,10 +65,24 @@ public class MainTimerLoop implements Runnable
 	 * The thread of the executing to do break (if exists)
 	 */
 	private volatile Thread breakThreadRunning;
+
+	/**
+	 * The thread that handles the execution of the events when the user is working not during active hours
+	 */
+	private Thread notActiveHoursThread;
+
 	/**
 	 * The type of the break corresponding to the break executing in the thread {@link #breakThreadRunning}
 	 */
 	private volatile BreakType breakTypeRunning;
+
+	/**
+	 * The configuration for the active hours of the user
+	 */
+	@Nullable
+	private volatile ActiveHours activeHours;
+
+	private int active_hours_start_cache_s = -1, active_hours_end_cache_s = -1;
 
 	private MainTimerLoop(@NotNull List<BreakToDo> breaksToDoList)
 	{
@@ -75,6 +91,12 @@ public class MainTimerLoop implements Runnable
 
 		this.threadFactory = new DaemonThreadFactory();
 		this.stopped = new AtomicBoolean(false);
+	}
+
+	private MainTimerLoop(@NotNull List<BreakToDo> breakToDoList, @NotNull ActiveHours activeHours)
+	{
+		this(breakToDoList);
+		this.setActiveHours(activeHours);
 	}
 
 	/**
@@ -94,10 +116,27 @@ public class MainTimerLoop implements Runnable
 		return new MainTimerLoop(todoList);
 	}
 
+	/**
+	 * Creates a new instance of the class {@link MainTimerLoop}
+	 *
+	 * @param todoList    the list of the list of todos to be executed in this
+	 * @param activeHours the preferred active hours
+	 * @return the new instance of the {@link MainTimerLoop} class
+	 * @throws InstantiationException if the class have already been instantiated. A single instance should be
+	 *                                created per application
+	 */
+	public static MainTimerLoop createMainTimer(@NotNull List<BreakToDo> todoList, @NotNull ActiveHours activeHours) throws InstantiationException
+	{
+		if (instantiated)
+			throw new InstantiationException("A timer has already been created");
+		instantiated = true;
+
+		return new MainTimerLoop(todoList, activeHours);
+	}
+
 	@Override
 	public void run()
 	{
-		// if there is already another break running, do nothing
 		if (isBreakHappening()) {
 			// if a break is happening, postpone all other breaks
 			for (BreakToDo breakToDo : breaksToDoList.values()) {
@@ -109,6 +148,7 @@ public class MainTimerLoop implements Runnable
 				breakToDo.postponeExecution(UPDATE_RATE_S);
 			}
 
+			ensureUserIsWorkingDuringActiveHours();
 			return;
 		}
 
@@ -123,6 +163,8 @@ public class MainTimerLoop implements Runnable
 
 				breakToDo.postponeExecution(UPDATE_RATE_S);
 			}
+
+			ensureUserIsWorkingDuringActiveHours();
 			return;
 		}
 
@@ -132,7 +174,6 @@ public class MainTimerLoop implements Runnable
 				|| !breakToDo.getBreakConfig().isEnabled()
 				|| !breakToDo.shouldExecuteNow(curr_s_since_epoch))
 				continue;
-			System.out.println("Executing: " + breakToDo);
 			shutdown();
 
 			breakThreadRunning = threadFactory.newThread(breakToDo);
@@ -140,6 +181,35 @@ public class MainTimerLoop implements Runnable
 			breakThreadRunning.start();
 			breakTypeRunning = breakToDo.getBreakConfig().getBreakType();
 			break;
+		}
+
+		ensureUserIsWorkingDuringActiveHours();
+	}
+
+	private boolean isNotActiveHoursThreadRunning()
+	{
+		return notActiveHoursThread != null && notActiveHoursThread.isAlive() && !notActiveHoursThread.isInterrupted();
+	}
+
+	private void ensureUserIsWorkingDuringActiveHours()
+	{
+		if (activeHours == null)
+			return;
+
+		// if the alerts or whatever configured hooks is currently running, do nothing
+		if (isNotActiveHoursThreadRunning())
+			return;
+
+		// check if the user is still working during active hours
+		int curr_time_s = Math.toIntExact(System.currentTimeMillis() / 1_000);
+
+		// the user is working before the start of the active hours
+		if (curr_time_s < active_hours_start_cache_s) {
+			notActiveHoursThread = threadFactory.newThread(activeHours::runBeforeStart);
+			notActiveHoursThread.start();
+		} else if (curr_time_s > active_hours_end_cache_s) {
+			notActiveHoursThread = threadFactory.newThread(activeHours::runAfterEnd);
+			notActiveHoursThread.start();
 		}
 	}
 
@@ -178,6 +248,18 @@ public class MainTimerLoop implements Runnable
 			shutdown();
 
 		breaksToDoList.put(breakToDo.getBreakConfig().getBreakType(), breakToDo);
+	}
+
+	/**
+	 * Updates the configured active hours
+	 *
+	 * @param activeHours the new active hours
+	 */
+	public void setActiveHours(@NotNull ActiveHours activeHours)
+	{
+		this.activeHours = activeHours;
+		this.active_hours_start_cache_s = activeHours.getStart().getHMSAsSeconds();
+		this.active_hours_end_cache_s = activeHours.getEnd().getHMSAsSeconds();
 	}
 
 	/**

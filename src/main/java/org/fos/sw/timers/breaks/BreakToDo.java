@@ -18,6 +18,7 @@
 
 package org.fos.sw.timers.breaks;
 
+import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -65,6 +66,9 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 	// number of times the notification was postponed
 	private int n_postponed;
 
+	@NotNull
+	private WallClock postponeTime;
+
 	public BreakToDo(
 		String takeABreakMessage,
 		String breakName,
@@ -76,6 +80,7 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 		this.takeABreakMessage = takeABreakMessage;
 		this.breakName = breakName;
 		this.add_take_break_option = add_take_break_option;
+		postponeTime = breakConfig.getPostponeTimerSettings();
 		if (breakConfig.isEnabled())
 			updateExecutionTimes(breakConfig.getWorkTimerSettings());
 	}
@@ -99,10 +104,13 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 				false
 			);
 
+		// note at this time it is safe to call get on the optional, as the only case when it could return null
+		// is when break time is day break
 		return new BreakToDo(
-			messagesBundle.getString("notification_time_for_a")
-				+ " " + breakConfig.getBreakTimerSettings().get().getHMSAsString()
-				+ " " + messagesBundle.getString("break"),
+			MessageFormat.format(
+				messagesBundle.getString("notification_time_for_a_break"),
+				breakConfig.getBreakTimerSettings().get().getHMSAsString()
+			),
 			messagesBundle.getString("time_for_a_small_break"),
 			breakConfig,
 			true
@@ -124,6 +132,8 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 
 		if (Thread.currentThread().isInterrupted())
 			return;
+
+		postponeTime = breakConfig.getPostponeTimerSettings();
 		BreakDecision breakDecision = showTakeBreakNotification(); // this is a blocking call
 		if (breakDecision == null) {
 			updateExecutionTimes(breakConfig.getWorkTimerSettings());
@@ -132,7 +142,7 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 
 		if (breakDecision != BreakDecision.TAKE_BREAK) {
 			if (breakDecision == BreakDecision.POSTPONE)
-				updateExecutionTimes(breakConfig.getPostponeTimerSettings());
+				updateExecutionTimes(postponeTime);
 			else if (breakDecision == BreakDecision.DISMISS)
 				updateExecutionTimes(breakConfig.getWorkTimerSettings());
 			return;
@@ -267,9 +277,21 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 				hooksConfig.shutdown();
 		}
 
-		// this should be extremely rare
-		if (notificationRef.get() != null)
-			return notificationRef.get().getBreakDecision();
+		if (notificationRef.get() != null) {
+			TakeABreakNotification notification = notificationRef.get();
+			BreakDecision decision = notification.getBreakDecision();
+			switch (decision) {
+				case POSTPONE:
+					++n_postponed;
+					if (notification.getPostponeTimeOverride() != null)
+						postponeTime = notification.getPostponeTimeOverride();
+					break;
+				case DISMISS:
+					++n_dismisses;
+					break;
+			}
+			return decision;
+		}
 
 		return BreakDecision.DISMISS;
 	}

@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 public class DaemonThreadFactory implements ThreadFactory
 {
 	protected String threadsName;
+	protected int priority = Thread.NORM_PRIORITY;
 
 	public DaemonThreadFactory()
 	{
@@ -33,6 +34,12 @@ public class DaemonThreadFactory implements ThreadFactory
 	public DaemonThreadFactory(String threadsName)
 	{
 		this.threadsName = threadsName;
+	}
+
+	public DaemonThreadFactory(String threadsName, int priority)
+	{
+		this(threadsName);
+		this.priority = priority;
 	}
 
 	/**
@@ -49,6 +56,7 @@ public class DaemonThreadFactory implements ThreadFactory
 		Thread t = new Thread(r);
 		t.setName(threadsName);
 		t.setDaemon(true);
+		t.setPriority(priority);
 		return t;
 	}
 }

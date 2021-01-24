@@ -21,6 +21,14 @@ The following files
 
 - `cam_model.jpg`
 
+- `face.jpg`
+
+- `camera_screen_sizes.jpg`
+
+- `posture_bad.jpg`
+
+- `posture_good.jpg`
+
 Are licensed under
 the [Creative Commons Attribution-ShareAlike license (CC BY-SA) 4.0](https://creativecommons.org/licenses/by-sa/4.0/),
 and were made by Benjamín Guzmán <9benjaminguzman@gmail.com>, therefore they ALL have the following copyright notice

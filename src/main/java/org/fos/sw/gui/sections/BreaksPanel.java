@@ -67,7 +67,7 @@ public class BreaksPanel extends JScrollPane
 
 	private final List<BreakConfig> preferredBreakSettings;
 	private final WallClock[] minWorkRecommendedTimes = new WallClock[]{
-		new WallClock((byte) 0, (byte) 5, (byte) 0), // min work time for the small break
+		new WallClock((byte) 0, (byte) 15, (byte) 0), // min work time for the small break
 		new WallClock((byte) 0, (byte) 30, (byte) 0), // min work time for the stretch break
 		new WallClock((byte) 8, (byte) 0, (byte) 0), // min work time for the day break
 	};
@@ -114,7 +114,7 @@ public class BreaksPanel extends JScrollPane
 			BreakType.SMALL_BREAK,
 			hooksConfigIcon,
 			saveConfigIcon,
-			new WallClock((byte) 0, (byte) 10, (byte) 0), // recommended value for working time
+			new WallClock((byte) 0, (byte) 15, (byte) 0), // recommended value for working time
 			new WallClock((byte) 0, (byte) 0, (byte) 10), // recommended value for break time
 			new WallClock((byte) 0, (byte) 5, (byte) 0) // recommended value for postpone time
 		));
@@ -145,6 +145,12 @@ public class BreaksPanel extends JScrollPane
 			new WallClock((byte) 0, (byte) 20, (byte) 0) // recommended value for postpone time
 		));
 		panel.add(Box.createVerticalStrut(10));
+
+		/*
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(createActiveHoursPanel());
+		panel.add(Box.createVerticalStrut(10));
+		 */
 
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(this.createOptionsPanel());
@@ -347,7 +353,7 @@ public class BreaksPanel extends JScrollPane
 		panel.add(setRecommendedValuesBtn, gridBagConstraints);
 		if (breakType != BreakType.DAY_BREAK) {
 			gridBagConstraints.gridx = 1;
-			gridBagConstraints.anchor = GridBagConstraints.CENTER;
+			gridBagConstraints.anchor = GridBagConstraints.EAST;
 			gridBagConstraints.fill = GridBagConstraints.VERTICAL;
 			panel.add(breakTimeLabel, gridBagConstraints);
 
@@ -564,18 +570,18 @@ public class BreaksPanel extends JScrollPane
 				btn.setEnabled(this.is_enabled);
 			saveButton.setEnabled(this.is_enabled);
 
-			// update the preference
-			if (!this.is_enabled)
-				TimersManager.setBreakEnabled(this.breakType, false);
-			else
-				saveButton.doClick(60);
-
 			statusLabel.setForeground(Colors.WHITE);
 			this.statusLabel.setText(SWMain.getMessagesBundle().getString(
 				this.is_enabled
 					? "break_successfully_enabled"
 					: "break_successfully_disabled"
 			));
+
+			// update the preference
+			if (!this.is_enabled)
+				TimersManager.setBreakEnabled(this.breakType, false);
+			else
+				saveButton.doClick(60);
 		}
 	}
 
@@ -629,9 +635,26 @@ public class BreaksPanel extends JScrollPane
 			if (!is_valid)
 				return;
 
+			// check also some constraints
+			if (postponeTimeInput.getTime() > workingTimeInput.getTime()) {
+				statusLabel.setForeground(Colors.RED);
+				statusLabel.setText(
+					SWMain.getMessagesBundle().getString("working_time_greater_than_postpone_time")
+				);
+				return;
+			} else if (breakTimeInput != null && breakTimeInput.getTime() > workingTimeInput.getTime()) {
+				statusLabel.setForeground(Colors.RED);
+				statusLabel.setText(
+					SWMain.getMessagesBundle().getString("working_time_greater_than_break_time")
+				);
+				return;
+			}
+
 			// if everything went OK
-			this.statusLabel.setText(SWMain.getMessagesBundle().getString("changes_saved")
-				+ ". " + SWMain.getMessagesBundle().getString("changes_saved_extra_text"));
+			this.statusLabel.setText(
+				SWMain.getMessagesBundle().getString("changes_saved")
+					+ ". " + SWMain.getMessagesBundle().getString("changes_saved_extra_text")
+			);
 			this.statusLabel.setForeground(Colors.GREEN);
 
 			if (this.breakTimeInput != null)
