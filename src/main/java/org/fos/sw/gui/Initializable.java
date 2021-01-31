@@ -18,14 +18,7 @@
 
 package org.fos.sw.gui;
 
-import java.awt.Color;
-
-public class Colors
+public interface Initializable
 {
-	public final static Color RED = new Color(0xf71919);
-	public final static Color YELLOW = new Color(0xF7E119);
-	public final static Color RED_WINE = new Color(0x420D0D);
-	public final static Color GREEN_DARK = new Color(0x385F1A);
-	public final static Color GREEN = new Color(0x69BB36);
-	public final static Color WHITE = new Color(0xF0F0F0);
+	void initComponents();
 }

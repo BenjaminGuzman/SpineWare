@@ -49,6 +49,7 @@ import javax.swing.JPanel;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
 import org.fos.sw.gui.notifications.StartUpNotification;
+import org.fos.sw.gui.sections.AbstractSection;
 import org.fos.sw.gui.sections.BreaksPanel;
 import org.fos.sw.gui.sections.HelpPanel;
 import org.fos.sw.timers.TimersManager;
@@ -58,7 +59,7 @@ public class MainFrame extends JFrame
 	private static final short BREAKS_PANEL_CACHE_IDX = 0;
 	private static final short HELP_PANEL_CACHE_IDX = 1;
 
-	private final JComponent[] mainPanelContentCaches = new JComponent[2];
+	private final AbstractSection[] mainPanelContentCaches = new AbstractSection[2];
 	private JComponent activeContentPanel = null;
 	private JPanel mainContentPanel = null;
 	private TrayIcon trayIcon;
@@ -76,7 +77,9 @@ public class MainFrame extends JFrame
 		this.setLocationRelativeTo(null);
 		this.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 
-		this.setMinimumSize(new Dimension(600, 600));
+		this.setMinimumSize(new Dimension(800, 600));
+		this.setPreferredSize(Toolkit.getDefaultToolkit().getScreenSize());
+		this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
 		// if this is the first time the user opens the application, show the jframe
 		Preferences prefs = Preferences.userNodeForPackage(this.getClass());
@@ -165,8 +168,6 @@ public class MainFrame extends JFrame
 			button.addActionListener(buttonsListeners[i]);
 		}
 
-		this.changePanel(BREAKS_PANEL_CACHE_IDX, BreaksPanel.class);
-
 		return menuPanel;
 	}
 
@@ -202,15 +203,19 @@ public class MainFrame extends JFrame
 	 * @param panelClass      the class of the panel
 	 * @param <T>             class of the panel
 	 */
-	public <T extends JComponent> void changePanel(final short panel_cache_idx, final Class<T> panelClass)
+	public <T extends AbstractSection> void changePanel(final short panel_cache_idx, final Class<T> panelClass)
 	{
 		if (panel_cache_idx < 0 || panel_cache_idx >= this.mainPanelContentCaches.length)
 			throw new IllegalArgumentException("The panel cache idx should be between [0, "
 				+ (this.mainPanelContentCaches.length - 1) + "]");
+
+		boolean invoke_init_components = false;
 		// if the panel is not in the cache, create it
 		if (this.mainPanelContentCaches[panel_cache_idx] == null) {
 			try {
 				this.mainPanelContentCaches[panel_cache_idx] = panelClass.getConstructor().newInstance();
+				this.mainPanelContentCaches[panel_cache_idx].setOwner(this);
+				invoke_init_components = true;
 			} catch (InstantiationException | IllegalAccessException
 				| InvocationTargetException | NoSuchMethodException e) {
 				Loggers.getErrorLogger().log(Level.SEVERE, "Error while creating the main content panel", e);
@@ -225,12 +230,14 @@ public class MainFrame extends JFrame
 			return;
 		}
 
-		if (this.activeContentPanel != null)
-			this.mainContentPanel.removeAll(); // clear the content panel
-		this.activeContentPanel = this.mainPanelContentCaches[panel_cache_idx];
-		this.mainContentPanel.add(this.activeContentPanel, BorderLayout.CENTER);
-		this.mainContentPanel.revalidate();
-		this.mainContentPanel.repaint();
+		if (activeContentPanel != null)
+			mainContentPanel.removeAll(); // clear the content panel
+		activeContentPanel = mainPanelContentCaches[panel_cache_idx];
+		mainContentPanel.add(activeContentPanel, BorderLayout.CENTER);
+		if (invoke_init_components)
+			mainPanelContentCaches[panel_cache_idx].initComponents();
+		mainContentPanel.revalidate();
+		mainContentPanel.repaint();
 	}
 
 	/**
@@ -331,6 +338,21 @@ public class MainFrame extends JFrame
 
 		// start the timers
 		TimersManager.startMainLoop();
+	}
+
+	/**
+	 * Shows or hides this {@code Window} depending on the value of parameter
+	 * {@code b}.
+	 * <p>
+	 * If the frame is not showing a {@link AbstractSection}, this method will automatically load the
+	 * {@link BreaksPanel}
+	 */
+	@Override
+	public void setVisible(boolean b)
+	{
+		super.setVisible(b);
+		if (b && activeContentPanel == null)
+			this.changePanel(BREAKS_PANEL_CACHE_IDX, BreaksPanel.class);
 	}
 
 	@Override

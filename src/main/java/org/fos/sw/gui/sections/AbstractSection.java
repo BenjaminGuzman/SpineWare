@@ -16,16 +16,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.sw.gui;
+package org.fos.sw.gui.sections;
 
-import java.awt.Color;
+import java.awt.Window;
+import javax.swing.JScrollPane;
+import org.fos.sw.gui.Initializable;
+import org.jetbrains.annotations.NotNull;
 
-public class Colors
+public abstract class AbstractSection extends JScrollPane implements Initializable
 {
-	public final static Color RED = new Color(0xf71919);
-	public final static Color YELLOW = new Color(0xF7E119);
-	public final static Color RED_WINE = new Color(0x420D0D);
-	public final static Color GREEN_DARK = new Color(0x385F1A);
-	public final static Color GREEN = new Color(0x69BB36);
-	public final static Color WHITE = new Color(0xF0F0F0);
+	protected Window owner;
+
+	/**
+	 * Sets the owner window, this may be used by the subclasses. Make sure you set the owner to avoid
+	 * NullPointerExceptions later
+	 *
+	 * @param owner the owner
+	 * @return this
+	 */
+	public AbstractSection setOwner(@NotNull Window owner)
+	{
+		this.owner = owner;
+		return this;
+	}
+
+	public abstract void initComponents();
 }

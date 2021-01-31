@@ -28,6 +28,7 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import javax.management.InstanceAlreadyExistsException;
@@ -42,22 +43,27 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
 import org.fos.sw.gui.Colors;
 import org.fos.sw.gui.Fonts;
-import org.fos.sw.gui.hooksconfig.ConfigureHooksDialog;
+import org.fos.sw.gui.hooksconfig.AbstractHooksConfigDialog;
+import org.fos.sw.gui.hooksconfig.ActiveHoursHooksConfigDialog;
+import org.fos.sw.gui.hooksconfig.BreakHooksConfigDialog;
 import org.fos.sw.gui.util.TimeInputPanel;
 import org.fos.sw.hooks.BreakHooksConfig;
 import org.fos.sw.prefs.timers.HooksPrefsIO;
 import org.fos.sw.prefs.timers.NotificationPrefsIO;
+import org.fos.sw.prefs.timers.TimersPrefsIO;
 import org.fos.sw.timers.TimersManager;
 import org.fos.sw.timers.WallClock;
+import org.fos.sw.timers.breaks.ActiveHours;
 import org.fos.sw.timers.breaks.BreakConfig;
 import org.fos.sw.timers.breaks.BreakType;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class BreaksPanel extends JScrollPane
+public class BreaksPanel extends AbstractSection
 {
 	private static boolean instantiated;
 
@@ -66,6 +72,8 @@ public class BreaksPanel extends JScrollPane
 	private final Font DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 16);
 
 	private final List<BreakConfig> preferredBreakSettings;
+	@NotNull
+	private final ActiveHours preferredActiveHours;
 	private final WallClock[] minWorkRecommendedTimes = new WallClock[]{
 		new WallClock((byte) 0, (byte) 15, (byte) 0), // min work time for the small break
 		new WallClock((byte) 0, (byte) 30, (byte) 0), // min work time for the stretch break
@@ -95,13 +103,25 @@ public class BreaksPanel extends JScrollPane
 		super();
 
 		if (BreaksPanel.instantiated)
-			throw new InstanceAlreadyExistsException("There must exist a single instance of " + BreaksPanel.class.getName());
+			throw new InstanceAlreadyExistsException(
+				"There must exist a single instance of " + BreaksPanel.class.getName()
+			);
 
 		BreaksPanel.instantiated = true;
 
-		// load preferred times
-		this.preferredBreakSettings = TimersManager.getPrefsIO().loadBreaksConfig();
+		// load preferred configurations
+		TimersPrefsIO prefsIO = TimersManager.getPrefsIO();
+		this.preferredBreakSettings = prefsIO.loadBreaksConfig();
+		Optional<ActiveHours> prefActiveHours;
+		if ((prefActiveHours = prefsIO.getActiveHoursPrefsIO().loadActiveHours(prefsIO.getHooksPrefsIO())).isPresent())
+			preferredActiveHours = prefActiveHours.get();
+		else
+			preferredActiveHours = new ActiveHours(WallClock.from(0), WallClock.from(0), false);
+	}
 
+	@Override
+	public void initComponents()
+	{
 		// load icon images that will be used by the createBreakPanel method
 		ImageIcon hooksConfigIcon = SWMain.readAndScaleIcon("/resources/media/task_white_18dp.png");
 		ImageIcon saveConfigIcon = SWMain.readAndScaleIcon("/resources/media/save_white_18dp.png");
@@ -110,7 +130,7 @@ public class BreaksPanel extends JScrollPane
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(this.createBreakPanel(
+		panel.add(createBreakPanel(
 			BreakType.SMALL_BREAK,
 			hooksConfigIcon,
 			saveConfigIcon,
@@ -123,7 +143,7 @@ public class BreaksPanel extends JScrollPane
 		panel.add(new JSeparator(JSeparator.HORIZONTAL));
 
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(this.createBreakPanel(
+		panel.add(createBreakPanel(
 			BreakType.STRETCH_BREAK,
 			hooksConfigIcon,
 			saveConfigIcon,
@@ -136,7 +156,7 @@ public class BreaksPanel extends JScrollPane
 		panel.add(new JSeparator(JSeparator.HORIZONTAL));
 
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(this.createBreakPanel(
+		panel.add(createBreakPanel(
 			BreakType.DAY_BREAK,
 			hooksConfigIcon,
 			saveConfigIcon,
@@ -146,11 +166,13 @@ public class BreaksPanel extends JScrollPane
 		));
 		panel.add(Box.createVerticalStrut(10));
 
-		/*
+		panel.add(new JSeparator(JSeparator.HORIZONTAL));
+
 		panel.add(Box.createVerticalStrut(10));
-		panel.add(createActiveHoursPanel());
+		panel.add(createActiveHoursPanel(hooksConfigIcon, saveConfigIcon));
 		panel.add(Box.createVerticalStrut(10));
-		 */
+
+		panel.add(new JSeparator(JSeparator.HORIZONTAL));
 
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(this.createOptionsPanel());
@@ -178,12 +200,12 @@ public class BreaksPanel extends JScrollPane
 	 * @return the JPanel containing all the elements mentioned above
 	 */
 	private JPanel createBreakPanel(
-		final BreakType breakType,
-		final ImageIcon hooksConfigIcon,
-		final ImageIcon saveConfigIcon,
-		final WallClock recommendedWorkingTime,
-		final WallClock recommendedBreakTime,
-		final WallClock recommendedPostponeTime
+		BreakType breakType,
+		ImageIcon hooksConfigIcon,
+		ImageIcon saveConfigIcon,
+		WallClock recommendedWorkingTime,
+		WallClock recommendedBreakTime,
+		WallClock recommendedPostponeTime
 	)
 	{
 		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
@@ -227,7 +249,7 @@ public class BreaksPanel extends JScrollPane
 		TimeInputPanel workingTimeInput = new TimeInputPanel(
 			this.minWorkRecommendedTimes[break_idx],
 			this.maxWorkRecommendedTimes[break_idx],
-			this.preferredBreakSettings.get(break_idx).getWorkTimerSettings()
+			this.preferredBreakSettings.get(break_idx).getWorkWallClock()
 		);
 		workingTimeInput.setEnabled(this.preferredBreakSettings.get(break_idx).isEnabled());
 
@@ -253,7 +275,7 @@ public class BreaksPanel extends JScrollPane
 			breakTimeInput = new TimeInputPanel(
 				this.minBreakRecommendedTimes[break_idx],
 				this.maxBreakRecommendedTimes[break_idx],
-				this.preferredBreakSettings.get(break_idx).getBreakTimerSettings().get()
+				this.preferredBreakSettings.get(break_idx).getBreakWallClock().get()
 			);
 			breakTimeInput.setEnabled(this.preferredBreakSettings.get(break_idx).isEnabled());
 		}
@@ -274,7 +296,7 @@ public class BreaksPanel extends JScrollPane
 		TimeInputPanel postponeTimeInput = new TimeInputPanel(
 			this.minRequiredPostponeTime,
 			this.maxRequiredPostponeTime,
-			this.preferredBreakSettings.get(break_idx).getPostponeTimerSettings(),
+			this.preferredBreakSettings.get(break_idx).getPostponeWallClock(),
 			true
 		);
 		postponeTimeInput.setEnabled(this.preferredBreakSettings.get(break_idx).isEnabled());
@@ -329,15 +351,7 @@ public class BreaksPanel extends JScrollPane
 		panel.add(hooksConfigBtn, gridBagConstraints);
 
 		++gridBagConstraints.gridx;
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.anchor = GridBagConstraints.EAST;
-		panel.add(workingTimeLabel, gridBagConstraints);
-
-		gridBagConstraints.gridwidth = 3;
-		++gridBagConstraints.gridx;
-		gridBagConstraints.anchor = GridBagConstraints.WEST;
-		gridBagConstraints.fill = GridBagConstraints.VERTICAL;
-		panel.add(workingTimeInput, gridBagConstraints);
+		addTimeInputAndLabel2Panel(panel, workingTimeLabel, workingTimeInput, gridBagConstraints);
 
 		/*
 		Add fourth row:
@@ -352,16 +366,8 @@ public class BreaksPanel extends JScrollPane
 		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
 		panel.add(setRecommendedValuesBtn, gridBagConstraints);
 		if (breakType != BreakType.DAY_BREAK) {
-			gridBagConstraints.gridx = 1;
-			gridBagConstraints.anchor = GridBagConstraints.EAST;
-			gridBagConstraints.fill = GridBagConstraints.VERTICAL;
-			panel.add(breakTimeLabel, gridBagConstraints);
-
-			gridBagConstraints.gridwidth = 3;
 			++gridBagConstraints.gridx;
-			gridBagConstraints.anchor = GridBagConstraints.WEST;
-			gridBagConstraints.fill = GridBagConstraints.VERTICAL;
-			panel.add(breakTimeInput, gridBagConstraints);
+			addTimeInputAndLabel2Panel(panel, breakTimeLabel, breakTimeInput, gridBagConstraints);
 		}
 
 		/*
@@ -375,17 +381,8 @@ public class BreaksPanel extends JScrollPane
 		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
 		panel.add(saveConfigBtn, gridBagConstraints);
 
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.anchor = GridBagConstraints.EAST;
-		gridBagConstraints.fill = GridBagConstraints.VERTICAL;
-		panel.add(postponeTimeLabel, gridBagConstraints);
-
-		gridBagConstraints.gridwidth = 3;
 		++gridBagConstraints.gridx;
-		gridBagConstraints.anchor = GridBagConstraints.WEST;
-		gridBagConstraints.fill = GridBagConstraints.VERTICAL;
-		panel.add(postponeTimeInput, gridBagConstraints);
+		addTimeInputAndLabel2Panel(panel, postponeTimeLabel, postponeTimeInput, gridBagConstraints);
 
 		/*
 		Add sixth row:
@@ -402,9 +399,9 @@ public class BreaksPanel extends JScrollPane
 		 */
 		FocusListener onFocusLostClearLabel = new OnFocusLostClearLabel(statusLabel);
 		featureEnabledCheckBox.addActionListener(new OnActionCheckBoxListener(
-			workingTimeInput,
-			breakTimeInput,
-			postponeTimeInput,
+			breakType == BreakType.DAY_BREAK
+				? new TimeInputPanel[]{workingTimeInput, postponeTimeInput}
+				: new TimeInputPanel[]{workingTimeInput, breakTimeInput, postponeTimeInput},
 			featureEnabledCheckBox.isSelected(),
 			breakType,
 			statusLabel,
@@ -414,7 +411,7 @@ public class BreaksPanel extends JScrollPane
 		));
 		featureEnabledCheckBox.addFocusListener(onFocusLostClearLabel);
 
-		saveConfigBtn.addActionListener(new OnSaveSettingsListener(
+		saveConfigBtn.addActionListener(new OnSaveConfigListener(
 			workingTimeInput,
 			breakType != BreakType.DAY_BREAK ? breakTimeInput : null,
 			postponeTimeInput,
@@ -434,10 +431,7 @@ public class BreaksPanel extends JScrollPane
 		));
 		setRecommendedValuesBtn.addFocusListener(onFocusLostClearLabel);
 
-		OnClickHooksSettings onClickHooksSettings = new OnClickHooksSettings(
-			SwingUtilities.getWindowAncestor(this),
-			breakType
-		);
+		OnClickHooksSettings onClickHooksSettings = new OnClickHooksSettings(super.owner, breakType);
 		hooksConfigBtn.addActionListener((ActionEvent evt) -> {
 			// show the modal dialog, this call will block
 			onClickHooksSettings.actionPerformed(evt);
@@ -448,6 +442,236 @@ public class BreaksPanel extends JScrollPane
 		});
 
 		return panel;
+	}
+
+	/**
+	 * Creates the active hours panel
+	 *
+	 * @return the JPanel
+	 */
+	private JPanel createActiveHoursPanel(
+		ImageIcon hooksConfigIcon,
+		ImageIcon saveConfigIcon
+	)
+	{
+		JPanel panel = new JPanel(new GridBagLayout());
+
+		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+
+		String activeHoursTitle = messagesBundle.getString("active_hours_title");
+		String activeHoursDesc = messagesBundle.getString("active_hours_description");
+		String activeHoursFullDesc = messagesBundle.getString("active_hours_full_description");
+
+		/*
+		First row:
+			Title	small description
+		 */
+		JLabel titleLabel = new JLabel(activeHoursTitle, JLabel.CENTER);
+		JLabel descLabel = new JLabel(activeHoursDesc, JLabel.CENTER);
+
+		titleLabel.setFont(TITLE_FONT);
+		descLabel.setFont(DESCRIPTION_FONT);
+
+		/*
+		Second row:
+			checkbox	full description
+		 */
+		JCheckBox featureEnabledCheckBox = new JCheckBox(messagesBundle.getString("feature_enabled"));
+		featureEnabledCheckBox.setSelected(preferredActiveHours.isEnabled());
+
+		JLabel fullDescLabel = new JLabel(activeHoursFullDesc, JLabel.CENTER);
+		fullDescLabel.setFont(FULL_DESCRIPTION_FONT);
+
+		/*
+		Third row:
+			hooks config	start active hours at time input
+		 */
+		JLabel startTimeLabel = new JLabel(
+			messagesBundle.getString("active_hours_start_label"),
+			SwingConstants.RIGHT
+		);
+		TimeInputPanel startTimeInput = new TimeInputPanel(
+			new WallClock((byte) 5, (byte) 0, (byte) 0),
+			new WallClock((byte) 13, (byte) 0, (byte) 0),
+			preferredActiveHours.getStart()
+		);
+		startTimeInput.setEnabled(preferredActiveHours.isEnabled());
+
+		JButton hooksConfigBtn = new JButton(messagesBundle.getString("hooks_config"));
+		hooksConfigBtn.setToolTipText(SWMain.getMessagesBundle().getString("hooks_config_tooltip"));
+		hooksConfigBtn.setIcon(hooksConfigIcon);
+
+		/*
+		Fifth row:
+			Save configuration	end active hours at time input
+		 */
+		JButton saveConfigBtn = new JButton(messagesBundle.getString("save_changes"));
+		saveConfigBtn.setIcon(saveConfigIcon);
+		saveConfigBtn.setFont(Fonts.SANS_SERIF_BOLD_15);
+		saveConfigBtn.setToolTipText(messagesBundle.getString("save_changes_timers_warning"));
+
+		JLabel endTimeLabel = new JLabel(
+			messagesBundle.getString("active_hours_end_label"),
+			SwingConstants.RIGHT
+		);
+		TimeInputPanel endTimeInput = new TimeInputPanel(
+			new WallClock((byte) 18, (byte) 0, (byte) 0),
+			new WallClock((byte) 23, (byte) 0, (byte) 0),
+			preferredActiveHours.getEnd()
+		);
+		endTimeInput.setEnabled(preferredActiveHours.isEnabled());
+
+		/*
+		Sixth row:
+			Status label (expanding through all the columns)
+		 */
+		JLabel statusLabel = new JLabel(" "); // put a space so the layout manager displays the label instead
+		// of nothing
+		statusLabel.setFont(Fonts.SANS_SERIF_BOLD_12);
+
+		GridBagConstraints gridBagConstraints = new GridBagConstraints();
+		gridBagConstraints.insets = new Insets(10, 10, 10, 10);
+		gridBagConstraints.anchor = GridBagConstraints.NORTH;
+		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+		gridBagConstraints.gridy = 0;
+		gridBagConstraints.gridx = 0;
+
+		/*
+		Add first row
+			title	small description
+		 */
+		panel.add(titleLabel, gridBagConstraints);
+
+		gridBagConstraints.gridwidth = 4;
+		++gridBagConstraints.gridx;
+		panel.add(descLabel, gridBagConstraints);
+
+		/*
+		Add second row
+			checkbox	description
+		 */
+		gridBagConstraints.gridwidth = 1;
+		gridBagConstraints.gridx = 0;
+		++gridBagConstraints.gridy;
+		panel.add(featureEnabledCheckBox, gridBagConstraints);
+
+		gridBagConstraints.gridwidth = 4;
+		gridBagConstraints.gridx = 1;
+		panel.add(fullDescLabel, gridBagConstraints);
+
+		/*
+		Add third row
+			hooks config	working time input
+		 */
+		++gridBagConstraints.gridy;
+		gridBagConstraints.gridx = 0;
+		gridBagConstraints.gridwidth = 1;
+		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(hooksConfigBtn, gridBagConstraints);
+
+		++gridBagConstraints.gridx;
+		addTimeInputAndLabel2Panel(panel, startTimeLabel, startTimeInput, gridBagConstraints);
+
+		/*
+		Add fifth row:
+			save changes	end active hours time input
+		 */
+		gridBagConstraints.gridx = 0;
+		gridBagConstraints.gridwidth = 1;
+		++gridBagConstraints.gridy;
+		gridBagConstraints.anchor = GridBagConstraints.CENTER;
+		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(saveConfigBtn, gridBagConstraints);
+
+		++gridBagConstraints.gridx;
+		addTimeInputAndLabel2Panel(panel, endTimeLabel, endTimeInput, gridBagConstraints);
+
+		/*
+		Add sixth row:
+			Status label (expanding through all the columns)
+		 */
+		++gridBagConstraints.gridy;
+		gridBagConstraints.gridx = 0;
+		gridBagConstraints.anchor = GridBagConstraints.WEST;
+		gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;
+		panel.add(statusLabel, gridBagConstraints);
+
+		/*
+		Add listeners to buttons
+		 */
+		FocusListener onFocusLostClearLabel = new OnFocusLostClearLabel(statusLabel);
+		featureEnabledCheckBox.addActionListener(new OnActionCheckBoxListener(
+			new TimeInputPanel[]{startTimeInput, endTimeInput},
+			featureEnabledCheckBox.isSelected(),
+			null,
+			statusLabel,
+			saveConfigBtn,
+			hooksConfigBtn
+		));
+		featureEnabledCheckBox.addFocusListener(onFocusLostClearLabel);
+
+		saveConfigBtn.addActionListener((ActionEvent evt) -> {
+			int start_time = startTimeInput.getTime();
+			int end_time = endTimeInput.getTime();
+
+			if (end_time <= start_time) {
+				statusLabel.setForeground(Colors.RED);
+				statusLabel.setText(SWMain.getMessagesBundle().getString("active_hours_time_invalid"));
+				return;
+			}
+
+			try {
+				HooksPrefsIO hooksPrefsIO = TimersManager.getPrefsIO().getHooksPrefsIO();
+				TimersManager.saveActiveHours(
+					new ActiveHours(
+						WallClock.from(start_time),
+						WallClock.from(end_time),
+						featureEnabledCheckBox.isSelected()
+					).setAfterEndHooks(hooksPrefsIO.loadForActiveHours(true))
+						.setBeforeStartHooks(hooksPrefsIO.loadForActiveHours(false))
+				);
+				statusLabel.setForeground(Colors.GREEN);
+				statusLabel.setText(SWMain.getMessagesBundle().getString("changes_saved"));
+			} catch (InstantiationException e) {
+				Loggers.getErrorLogger().log(Level.SEVERE, "Couldn't save preferences", e);
+				statusLabel.setForeground(Colors.RED);
+				statusLabel.setText(SWMain.getMessagesBundle().getString("error_while_saving_changes"));
+			}
+		});
+		saveConfigBtn.addFocusListener(onFocusLostClearLabel);
+
+		OnClickHooksSettings onClickHooksSettings = new OnClickHooksSettings(super.owner);
+		hooksConfigBtn.addActionListener((ActionEvent evt) -> {
+			// show the modal dialog, this call will block
+			onClickHooksSettings.actionPerformed(evt);
+
+			if (onClickHooksSettings.shouldSaveChanges())
+				// save the new configuration
+				saveConfigBtn.doClick(60);
+		});
+
+		return panel;
+	}
+
+	private void addTimeInputAndLabel2Panel(
+		@NotNull JPanel panel,
+		@NotNull JLabel timeInputLabel,
+		@NotNull TimeInputPanel timeInput,
+		@NotNull GridBagConstraints gbc
+	)
+	{
+		gbc.gridwidth = 1;
+		gbc.anchor = GridBagConstraints.NORTHEAST;
+		gbc.fill = GridBagConstraints.NONE;
+		gbc.ipady = 15;
+		panel.add(timeInputLabel, gbc);
+		gbc.ipady = 0;
+
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		++gbc.gridx;
+		gbc.anchor = GridBagConstraints.WEST;
+		gbc.fill = GridBagConstraints.VERTICAL;
+		panel.add(timeInput, gbc);
 	}
 
 	/**
@@ -482,12 +706,12 @@ public class BreaksPanel extends JScrollPane
 		panel.add(locationLabel, gridBagConstraints);
 
 		gridBagConstraints.gridx = 1;
-		panel.add(this.notificationLocationCombobox, gridBagConstraints);
+		panel.add(notificationLocationCombobox, gridBagConstraints);
 
 		// set the listener to automatically save config on changes
-		this.notificationLocationCombobox.addActionListener((ActionEvent evt) ->
+		notificationLocationCombobox.addActionListener((ActionEvent evt) ->
 			notificationPrefsIO.saveNotificationPrefLocation(
-				(byte) this.notificationLocationCombobox.getSelectedIndex()
+				(byte) notificationLocationCombobox.getSelectedIndex()
 			)
 		);
 
@@ -499,12 +723,15 @@ public class BreaksPanel extends JScrollPane
 	 */
 	private static class OnActionCheckBoxListener implements ActionListener
 	{
-		private final TimeInputPanel workingTimeInputPanel;
-		private final TimeInputPanel breakTimeInputPanel;
-		private final TimeInputPanel postponeTimeInputPanel;
+		@NotNull
+		private final TimeInputPanel[] relatedTimeInputPanels;
+		@Nullable
 		private final BreakType breakType;
+		@NotNull
 		private final JLabel statusLabel;
+		@NotNull
 		private final JButton[] relatedButtons;
+		@NotNull
 		private final JButton saveButton;
 		private boolean is_enabled;
 
@@ -512,9 +739,8 @@ public class BreaksPanel extends JScrollPane
 		 * Constructs a new object capable of handling checkbox click events as it implements the method
 		 * {@link #actionPerformed(ActionEvent)}
 		 *
-		 * @param workingTimeInputPanel  the working time input to enable/disable
-		 * @param breakTimeInputPanel    the break time input to enable/disable
-		 * @param postponeTimeInputPanel the postpone time input to enable/disable
+		 * @param relatedTimeInputPanels the related time input panels, these panels will be enabled or
+		 *                               disabled if the check box is enabled or disabled
 		 * @param is_enabled             this is used to set the initial state for the checkbox
 		 * @param breakType              the break type associated to the checkbox, this will be used to
 		 *                               identify which break to enable/disable in the
@@ -524,19 +750,15 @@ public class BreaksPanel extends JScrollPane
 		 *                               enabled/disabled
 		 */
 		public OnActionCheckBoxListener(
-			final TimeInputPanel workingTimeInputPanel,
-			final TimeInputPanel breakTimeInputPanel,
-			final TimeInputPanel postponeTimeInputPanel,
+			@NotNull TimeInputPanel[] relatedTimeInputPanels,
 			final boolean is_enabled,
-			final BreakType breakType,
-			JLabel statusLabel,
-			JButton saveButton,
+			@Nullable BreakType breakType,
+			@NotNull JLabel statusLabel,
+			@NotNull JButton saveButton,
 			JButton... relatedButtons
 		)
 		{
-			this.workingTimeInputPanel = workingTimeInputPanel;
-			this.breakTimeInputPanel = breakTimeInputPanel;
-			this.postponeTimeInputPanel = postponeTimeInputPanel;
+			this.relatedTimeInputPanels = relatedTimeInputPanels;
 			this.is_enabled = is_enabled;
 			this.relatedButtons = relatedButtons;
 			this.breakType = breakType;
@@ -551,41 +773,36 @@ public class BreaksPanel extends JScrollPane
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			this.is_enabled = !this.is_enabled;
+			is_enabled = !is_enabled;
 
-			this.workingTimeInputPanel.clearWarning();
-			//this.workingTimeInputPanel.checkInputWarnings();
-			this.workingTimeInputPanel.setEnabled(this.is_enabled);
-
-			if (this.breakTimeInputPanel != null) {
-				this.breakTimeInputPanel.clearWarning();
-				//this.workingTimeInputPanel.checkInputWarnings();
-				this.breakTimeInputPanel.setEnabled(this.is_enabled);
+			for (TimeInputPanel timeInputPanel : relatedTimeInputPanels) {
+				timeInputPanel.clearWarning();
+				timeInputPanel.setEnabled(is_enabled);
 			}
 
-			this.postponeTimeInputPanel.clearWarning();
-			this.postponeTimeInputPanel.setEnabled(this.is_enabled);
-
 			for (JButton btn : relatedButtons)
-				btn.setEnabled(this.is_enabled);
-			saveButton.setEnabled(this.is_enabled);
+				btn.setEnabled(is_enabled);
+			saveButton.setEnabled(is_enabled);
 
 			statusLabel.setForeground(Colors.WHITE);
-			this.statusLabel.setText(SWMain.getMessagesBundle().getString(
-				this.is_enabled
-					? "break_successfully_enabled"
-					: "break_successfully_disabled"
+			statusLabel.setText(SWMain.getMessagesBundle().getString(
+				is_enabled
+					? "feature_successfully_enabled"
+					: "feature_successfully_disabled"
 			));
 
 			// update the preference
-			if (!this.is_enabled)
-				TimersManager.setBreakEnabled(this.breakType, false);
-			else
+			if (!is_enabled) {
+				if (breakType != null)
+					TimersManager.setBreakEnabled(breakType, false);
+				else
+					TimersManager.setActiveHoursEnabled(false);
+			} else
 				saveButton.doClick(60);
 		}
 	}
 
-	private static class OnSaveSettingsListener implements ActionListener
+	private static class OnSaveConfigListener implements ActionListener
 	{
 		private final BreakType breakType;
 
@@ -596,7 +813,7 @@ public class BreaksPanel extends JScrollPane
 		private final JLabel statusLabel;
 		private BreakConfig.Builder breakSettingsBuilder;
 
-		public OnSaveSettingsListener(
+		public OnSaveConfigListener(
 			final TimeInputPanel workingTimeInput,
 			final TimeInputPanel breakTimeInput,
 			final TimeInputPanel postponeTimeInput,
@@ -762,14 +979,21 @@ public class BreaksPanel extends JScrollPane
 
 	private static class OnClickHooksSettings implements ActionListener
 	{
-		private final Window parentDialogWindow;
-		private final BreakType breakType;
+		@NotNull
+		private final Window parentDialog;
+		@Nullable
+		private BreakType breakType;
 
 		private boolean save_changes = false;
 
-		public OnClickHooksSettings(Window parentDialogWindow, BreakType breakType)
+		public OnClickHooksSettings(@NotNull Window parentDialog)
 		{
-			this.parentDialogWindow = parentDialogWindow;
+			this.parentDialog = parentDialog;
+		}
+
+		public OnClickHooksSettings(@NotNull Window parentDialog, @Nullable BreakType breakType)
+		{
+			this(parentDialog);
 			this.breakType = breakType;
 		}
 
@@ -781,9 +1005,15 @@ public class BreaksPanel extends JScrollPane
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			ConfigureHooksDialog hooksDialog = new ConfigureHooksDialog(parentDialogWindow, breakType);
-			hooksDialog.initComponents();
-			save_changes = hooksDialog.shouldSaveChanges();
+			AbstractHooksConfigDialog hooksConfigDialog = breakType != null
+				? new BreakHooksConfigDialog(
+				parentDialog,
+				breakType
+			)
+				: new ActiveHoursHooksConfigDialog(parentDialog);
+
+			hooksConfigDialog.initComponents(); // this call will block
+			save_changes = hooksConfigDialog.shouldSaveChanges();
 		}
 
 		public boolean shouldSaveChanges()

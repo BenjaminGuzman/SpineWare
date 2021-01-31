@@ -18,6 +18,9 @@
 
 package org.fos.sw.timers;
 
+import java.time.LocalTime;
+import org.jetbrains.annotations.NotNull;
+
 public class WallClock
 {
 	private byte hours;
@@ -25,6 +28,15 @@ public class WallClock
 	private byte seconds;
 
 	private int hms_cache = -1;
+
+	public WallClock(int hours, int minutes, int seconds)
+	{
+		this((byte) hours, (byte) minutes, (byte) seconds);
+		// FIXME: is it ok to do this?
+		assert Byte.MIN_VALUE <= hours && hours <= Byte.MAX_VALUE;
+		assert Byte.MIN_VALUE <= minutes && minutes <= Byte.MAX_VALUE;
+		assert Byte.MIN_VALUE <= seconds && seconds <= Byte.MAX_VALUE;
+	}
 
 	/**
 	 * Constructs a ne TimerSettings object with the given arguments
@@ -34,7 +46,7 @@ public class WallClock
 	 * @param minutes configured minutes
 	 * @param seconds configured seconds
 	 */
-	public WallClock(final byte hours, final byte minutes, final byte seconds)
+	public WallClock(byte hours, byte minutes, byte seconds)
 	{
 		this.hours = hours < 0 ? 1 : hours;
 		this.minutes = minutes < 0 ? 5 : minutes;
@@ -46,7 +58,7 @@ public class WallClock
 	 *
 	 * @param wallClock the original object from which all values will be copied
 	 */
-	public WallClock(final WallClock wallClock)
+	public WallClock(@NotNull WallClock wallClock)
 	{
 		this(wallClock.getHours(), wallClock.getMinutes(), wallClock.getSeconds());
 		this.hms_cache = wallClock.hms_cache;
@@ -63,6 +75,20 @@ public class WallClock
 		byte[] hms = WallClock.getHMSFromSeconds(hms_as_seconds);
 
 		return new WallClock(hms[0], hms[1], hms[2]);
+	}
+
+	/**
+	 * @return a {@link WallClock} object with the local time
+	 */
+	public static WallClock localNow()
+	{
+		LocalTime now = LocalTime.now();
+
+		return new WallClock(
+			now.getHour(),
+			now.getMinute(),
+			now.getSecond()
+		);
 	}
 
 	/**

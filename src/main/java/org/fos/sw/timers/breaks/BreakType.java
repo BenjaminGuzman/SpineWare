@@ -20,7 +20,7 @@ package org.fos.sw.timers.breaks;
 
 public enum BreakType
 {
-	// IMPORTANT: PRESERVER THIS ORDERING, IF NOT BAD THING COULD HAPPEN WHEN ITERATING OVER THE ENUM VALUES
+	// IMPORTANT: PRESERVE THIS ORDERING, IF NOT BAD THING COULD HAPPEN WHEN ITERATING OVER THE ENUM VALUES
 	SMALL_BREAK("small break", "small_breaks", (byte) 0),
 	STRETCH_BREAK("stretch break", "stretch_breaks", (byte) 1),
 	DAY_BREAK("day break", "day_break", (byte) 2);

@@ -19,11 +19,17 @@
 package org.fos.sw.timers;
 
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import org.fos.sw.Loggers;
 import org.fos.sw.timers.breaks.ActiveHours;
+import org.fos.sw.timers.breaks.ActiveHoursToDo;
 import org.fos.sw.timers.breaks.BreakToDo;
 import org.fos.sw.timers.breaks.BreakType;
+import org.fos.sw.timers.breaks.ExecuteAtToDo;
 import org.fos.sw.utils.DaemonThreadFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -62,27 +68,27 @@ public class MainTimerLoop implements Runnable
 	@NotNull
 	private final DaemonThreadFactory threadFactory;
 	/**
+	 * Holds a list of all the To Do's that should be executed at a specific time
+	 * <p>
+	 * NOTE: this is currently not used, SpineWare does not have this feature now
+	 */
+	@NotNull
+	private final List<ExecuteAtToDo> executeAtToDoList;
+	/**
 	 * The thread of the executing to do break (if exists)
 	 */
-	private volatile Thread breakThreadRunning;
-
+	private volatile Thread breakThread;
 	/**
 	 * The thread that handles the execution of the events when the user is working not during active hours
 	 */
-	private Thread notActiveHoursThread;
-
+	private volatile Thread executeAtToDoThread;
+	private volatile Thread activeHoursThread;
 	/**
-	 * The type of the break corresponding to the break executing in the thread {@link #breakThreadRunning}
+	 * The type of the break corresponding to the break executing in the thread {@link #breakThread}
 	 */
 	private volatile BreakType breakTypeRunning;
-
-	/**
-	 * The configuration for the active hours of the user
-	 */
 	@Nullable
-	private volatile ActiveHours activeHours;
-
-	private int active_hours_start_cache_s = -1, active_hours_end_cache_s = -1;
+	private ActiveHoursToDo activeHoursToDo;
 
 	private MainTimerLoop(@NotNull List<BreakToDo> breaksToDoList)
 	{
@@ -91,12 +97,19 @@ public class MainTimerLoop implements Runnable
 
 		this.threadFactory = new DaemonThreadFactory();
 		this.stopped = new AtomicBoolean(false);
+		executeAtToDoList = new Vector<>(); // use a vector as it is thread safe
 	}
 
 	private MainTimerLoop(@NotNull List<BreakToDo> breakToDoList, @NotNull ActiveHours activeHours)
 	{
 		this(breakToDoList);
 		this.setActiveHours(activeHours);
+	}
+
+	private MainTimerLoop(@NotNull List<BreakToDo> breakToDoList, @NotNull List<ExecuteAtToDo> executeAtToDoList)
+	{
+		this(breakToDoList);
+		this.executeAtToDoList.addAll(executeAtToDoList);
 	}
 
 	/**
@@ -120,18 +133,42 @@ public class MainTimerLoop implements Runnable
 	 * Creates a new instance of the class {@link MainTimerLoop}
 	 *
 	 * @param todoList    the list of the list of todos to be executed in this
-	 * @param activeHours the preferred active hours
+	 * @param activeHours the active hours configured by the user
 	 * @return the new instance of the {@link MainTimerLoop} class
 	 * @throws InstantiationException if the class have already been instantiated. A single instance should be
 	 *                                created per application
 	 */
-	public static MainTimerLoop createMainTimer(@NotNull List<BreakToDo> todoList, @NotNull ActiveHours activeHours) throws InstantiationException
+	public static MainTimerLoop createMainTimer(
+		@NotNull List<BreakToDo> todoList,
+		@NotNull ActiveHours activeHours
+	) throws InstantiationException
 	{
 		if (instantiated)
 			throw new InstantiationException("A timer has already been created");
 		instantiated = true;
 
 		return new MainTimerLoop(todoList, activeHours);
+	}
+
+	/**
+	 * Creates a new instance of the class {@link MainTimerLoop}
+	 *
+	 * @param todoList          the list of the list of todos to be executed in this
+	 * @param executeAtToDoList A list of all the actions to be executed at a specific time
+	 * @return the new instance of the {@link MainTimerLoop} class
+	 * @throws InstantiationException if the class have already been instantiated. A single instance should be
+	 *                                created per application
+	 */
+	public static MainTimerLoop createMainTimer(
+		@NotNull List<BreakToDo> todoList,
+		@NotNull List<ExecuteAtToDo> executeAtToDoList
+	) throws InstantiationException
+	{
+		if (instantiated)
+			throw new InstantiationException("A timer has already been created");
+		instantiated = true;
+
+		return new MainTimerLoop(todoList, executeAtToDoList);
 	}
 
 	@Override
@@ -148,7 +185,8 @@ public class MainTimerLoop implements Runnable
 				breakToDo.postponeExecution(UPDATE_RATE_S);
 			}
 
-			ensureUserIsWorkingDuringActiveHours();
+			checkWorkingDuringActiveHours();
+			//checkToDos2Execute();
 			return;
 		}
 
@@ -164,7 +202,8 @@ public class MainTimerLoop implements Runnable
 				breakToDo.postponeExecution(UPDATE_RATE_S);
 			}
 
-			ensureUserIsWorkingDuringActiveHours();
+			checkWorkingDuringActiveHours();
+			//checkToDos2Execute();
 			return;
 		}
 
@@ -174,53 +213,97 @@ public class MainTimerLoop implements Runnable
 				|| !breakToDo.getBreakConfig().isEnabled()
 				|| !breakToDo.shouldExecuteNow(curr_s_since_epoch))
 				continue;
-			shutdown();
+			shutdownBreakThread();
 
-			breakThreadRunning = threadFactory.newThread(breakToDo);
-			breakThreadRunning.setName("Thread for " + breakToDo.getBreakConfig().getBreakType().getName());
-			breakThreadRunning.start();
+			breakThread = threadFactory.newThread(breakToDo);
+			breakThread.setName("Thread for " + breakToDo.getBreakConfig().getBreakType().getName());
+			breakThread.start();
 			breakTypeRunning = breakToDo.getBreakConfig().getBreakType();
 			break;
 		}
 
-		ensureUserIsWorkingDuringActiveHours();
+		checkWorkingDuringActiveHours();
+		//checkToDos2Execute();
 	}
 
-	private boolean isNotActiveHoursThreadRunning()
+	private boolean isThreadRunning(@Nullable Thread t)
 	{
-		return notActiveHoursThread != null && notActiveHoursThread.isAlive() && !notActiveHoursThread.isInterrupted();
+		return t != null && t.isAlive() && !t.isInterrupted();
 	}
 
-	private void ensureUserIsWorkingDuringActiveHours()
+	private void shutdownThread(@Nullable Thread t)
 	{
-		if (activeHours == null)
+		if (isThreadRunning(t))
+			t.interrupt();
+	}
+
+	private void checkWorkingDuringActiveHours()
+	{
+		if (isThreadRunning(activeHoursThread) || activeHoursToDo == null)
 			return;
 
-		// if the alerts or whatever configured hooks is currently running, do nothing
-		if (isNotActiveHoursThreadRunning())
+		ActiveHours activeHours = activeHoursToDo.getActiveHours();
+		if (!activeHours.isEnabled())
 			return;
 
-		// check if the user is still working during active hours
-		int curr_time_s = Math.toIntExact(System.currentTimeMillis() / 1_000);
-
-		// the user is working before the start of the active hours
-		if (curr_time_s < active_hours_start_cache_s) {
-			notActiveHoursThread = threadFactory.newThread(activeHours::runBeforeStart);
-			notActiveHoursThread.start();
-		} else if (curr_time_s > active_hours_end_cache_s) {
-			notActiveHoursThread = threadFactory.newThread(activeHours::runAfterEnd);
-			notActiveHoursThread.start();
+		int curr_time_s = WallClock.localNow().getHMSAsSeconds();
+		if (activeHours.isAfterEnd(curr_time_s)) {
+			activeHoursToDo.setNotificationLocation(
+				TimersManager.getPrefsIO().getNotificationPrefsIO().getNotificationPrefLocation()
+			);
+			activeHoursThread = threadFactory.newThread(activeHoursToDo::executeAfterEndHooks);
+			activeHoursThread.start();
+			activeHours.setEnabled(false); // don't show the notification again
+		} else if (activeHours.isBeforeStart(curr_time_s)) {
+			activeHoursToDo.setNotificationLocation(
+				TimersManager.getPrefsIO().getNotificationPrefsIO().getNotificationPrefLocation()
+			);
+			activeHoursThread = threadFactory.newThread(activeHoursToDo::executeBeforeStartHooks);
+			activeHoursThread.start();
+			activeHours.setEnabled(false); // don't show the notification again
 		}
+	}
+
+	private void checkToDos2Execute()
+	{
+		// if the thread is currently running or the list is null, do nothing
+		if (isThreadRunning(executeAtToDoThread))
+			return;
+
+		int curr_time_s = Math.toIntExact(System.currentTimeMillis() / 1_000);
+		List<ExecuteAtToDo> toDoByNowList = executeAtToDoList.stream()
+			.filter(toDo -> !toDo.isCancelled() && toDo.shouldExecuteNow(curr_time_s))
+			.collect(Collectors.toList());
+
+		if (toDoByNowList.isEmpty())
+			return;
+
+		if (toDoByNowList.size() > 1)
+			Loggers.getErrorLogger().log(
+				Level.WARNING,
+				"More than one To Do should be executed by now: "
+					+ toDoByNowList
+					+ ". For performance purposes, just the first To Do will be executed"
+			);
+
+		executeAtToDoThread = threadFactory.newThread(toDoByNowList.get(0));
+		executeAtToDoThread.start();
 	}
 
 	/**
 	 * Shutdowns the current break thread running
 	 * (if there is a break happening) at the time of the invocation
 	 */
-	public void shutdown()
+	public void shutdownBreakThread()
 	{
-		if (isBreakHappening())
-			breakThreadRunning.interrupt();
+		shutdownThread(breakThread);
+	}
+
+	public void shutdownAllThreads()
+	{
+		shutdownThread(breakThread);
+		shutdownThread(executeAtToDoThread);
+		shutdownThread(activeHoursThread);
 	}
 
 	/////////////
@@ -245,21 +328,9 @@ public class MainTimerLoop implements Runnable
 	public void updateBreakToDo(@NotNull BreakToDo breakToDo)
 	{
 		if (breakToDo.getBreakConfig().getBreakType() == breakTypeRunning)
-			shutdown();
+			shutdownBreakThread();
 
 		breaksToDoList.put(breakToDo.getBreakConfig().getBreakType(), breakToDo);
-	}
-
-	/**
-	 * Updates the configured active hours
-	 *
-	 * @param activeHours the new active hours
-	 */
-	public void setActiveHours(@NotNull ActiveHours activeHours)
-	{
-		this.activeHours = activeHours;
-		this.active_hours_start_cache_s = activeHours.getStart().getHMSAsSeconds();
-		this.active_hours_end_cache_s = activeHours.getEnd().getHMSAsSeconds();
 	}
 
 	/**
@@ -275,6 +346,32 @@ public class MainTimerLoop implements Runnable
 			breaksToDoList.get(breakType).reloadTimes();
 	}
 
+	/**
+	 * Updates all the values inside the {@link #executeAtToDoList} with the given new values
+	 *
+	 * @param executables the new values
+	 */
+	public void updateExecuteAtToDoList(@NotNull List<ExecuteAtToDo> executables)
+	{
+		this.executeAtToDoList.clear();
+		this.executeAtToDoList.addAll(executables);
+	}
+
+	synchronized public void setActiveHours(@NotNull ActiveHours activeHours)
+	{
+		shutdownThread(activeHoursThread);
+		activeHoursToDo = new ActiveHoursToDo(activeHours);
+		activeHoursToDo.setNotificationLocation(
+			TimersManager.getPrefsIO().getNotificationPrefsIO().getNotificationPrefLocation()
+		);
+	}
+
+	public void setActiveHoursEnabled(boolean enabled)
+	{
+		if (activeHoursToDo != null)
+			activeHoursToDo.getActiveHours().setEnabled(enabled);
+	}
+
 	/////////////
 	// getters //
 	/////////////
@@ -285,7 +382,7 @@ public class MainTimerLoop implements Runnable
 
 	public boolean isBreakHappening()
 	{
-		return breakThreadRunning != null && breakThreadRunning.isAlive() && !breakThreadRunning.isInterrupted();
+		return isThreadRunning(breakThread);
 	}
 
 	public boolean isStopped() {

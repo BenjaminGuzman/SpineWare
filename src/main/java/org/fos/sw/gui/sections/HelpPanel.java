@@ -38,12 +38,16 @@ import javax.swing.event.HyperlinkEvent;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
 
-public class HelpPanel extends JScrollPane
+public class HelpPanel extends AbstractSection
 {
 	public HelpPanel()
 	{
 		super();
+	}
 
+	@Override
+	public void initComponents()
+	{
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new GridBagLayout());
 
