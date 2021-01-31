@@ -30,11 +30,11 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.AbstractMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -131,6 +131,7 @@ public class SysTrayMenu extends JDialog
 		JButton openButton = new JButton(messagesBundle.getString("systray_open"));
 		pauseButton = new JButton(pauseStr);
 		pauseButton.setIcon(pauseIcon);
+		pauseButton.setToolTipText(messagesBundle.getString("pause_timers_tooltip"));
 
 		exitButton.addActionListener((ActionEvent evt) -> {
 			this.dispose();
@@ -143,6 +144,7 @@ public class SysTrayMenu extends JDialog
 		pauseButton.addActionListener((ActionEvent evt) -> {
 			boolean main_loop_stopped = !TimersManager.mainLoopIsStopped();
 			TimersManager.setMainLoopStopped(main_loop_stopped);
+			TimersManager.shutdownAllThreads();
 
 			pauseButton.setIcon(main_loop_stopped ? continueIcon : pauseIcon);
 			pauseButton.setText(main_loop_stopped ? continueStr : pauseStr);
@@ -216,7 +218,7 @@ public class SysTrayMenu extends JDialog
 			return;
 		}
 
-		ConcurrentHashMap<BreakType, BreakToDo> toDoList = TimersManager.getToDoList();
+		AbstractMap<BreakType, BreakToDo> toDoList = TimersManager.getToDoList();
 
 		long curr_s_since_epoch = System.currentTimeMillis() / 1_000;
 		boolean set_timer = false;
@@ -241,10 +243,10 @@ public class SysTrayMenu extends JDialog
 
 				progressBar.setString(messagesBundle.getString("notification_is_showing"));
 				progressBar.setValue(0);
-				progressBar.setMaximum(toDo.getBreakConfig().getWorkTimerSettings().getHMSAsSeconds());
+				progressBar.setMaximum(toDo.getBreakConfig().getWorkWallClock().getHMSAsSeconds());
 			}
 
-			progressBar.setMaximum(toDo.getBreakConfig().getWorkTimerSettings().getHMSAsSeconds());
+			progressBar.setMaximum(toDo.getBreakConfig().getWorkWallClock().getHMSAsSeconds());
 
 			set_timer = true;
 		}

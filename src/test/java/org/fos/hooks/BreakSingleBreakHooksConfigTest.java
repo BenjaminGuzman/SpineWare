@@ -20,7 +20,7 @@ package org.fos.hooks;
 
 import org.junit.jupiter.api.Test;
 
-class BreakHooksConfigTest
+class BreakSingleBreakHooksConfigTest
 {
 
 	static byte counter = 0;

@@ -19,42 +19,34 @@
 package org.fos.sw.gui.hooksconfig;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
-import org.fos.sw.hooks.HooksConfig;
-import org.fos.sw.prefs.timers.HooksPrefsIO;
-import org.fos.sw.timers.TimersManager;
+import org.fos.sw.hooks.SingleBreakHooksConfig;
 import org.fos.sw.timers.breaks.BreakType;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Use this class to show a JDialog with all the options & elements for the user to configure
  * <p>
  * This will configure the hooks for a single break (micro break, stretch break, day break)
  */
-public class ConfigureHooksDialog extends JDialog
+public class BreakHooksConfigDialog extends AbstractHooksConfigDialog
 {
 	// store the break type to know which configuration display (remember day break does not have break time)
 	private final BreakType breakType;
 
-	// arrays sto store start (index 0) / break (index 1) hooks panel
+	// arrays to store start (index 0) and break (index 1) hooks panel
 	private final HooksConfigPanel[] notificationHooksPanel;
 	private final HooksConfigPanel[] breakHooksPanel;
-
-	private HooksPrefsIO hooksPrefsIO;
-
-	private boolean save_configs = false;
 
 	/**
 	 * Constructs the object
@@ -63,7 +55,7 @@ public class ConfigureHooksDialog extends JDialog
 	 * @param breakType the break type, this is used to save the correct value in the correct preference while
 	 *                  saving the user preferences
 	 */
-	public ConfigureHooksDialog(Window owner, BreakType breakType)
+	public BreakHooksConfigDialog(@NotNull Window owner, BreakType breakType)
 	{
 		super(owner);
 		this.notificationHooksPanel = new HooksConfigPanel[2];
@@ -77,25 +69,15 @@ public class ConfigureHooksDialog extends JDialog
 	 * this will call {@link #setVisible(boolean)} internally
 	 * and also configure all the modality for the dialog
 	 */
+	@Override
 	public void initComponents()
 	{
-		JPanel panel = new JPanel(new BorderLayout());
+		mainPanel.add(createConfigurationsPanel(), BorderLayout.CENTER);
+		mainPanel.add(createActionsPanel(), BorderLayout.SOUTH);
 
-		panel.add(this.createConfigurationsPanel(), BorderLayout.CENTER);
-		panel.add(this.createActionsPanel(), BorderLayout.SOUTH);
+		super.configDialog();
 
-		this.setContentPane(panel);
-
-		this.setMinimumSize(new Dimension(600, 600)); // in case resizable is true
-		this.setPreferredSize(new Dimension(900, 700));
-		this.setMaximumSize(new Dimension(900, 800)); // in case resizable is true
-		this.pack();
-		this.setIconImage(SWMain.getSWIcon());
-		this.setModal(true);
-		this.setModalityType(ModalityType.APPLICATION_MODAL);
-		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		this.setTitle("SpineWare | " + SWMain.getMessagesBundle().getString("hooks_config"));
-		this.setLocationRelativeTo(this.getOwner());
+		this.setTitle("SpineWare | Breaks | " + SWMain.getMessagesBundle().getString("hooks_config"));
 		this.setVisible(true);
 	}
 
@@ -113,7 +95,6 @@ public class ConfigureHooksDialog extends JDialog
 		contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
 		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
-		hooksPrefsIO = TimersManager.getPrefsIO().getHooksPrefsIO();
 
 		String playAudio = messagesBundle.getString("play_audio");
 		String selectAudio = messagesBundle.getString("select_audio");
@@ -121,7 +102,7 @@ public class ConfigureHooksDialog extends JDialog
 		String cmd2Exec = messagesBundle.getString("cmd_to_execute");
 
 		// load configurations
-		HooksConfig notificationsHooksConf = null;
+		SingleBreakHooksConfig notificationsHooksConf = null;
 		try {
 			notificationsHooksConf = hooksPrefsIO.loadForBreak(this.breakType, true);
 		} catch (InstantiationException e) {
@@ -174,7 +155,7 @@ public class ConfigureHooksDialog extends JDialog
 		contentPanel.add(Box.createVerticalStrut(10));
 
 		if (this.breakType != BreakType.DAY_BREAK) { // the day break should not have break hooks config
-			HooksConfig breakHooksConf = null;
+			SingleBreakHooksConfig breakHooksConf = null;
 			try {
 				breakHooksConf = hooksPrefsIO.loadForBreak(this.breakType, false);
 			} catch (InstantiationException e) {
@@ -231,46 +212,19 @@ public class ConfigureHooksDialog extends JDialog
 	}
 
 	/**
-	 * Creates the actions panel
-	 * <p>
-	 * The panel will contain just two buttons, save and cancel
-	 *
-	 * @return the JPanel with the buttons added
-	 */
-	public JPanel createActionsPanel()
-	{
-		JPanel panel = new JPanel();
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
-
-		JButton saveBtn = new JButton(messagesBundle.getString("save_changes"));
-		saveBtn.setToolTipText(messagesBundle.getString("save_changes_timers_warning"));
-
-		JButton cancelBtn = new JButton(messagesBundle.getString("cancel"));
-
-		panel.add(saveBtn);
-		panel.add(cancelBtn);
-
-		this.getRootPane().setDefaultButton(saveBtn);
-
-		cancelBtn.addActionListener((ActionEvent evt) -> this.dispose());
-		saveBtn.addActionListener(this::saveConfiguration);
-
-		return panel;
-	}
-
-	/**
 	 * Invoked when the user clicks the save config button
 	 *
 	 * @param evt event to be processed
 	 */
-	private void saveConfiguration(ActionEvent evt)
+	@Override
+	protected void onClickSaveConfig(ActionEvent evt)
 	{
 		save_configs = true;
 
 		// create notification hooks configuration & save preferences
 		try {
 			hooksPrefsIO.save(
-				new HooksConfig.Builder()
+				new SingleBreakHooksConfig.Builder()
 					.isNotificationHook(true)
 					.breakType(this.breakType)
 					.startAudioIsDir(false)
@@ -295,7 +249,7 @@ public class ConfigureHooksDialog extends JDialog
 			// create break hooks configuration & save preferences
 			try {
 				hooksPrefsIO.save(
-					new HooksConfig.Builder()
+					new SingleBreakHooksConfig.Builder()
 						.isNotificationHook(false)
 						.breakType(this.breakType)
 						.startAudioIsDir(true)
@@ -317,15 +271,5 @@ public class ConfigureHooksDialog extends JDialog
 		}
 
 		this.dispose();
-	}
-
-	/**
-	 * Tells whether or not the user clicked the "save changes" button
-	 * and therefore changes should be saved
-	 *
-	 * @return true if the user clicked the button
-	 */
-	public boolean shouldSaveChanges() {
-		return save_configs;
 	}
 }

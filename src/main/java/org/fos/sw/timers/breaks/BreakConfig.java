@@ -45,7 +45,8 @@ public class BreakConfig
 	/**
 	 * This field may be null if {@link #breakType} is of type {@link BreakType#DAY_BREAK}
 	 */
-	private Optional<WallClock> breakWallClock;
+	@Nullable
+	private WallClock breakWallClock;
 	@NotNull
 	private WallClock postponeWallClock;
 	private boolean is_enabled;
@@ -60,7 +61,7 @@ public class BreakConfig
 	)
 	{
 		this.workWallClock = Objects.requireNonNull(workWallClock);
-		this.breakWallClock = Optional.ofNullable(breakWallClock);
+		this.breakWallClock = breakWallClock;
 		this.postponeWallClock = Objects.requireNonNull(postponeWallClock);
 		this.breakType = Objects.requireNonNull(breakType);
 		this.is_enabled = is_enabled;
@@ -72,7 +73,7 @@ public class BreakConfig
 		return this.breakType;
 	}
 
-	public WallClock getWorkTimerSettings()
+	public @NotNull WallClock getWorkWallClock()
 	{
 		return workWallClock;
 	}
@@ -82,17 +83,17 @@ public class BreakConfig
 		this.workWallClock = workWallClock;
 	}
 
-	public Optional<WallClock> getBreakTimerSettings()
+	public Optional<WallClock> getBreakWallClock()
 	{
-		return breakWallClock;
+		return Optional.ofNullable(breakWallClock);
 	}
 
 	public void setBreakTimerSettings(@Nullable WallClock breakWallClock)
 	{
-		this.breakWallClock = Optional.ofNullable(breakWallClock);
+		this.breakWallClock = breakWallClock;
 	}
 
-	public WallClock getPostponeTimerSettings()
+	public @NotNull WallClock getPostponeWallClock()
 	{
 		return this.postponeWallClock;
 	}
@@ -119,11 +120,11 @@ public class BreakConfig
 			newConfig.workWallClock.getMinutes(),
 			newConfig.workWallClock.getSeconds()
 		);
-		if (newConfig.breakWallClock.isPresent() && breakWallClock.isPresent()) {
-			this.breakWallClock.get().updateAll(
-				newConfig.breakWallClock.get().getHours(),
-				newConfig.breakWallClock.get().getMinutes(),
-				newConfig.breakWallClock.get().getSeconds()
+		if (newConfig.breakWallClock != null && breakWallClock != null) {
+			this.breakWallClock.updateAll(
+				newConfig.breakWallClock.getHours(),
+				newConfig.breakWallClock.getMinutes(),
+				newConfig.breakWallClock.getSeconds()
 			);
 		}
 		this.postponeWallClock.updateAll(

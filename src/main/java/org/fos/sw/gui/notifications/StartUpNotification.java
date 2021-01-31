@@ -25,12 +25,21 @@ import org.fos.sw.SWMain;
 import org.fos.sw.core.NotificationLocation;
 import org.fos.sw.gui.Fonts;
 
-public class StartUpNotification extends Notification
+public class StartUpNotification extends AbstractNotification
 {
 	public StartUpNotification()
 	{
 		super(4_000, NotificationLocation.BOTTOM_RIGHT);
 
+		initComponents();
+	}
+
+	/**
+	 * Use this function to initialize and add the compoenents to the {@link #mainPanel}
+	 */
+	@Override
+	protected void initComponents()
+	{
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
 		gridBagConstraints.ipadx = 5;
 		gridBagConstraints.ipady = 5;
@@ -58,5 +67,4 @@ public class StartUpNotification extends Notification
 
 		super.showJDialog();
 	}
-
 }

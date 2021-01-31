@@ -77,7 +77,7 @@ public class TimeInputPanel extends JPanel
 		this.minRecommendedTime = minRecommendedTime;
 		this.maxRecommendedTime = maxRecommendedTime;
 
-		hoursSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[0], 0, 16, 1));
+		hoursSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[0], 0, 23, 1));
 		minutesSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[1], 0, 59, 1));
 		secondsSpinner = new JSpinner(new SpinnerNumberModel(preferred_hms[2], 0, 59, 1));
 

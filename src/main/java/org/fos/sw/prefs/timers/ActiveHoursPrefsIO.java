@@ -29,6 +29,7 @@ public class ActiveHoursPrefsIO extends PrefsIO
 {
 	private static final String ACTIVE_HOURS_START = "active hours start";
 	private static final String ACTIVE_HOURS_END = "active hours end";
+	private static final String ACTIVE_HOURS_ENABLED = "active hours enabled";
 
 	ActiveHoursPrefsIO(@NotNull Preferences prefs)
 	{
@@ -44,6 +45,19 @@ public class ActiveHoursPrefsIO extends PrefsIO
 	{
 		prefs.putInt(ACTIVE_HOURS_START, activeHours.getStart().getHMSAsSeconds());
 		prefs.putInt(ACTIVE_HOURS_END, activeHours.getEnd().getHMSAsSeconds());
+		prefs.putBoolean(ACTIVE_HOURS_ENABLED, activeHours.isEnabled());
+
+		flushPrefs();
+	}
+
+	/**
+	 * Saves the enabled preference for the active hours
+	 *
+	 * @param enabled true if the active hours should be enabled
+	 */
+	public void setActiveHoursEnabled(boolean enabled)
+	{
+		prefs.putBoolean(ACTIVE_HOURS_ENABLED, enabled);
 
 		flushPrefs();
 	}
@@ -54,17 +68,24 @@ public class ActiveHoursPrefsIO extends PrefsIO
 	 *
 	 * @return the loaded active hours or null
 	 */
-	public Optional<ActiveHours> loadActiveHours()
+	public Optional<ActiveHours> loadActiveHours(HooksPrefsIO hooksPrefsIO)
 	{
+		syncPrefs();
+
 		int active_hours_start = prefs.getInt(ACTIVE_HOURS_START, -1);
 		int active_hours_end = prefs.getInt(ACTIVE_HOURS_END, -1);
 
 		if (active_hours_start == -1 || active_hours_end == -1)
 			return Optional.empty();
 
-		return Optional.of(new ActiveHours(
-			WallClock.from(active_hours_start),
-			WallClock.from(active_hours_end)
-		));
+		return Optional.of(
+			new ActiveHours(
+				WallClock.from(active_hours_start),
+				WallClock.from(active_hours_end),
+				prefs.getBoolean(ACTIVE_HOURS_ENABLED, false)
+			)
+				.setBeforeStartHooks(hooksPrefsIO.loadForActiveHours(false))
+				.setAfterEndHooks(hooksPrefsIO.loadForActiveHours(true))
+		);
 	}
 }

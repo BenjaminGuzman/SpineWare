@@ -25,7 +25,7 @@ import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import org.fos.sw.Loggers;
 import org.fos.sw.hooks.BreakHooksConfig;
-import org.fos.sw.hooks.HooksConfig;
+import org.fos.sw.hooks.SingleBreakHooksConfig;
 import org.fos.sw.prefs.PrefsIO;
 import org.fos.sw.timers.WallClock;
 import org.fos.sw.timers.breaks.BreakConfig;
@@ -76,7 +76,7 @@ public class TimersPrefsIO extends PrefsIO
 	 *                  associated with that name
 	 * @return a {@link BreakConfig} object constructed from the preferences values
 	 */
-	private BreakConfig loadBreakConfig(final BreakType breakType)
+	private BreakConfig loadBreakConfig(BreakType breakType)
 	{
 		String breakName = breakType.getName();
 		boolean is_enabled = prefs.getBoolean(breakName + ENABLED, false);
@@ -87,7 +87,7 @@ public class TimersPrefsIO extends PrefsIO
 		int postpone_time = prefs.getInt(breakName + POSTPONE_TIME, 0);
 
 		// load hooks settings
-		HooksConfig notifHooksConf;
+		SingleBreakHooksConfig notifHooksConf;
 		try {
 			notifHooksConf = hooksPrefsIO.loadForBreak(breakType, true);
 		} catch (InstantiationException e) {
@@ -100,7 +100,7 @@ public class TimersPrefsIO extends PrefsIO
 			return null;
 		}
 
-		HooksConfig breakHooksConf = null;
+		SingleBreakHooksConfig breakHooksConf = null;
 		try {
 			breakHooksConf = hooksPrefsIO.loadForBreak(breakType, false);
 		} catch (InstantiationException e) {
@@ -150,13 +150,13 @@ public class TimersPrefsIO extends PrefsIO
 		// save timer settings
 		prefs.putInt(
 			breakName + WORKING_TIME,
-			breakConfig.getWorkTimerSettings().getHMSAsSeconds()
+			breakConfig.getWorkWallClock().getHMSAsSeconds()
 		);
 		prefs.putInt(
 			breakName + POSTPONE_TIME,
-			breakConfig.getPostponeTimerSettings().getHMSAsSeconds()
+			breakConfig.getPostponeWallClock().getHMSAsSeconds()
 		);
-		breakConfig.getBreakTimerSettings().ifPresent(
+		breakConfig.getBreakWallClock().ifPresent(
 			wallClock -> prefs.putInt(breakName + BREAK_TIME, wallClock.getHMSAsSeconds())
 		);
 

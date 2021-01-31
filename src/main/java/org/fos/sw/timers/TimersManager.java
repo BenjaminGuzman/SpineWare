@@ -30,6 +30,7 @@ import org.fos.sw.timers.breaks.BreakConfig;
 import org.fos.sw.timers.breaks.BreakToDo;
 import org.fos.sw.timers.breaks.BreakType;
 import org.fos.sw.utils.DaemonThreadFactory;
+import org.jetbrains.annotations.NotNull;
 
 public class TimersManager
 {
@@ -68,7 +69,7 @@ public class TimersManager
 	 * problems)
 	 *
 	 * @param create_main_timer_loop if true the main timer loop will be created
-	 * @throws InstantiationException if you call this method more than once with a true parameter
+	 * @throws RuntimeException if you call this method more than once with a true parameter
 	 */
 	public static void init(boolean create_main_timer_loop) throws InstantiationException
 	{
@@ -78,13 +79,15 @@ public class TimersManager
 		prefsIO = new TimersPrefsIO();
 		initialized = true;
 		List<BreakToDo> toDoList = loadAndCreateBreakToDos();
-		Optional<ActiveHours> activeHours = prefsIO.getActiveHoursPrefsIO().loadActiveHours();
+		Optional<ActiveHours> activeHoursOptional = prefsIO.getActiveHoursPrefsIO().loadActiveHours(
+			prefsIO.getHooksPrefsIO()
+		);
 
 		if (!create_main_timer_loop)
 			return;
 
-		if (activeHours.isPresent())
-			mainTimerLoop = MainTimerLoop.createMainTimer(toDoList, activeHours.get());
+		if (activeHoursOptional.isPresent())
+			mainTimerLoop = MainTimerLoop.createMainTimer(toDoList, activeHoursOptional.get());
 		else
 			mainTimerLoop = MainTimerLoop.createMainTimer(toDoList);
 	}
@@ -103,6 +106,11 @@ public class TimersManager
 			MainTimerLoop.UPDATE_RATE_S,
 			TimeUnit.SECONDS
 		);
+	}
+
+	public static void shutdownAllThreads()
+	{
+		mainTimerLoop.shutdownAllThreads();
 	}
 
 	/**
@@ -140,7 +148,7 @@ public class TimersManager
 	 */
 	public static void killAllTimers()
 	{
-		mainTimerLoop.shutdown();
+		mainTimerLoop.shutdownBreakThread();
 		if (mainLoopExecutor != null)
 			mainLoopExecutor.shutdownNow();
 	}
@@ -164,7 +172,7 @@ public class TimersManager
 	 *
 	 * @param breakConfig the new break configuration
 	 */
-	public static void saveBreakConfig(BreakConfig breakConfig)
+	public static void saveBreakConfig(@NotNull BreakConfig breakConfig)
 	{
 		// update value in preferences
 		prefsIO.saveBreakConfig(breakConfig);
@@ -191,6 +199,24 @@ public class TimersManager
 			.stream()
 			.map(BreakToDo::from)
 			.forEach(mainTimerLoop::updateBreakToDo);
+	}
+
+	public static void saveActiveHours(@NotNull ActiveHours activeHours) throws InstantiationException
+	{
+		// update value in preferences
+		prefsIO.getActiveHoursPrefsIO().saveActiveHoursPref(activeHours);
+
+		// update value in memory
+		mainTimerLoop.setActiveHours(activeHours);
+	}
+
+	public static void setActiveHoursEnabled(boolean enabled)
+	{
+		// update value in preferences
+		prefsIO.getActiveHoursPrefsIO().setActiveHoursEnabled(enabled);
+
+		// update value in memory
+		mainTimerLoop.setActiveHoursEnabled(enabled);
 	}
 
 	/////////////
