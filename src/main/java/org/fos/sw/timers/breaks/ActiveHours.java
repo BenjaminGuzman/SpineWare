@@ -18,11 +18,19 @@
 
 package org.fos.sw.timers.breaks;
 
+import org.fos.sw.hooks.HooksConfig;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+/**
+ * Wrapper class to have the start and end of the active hours for the user
+ * <p>
+ * it also includes whether or not the user disabled this feature
+ */
 public class ActiveHours
 {
+	private boolean is_enabled;
 	/**
 	 * When the active hours start
 	 * this should be less than or equal to {@link #end}
@@ -37,27 +45,78 @@ public class ActiveHours
 	@NotNull
 	private final WallClock end;
 
+	@Nullable
+	private HooksConfig beforeStartHooks;
+	@Nullable
+	private HooksConfig afterEndHooks;
 
 	public ActiveHours(@NotNull WallClock start, @NotNull WallClock end)
 	{
+		this(start, end, true);
+	}
+
+	public ActiveHours(@NotNull WallClock start, @NotNull WallClock end, boolean is_enabled)
+	{
 		this.start = start;
 		this.end = end;
+		this.is_enabled = is_enabled;
 	}
 
 	/**
-	 * Method to invoke if the current local time is before the specified in {@link #start}
+	 * @param curr_time the local time as seconds
+	 * @return true if the curr_time is before (is less than) the start time
 	 */
-	public void runBeforeStart()
+	public boolean isBeforeStart(long curr_time)
 	{
-
+		return curr_time < start.getHMSAsSeconds();
 	}
 
 	/**
-	 * Method to invoke if the current local time is after the specified in {@link #end}
+	 * @param curr_time the local time as seconds
+	 * @return true if the curr_time is after (is greater than) the end time
 	 */
-	public void runAfterEnd()
+	public boolean isAfterEnd(long curr_time)
 	{
+		return curr_time > end.getHMSAsSeconds();
+	}
 
+	/**
+	 * @param curr_time the local time as seconds
+	 * @return true if the curr_time is between the start and end time
+	 */
+	public boolean isWithinActiveHours(long curr_time)
+	{
+		return !isBeforeStart(curr_time) && !isAfterEnd(curr_time);
+	}
+
+	/**
+	 * @return true if the local time is within the start and end time
+	 */
+	public boolean isWithinActiveHours()
+	{
+		return isWithinActiveHours(WallClock.localNow().getHMSAsSeconds());
+	}
+
+	public @Nullable HooksConfig getBeforeStartHooks()
+	{
+		return beforeStartHooks;
+	}
+
+	public ActiveHours setBeforeStartHooks(HooksConfig beforeStartHooks)
+	{
+		this.beforeStartHooks = beforeStartHooks;
+		return this;
+	}
+
+	public @Nullable HooksConfig getAfterEndHooks()
+	{
+		return afterEndHooks;
+	}
+
+	public ActiveHours setAfterEndHooks(HooksConfig afterEndHooks)
+	{
+		this.afterEndHooks = afterEndHooks;
+		return this;
 	}
 
 	public @NotNull WallClock getStart()
@@ -68,5 +127,15 @@ public class ActiveHours
 	public @NotNull WallClock getEnd()
 	{
 		return end;
+	}
+
+	public boolean isEnabled()
+	{
+		return is_enabled;
+	}
+
+	public void setEnabled(boolean is_enabled)
+	{
+		this.is_enabled = is_enabled;
 	}
 }

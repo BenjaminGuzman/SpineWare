@@ -75,6 +75,13 @@ public class NotificationPrefsIO extends PrefsIO
 		return notificationLocationCache;
 	}
 
+	/**
+	 * Gets the notification location preference without querying the preferences
+	 * It will return the cached value from previous reads, if there were no previous reads it will return
+	 * {@link NotificationLocation#BOTTOM_RIGHT}
+	 *
+	 * @return the notification location preference
+	 */
 	public NotificationLocation getNotificationPrefLocation()
 	{
 		return getNotificationPrefLocation(false);

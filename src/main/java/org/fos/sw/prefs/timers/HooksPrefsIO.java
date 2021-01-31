@@ -18,12 +18,10 @@
 
 package org.fos.sw.prefs.timers;
 
-import java.util.logging.Level;
-import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-import org.fos.sw.Loggers;
 import org.fos.sw.hooks.BreakHooksConfig;
 import org.fos.sw.hooks.HooksConfig;
+import org.fos.sw.hooks.SingleBreakHooksConfig;
 import org.fos.sw.prefs.PrefsIO;
 import org.fos.sw.timers.breaks.BreakType;
 import org.jetbrains.annotations.NotNull;
@@ -44,28 +42,24 @@ public class HooksPrefsIO extends PrefsIO
 	}
 
 	/**
-	 * Loads a {@link HooksConfig} object from preferences
+	 * Loads a {@link SingleBreakHooksConfig} object from preferences
 	 *
 	 * @param breakType            the break type for which the preferences will be loaded
 	 * @param is_notification_hook tells if the preference you're looking for is a notification hook or a break hook
 	 * @return the created object from preferences
 	 */
-	public HooksConfig loadForBreak(@NotNull BreakType breakType, boolean is_notification_hook) throws InstantiationException
+	public SingleBreakHooksConfig loadForBreak(@NotNull BreakType breakType, boolean is_notification_hook) throws InstantiationException
 	{
-		try {
-			prefs.sync();
-		} catch (BackingStoreException e) {
-			Loggers.getDebugLogger().log(Level.WARNING, "Couldn't sync preferences", e);
-		}
+		syncPrefs();
 
-		String prefix = hookPrefPrefix(breakType, is_notification_hook);
+		String prefix = hookPrefBreakPrefix(breakType, is_notification_hook);
 
-		return new HooksConfig.Builder()
+		return new SingleBreakHooksConfig.Builder()
+			.breakType(breakType)
 			.isNotificationHook(is_notification_hook)
 			.startEnabled(prefs.getBoolean(prefix + START_ENABLED, false))
 			.endEnabled(prefs.getBoolean(prefix + END_ENABLED, false))
 			.startAudioIsDir(prefs.getBoolean(prefix + START_AUDIO_IS_DIR, false))
-			.breakType(breakType)
 			.onStartAudioStr(prefs.get(prefix + ON_START_AUDIO_STR, null))
 			.onEndAudioStr(prefs.get(prefix + ON_END_AUDIO_STR, null))
 			.onStartCmdStr(prefs.get(prefix + ON_START_CMD_STR, null))
@@ -73,18 +67,46 @@ public class HooksPrefsIO extends PrefsIO
 			.createHooksConfig();
 	}
 
+	public HooksConfig loadForActiveHours(boolean after_active_hours)
+	{
+		syncPrefs();
+		String prefix = hookPrefActiveHoursPrefix(after_active_hours);
+
+		return new HooksConfig.Builder()
+			.isNotificationHook(true)
+			.startEnabled(prefs.getBoolean(prefix + START_ENABLED, false))
+			.endEnabled(prefs.getBoolean(prefix + END_ENABLED, false))
+			.startAudioIsDir(prefs.getBoolean(prefix + START_AUDIO_IS_DIR, false))
+			.onStartAudioStr(prefs.get(prefix + ON_START_AUDIO_STR, null))
+			.onEndAudioStr(prefs.get(prefix + ON_END_AUDIO_STR, null))
+			.onStartCmdStr(prefs.get(prefix + ON_START_CMD_STR, null))
+			.onEndCmdStr(prefs.get(prefix + ON_END_CMD_STR, null))
+			.createHooksConfig();
+
+	}
+
+	public void saveActiveHoursHooks(@NotNull HooksConfig hooksConfig, boolean after_active_hours)
+	{
+		save(hooksConfig, hookPrefActiveHoursPrefix(after_active_hours));
+	}
+
+	public void save(@NotNull SingleBreakHooksConfig breakHooksConfig)
+	{
+		save(
+			breakHooksConfig,
+			hookPrefBreakPrefix(breakHooksConfig.getBreakType(), breakHooksConfig.isNotificationHook())
+		);
+	}
+
 	/**
-	 * Saves the values for the given {@link HooksConfig} in the preferences
+	 * Saves the values for the given {@link SingleBreakHooksConfig} in the preferences
 	 *
 	 * @param hooksConfig the object to be saved in the preferences
+	 * @param prefix      the prefix for the preference name. This value will vary according to the
+	 *                    {@link HooksConfig} object
 	 */
-	public void save(@NotNull HooksConfig hooksConfig)
+	public void save(@NotNull HooksConfig hooksConfig, @NotNull String prefix)
 	{
-		Preferences prefs = Preferences.userNodeForPackage(this.getClass());
-
-		// add a prefix to each key to avoid collisions
-		String prefix = hookPrefPrefix(hooksConfig.getBreakType(), hooksConfig.isNotificationHook());
-
 		prefs.putBoolean(prefix + START_ENABLED, hooksConfig.isStartEnabled());
 		prefs.putBoolean(prefix + END_ENABLED, hooksConfig.isEndEnabled());
 		prefs.putBoolean(prefix + START_AUDIO_IS_DIR, hooksConfig.isStartAudioADirectory());
@@ -121,14 +143,26 @@ public class HooksPrefsIO extends PrefsIO
 	}
 
 	/**
-	 * Constructs the prefix used to save/load preferences
+	 * Constructs the prefix used to save/load break hooks preferences
 	 *
 	 * @param breakType            the break type for the saved preferences
 	 * @param is_notification_hook this indicates whether or not the saved preferences are for a notification
 	 * @return the prefix
 	 */
-	private String hookPrefPrefix(@NotNull BreakType breakType, boolean is_notification_hook)
+	private String hookPrefBreakPrefix(@NotNull BreakType breakType, boolean is_notification_hook)
 	{
 		return breakType.getName() + (is_notification_hook ? " notification " : " break ") + "hooks ";
+	}
+
+	/**
+	 * Constructs the prefix used to save/load active hours hooks preferences
+	 *
+	 * @param is_after_active_hours this indicates whether or not the saved preferences are for the after active
+	 *                              hours hooks
+	 * @return the prefix
+	 */
+	private String hookPrefActiveHoursPrefix(boolean is_after_active_hours)
+	{
+		return is_after_active_hours ? "after active hours hooks " : "before active hours hooks ";
 	}
 }

@@ -19,18 +19,15 @@
 package org.fos.sw.hooks;
 
 import java.util.Objects;
-import org.fos.sw.timers.breaks.BreakType;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class HooksConfig
+public class HooksConfig
 {
-	private boolean start_audio_is_dir;
-	@NotNull
-	private BreakType breakType;
-	private boolean is_notification_hook;
+	protected boolean start_audio_is_dir;
+	protected boolean is_notification_hook;
 
-	private boolean start_enabled; // flag to know if the start hooks should execute
-	private boolean end_enabled; // flag to know if the end hooks should execute
+	protected boolean start_enabled; // flag to know if the start hooks should execute
+	protected boolean end_enabled; // flag to know if the end hooks should execute
 
 	/**
 	 * If {@link #start_audio_is_dir} is true this attribute will hold the directory path
@@ -45,39 +42,42 @@ public final class HooksConfig
 	 * <p>
 	 * If this is null, then no sound should be played
 	 */
-	private String onStartAudioStr;
+	@Nullable
+	protected String onStartAudioStr;
 
 	/**
 	 * Path to the file to be played on notification/break termination
 	 * <p>
 	 * This WILL always contain a filepath regardless the {@link #start_audio_is_dir}
+	 * If this is null, no sound should be played
 	 */
-	private String onEndAudioStr;
+	@Nullable
+	protected String onEndAudioStr;
 
-	// the command (and arguments) to execute on break/notification start
-	private String onStartCmdStr;
+	/**
+	 * the command (and arguments) to execute on break/notification start
+	 * If this is null, no command will be executed
+	 */
+	@Nullable
+	protected String onStartCmdStr;
 
-	// the command (and arguments) to execute on break/notification termination
-	private String onEndCmdStr;
+	/**
+	 * the command (and arguments) to execute on break/notification termination
+	 */
+	@Nullable
+	protected String onEndCmdStr;
 
 	public HooksConfig(
 		boolean start_audio_is_dir,
-		String onStartAudioStr,
-		String onEndAudioStr,
-		String onStartCmdStr,
-		String onEndCmdStr,
+		@Nullable String onStartAudioStr,
+		@Nullable String onEndAudioStr,
+		@Nullable String onStartCmdStr,
+		@Nullable String onEndCmdStr,
 		boolean start_enabled,
 		boolean end_enabled,
-		@NotNull BreakType breakType,
 		boolean is_notification_hook
-	) throws InstantiationException
+	)
 	{
-		if (breakType == BreakType.DAY_BREAK && onEndAudioStr != null && onEndCmdStr != null && end_enabled)
-			throw new InstantiationException("If break type is DAY BREAK, there is no ending parameters");
-		if (is_notification_hook && start_audio_is_dir)
-			throw new InstantiationException("If this hook is for notification, the audio MUST be a file," +
-				" not a directory");
-
 		this.start_audio_is_dir = start_audio_is_dir;
 		this.onStartAudioStr = onStartAudioStr;
 		this.onEndAudioStr = onEndAudioStr;
@@ -85,7 +85,6 @@ public final class HooksConfig
 		this.onEndCmdStr = onEndCmdStr;
 		this.start_enabled = start_enabled;
 		this.end_enabled = end_enabled;
-		this.breakType = Objects.requireNonNull(breakType);
 		this.is_notification_hook = is_notification_hook;
 	}
 
@@ -98,7 +97,6 @@ public final class HooksConfig
 		this.onEndCmdStr = config.onEndCmdStr;
 		this.start_enabled = config.start_enabled;
 		this.end_enabled = config.end_enabled;
-		this.breakType = config.breakType;
 		this.is_notification_hook = config.is_notification_hook;
 	}
 
@@ -127,29 +125,24 @@ public final class HooksConfig
 		return start_audio_is_dir;
 	}
 
-	public String getOnStartAudioStr()
+	public @Nullable String getOnStartAudioStr()
 	{
 		return onStartAudioStr;
 	}
 
-	public String getOnEndAudioStr()
+	public @Nullable String getOnEndAudioStr()
 	{
 		return onEndAudioStr;
 	}
 
-	public String getOnStartCmdStr()
+	public @Nullable String getOnStartCmdStr()
 	{
 		return onStartCmdStr;
 	}
 
-	public String getOnEndCmdStr()
+	public @Nullable String getOnEndCmdStr()
 	{
 		return onEndCmdStr;
-	}
-
-	public @NotNull BreakType getBreakType()
-	{
-		return this.breakType;
 	}
 
 	public boolean isNotificationHook()
@@ -158,11 +151,26 @@ public final class HooksConfig
 	}
 
 	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		HooksConfig that = (HooksConfig) o;
+		return start_audio_is_dir == that.start_audio_is_dir
+			&& is_notification_hook == that.is_notification_hook
+			&& start_enabled == that.start_enabled
+			&& end_enabled == that.end_enabled
+			&& Objects.equals(onStartAudioStr, that.onStartAudioStr)
+			&& Objects.equals(onEndAudioStr, that.onEndAudioStr)
+			&& Objects.equals(onStartCmdStr, that.onStartCmdStr)
+			&& Objects.equals(onEndCmdStr, that.onEndCmdStr);
+	}
+
+	@Override
 	public String toString()
 	{
 		return "HooksConfig{" +
 			"start_audio_is_dir=" + start_audio_is_dir +
-			", breakType=" + breakType +
 			", start_enabled=" + start_enabled +
 			", end_enabled=" + end_enabled +
 			", onStartAudioStr='" + onStartAudioStr + '\'' +
@@ -176,7 +184,6 @@ public final class HooksConfig
 	{
 		private boolean start_audio_is_dir;
 		private boolean is_notification_hook;
-		private BreakType breakType;
 		private boolean start_enabled;
 		private boolean end_enabled;
 
@@ -220,12 +227,6 @@ public final class HooksConfig
 			return this;
 		}
 
-		public Builder breakType(BreakType breakType)
-		{
-			this.breakType = breakType;
-			return this;
-		}
-
 		public Builder startEnabled(boolean is_enabled)
 		{
 			this.start_enabled = is_enabled;
@@ -238,31 +239,31 @@ public final class HooksConfig
 			return this;
 		}
 
-		public Builder onStartAudioStr(String onStartAudioStr)
+		public Builder onStartAudioStr(@Nullable String onStartAudioStr)
 		{
 			this.onStartAudioStr = onStartAudioStr;
 			return this;
 		}
 
-		public Builder onEndAudioStr(String onEndAudioStr)
+		public Builder onEndAudioStr(@Nullable String onEndAudioStr)
 		{
 			this.onEndAudioStr = onEndAudioStr;
 			return this;
 		}
 
-		public Builder onStartCmdStr(String onStartCmdStr)
+		public Builder onStartCmdStr(@Nullable String onStartCmdStr)
 		{
 			this.onStartCmdStr = onStartCmdStr;
 			return this;
 		}
 
-		public Builder onEndCmdStr(String onEndCmdStr)
+		public Builder onEndCmdStr(@Nullable String onEndCmdStr)
 		{
 			this.onEndCmdStr = onEndCmdStr;
 			return this;
 		}
 
-		public HooksConfig createHooksConfig() throws InstantiationException
+		public HooksConfig createHooksConfig()
 		{
 			return new HooksConfig(
 				this.start_audio_is_dir,
@@ -272,7 +273,6 @@ public final class HooksConfig
 				this.onEndCmdStr,
 				this.start_enabled,
 				this.end_enabled,
-				this.breakType,
 				this.is_notification_hook
 			);
 		}

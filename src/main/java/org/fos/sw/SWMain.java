@@ -279,6 +279,7 @@ public class SWMain
 	{
 		Loggers.getDebugLogger().log(Level.INFO, "Shutting down...");
 		mainFrame.dispose(); // close the main JFrame
+		TimersManager.shutdownAllThreads(); // shutdown all threads
 		TimersManager.killAllTimers(); // stop all timers
 
 		//System.exit(0); // this is not needed, when closing all windows and killing all timers, the JVM

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.fos.sw.SWMain;
 import org.fos.sw.hooks.BreakHooksConfig;
-import org.fos.sw.hooks.HooksConfig;
+import org.fos.sw.hooks.SingleBreakHooksConfig;
 import org.fos.sw.timers.MainTimerLoop;
 import org.fos.sw.timers.TimersManager;
 import org.fos.sw.timers.WallClock;
@@ -67,10 +67,10 @@ class MainTimerLoopTest
 				.breakTimerSettings(WallClock.from(5))
 				.workTimerSettings(WallClock.from(5))
 				.postponeTimerSettings(WallClock.from(5))
-				.hooksConfig(new BreakHooksConfig(new HooksConfig(
+				.hooksConfig(new BreakHooksConfig(new SingleBreakHooksConfig(
 					false, null, null,
 					null, null, false,
-					false, BreakType.STRETCH_BREAK, false
+					false, false, BreakType.STRETCH_BREAK
 				), null
 				))
 				.breakType(BreakType.STRETCH_BREAK)

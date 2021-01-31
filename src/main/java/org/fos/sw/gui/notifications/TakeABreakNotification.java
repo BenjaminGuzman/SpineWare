@@ -39,7 +39,7 @@ import org.fos.sw.timers.breaks.BreakDecision;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TakeABreakNotification extends Notification
+public class TakeABreakNotification extends AbstractNotification
 {
 	// Milliseconds for the notification timeout
 	public static final int MS_NOTIFICATION_TIMEOUT = 30_000;
@@ -63,29 +63,32 @@ public class TakeABreakNotification extends Notification
 	@Nullable
 	private WallClock postponeTimeOverride;
 
-	private volatile boolean pause_countdown;
+	@NotNull
+	private final String takeABreakMessage;
+	private final boolean is_not_day_limit_notification;
+	private boolean pause_countdown;
+
 
 	public TakeABreakNotification(
-		final String takeABreakMessage,
+		final @NotNull String takeABreakMessage,
 		final CountDownLatch countDownLatch,
-		final boolean is_not_day_limit_notification,
+		boolean is_not_day_limit_notification,
 		final NotificationLocation notificationLocation,
 		final @Nullable Runnable onShown,
 		final @Nullable Runnable onDisposed
 	)
 	{
 		this(takeABreakMessage, countDownLatch, is_not_day_limit_notification, notificationLocation);
-		this.onShown = onShown;
-		this.onDisposed = onDisposed;
+		super.onShown = onShown;
+		super.onDisposed = onDisposed;
 
-		if (this.onShown != null)
-			this.onShown.run();
+		initComponents();
 	}
 
 	public TakeABreakNotification(
-		final String takeABreakMessage,
+		final @NotNull String takeABreakMessage,
 		final @NotNull CountDownLatch countDownLatch,
-		final boolean is_not_day_limit_notification,
+		boolean is_not_day_limit_notification,
 		final NotificationLocation notificationLocation
 	)
 	{
@@ -94,11 +97,20 @@ public class TakeABreakNotification extends Notification
 			notificationLocation
 		);
 
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
-
 		this.countDownLatch = countDownLatch;
+		this.takeABreakMessage = takeABreakMessage;
+		this.is_not_day_limit_notification = is_not_day_limit_notification;
+		remaining_seconds = MS_NOTIFICATION_TIMEOUT / 1_000;
+		progressBarCountDown = new JProgressBar(0, remaining_seconds);
+	}
 
-		this.remaining_seconds = MS_NOTIFICATION_TIMEOUT / 1_000;
+	/**
+	 * Use this function to initialize and add the components to the {@link #mainPanel}
+	 */
+	@Override
+	protected void initComponents()
+	{
+		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
 
 		// create take a break label
 		JLabel takeABreakLabel = new JLabel(takeABreakMessage);
@@ -134,13 +146,12 @@ public class TakeABreakNotification extends Notification
 		buttonsPanel.add(dismissButton);
 
 		// create the progress bar
-		this.progressBarCountDown = new JProgressBar(0, this.remaining_seconds);
-		this.progressBarCountDown.setValue(this.remaining_seconds);
-		this.progressBarCountDown.setString(this.remaining_seconds + "s");
-		this.progressBarCountDown.setStringPainted(true);
-		this.progressBarCountDown.setBorderPainted(false);
-		this.progressBarCountDown.setBackground(Colors.RED_WINE);
-		this.progressBarCountDown.setForeground(Colors.GREEN_DARK);
+		progressBarCountDown.setValue(remaining_seconds);
+		progressBarCountDown.setString(remaining_seconds + "s");
+		progressBarCountDown.setStringPainted(true);
+		progressBarCountDown.setBorderPainted(false);
+		progressBarCountDown.setBackground(Colors.RED_WINE);
+		progressBarCountDown.setForeground(Colors.GREEN_DARK);
 
 		GridBagConstraints gridBagConstraints = new GridBagConstraints();
 		gridBagConstraints.ipadx = 5;
@@ -166,22 +177,22 @@ public class TakeABreakNotification extends Notification
 			gridBagConstraints.gridx = 1;
 			gridBagConstraints.gridy = 2;
 			gridBagConstraints.weightx = 2;
-			super.mainPanel.add(this.progressBarCountDown, gridBagConstraints);
+			super.mainPanel.add(progressBarCountDown, gridBagConstraints);
 
-			this.countDownTimer = new Timer(1_000, (ActionEvent evt) -> {
+			countDownTimer = new Timer(1_000, (ActionEvent evt) -> {
 				if (pause_countdown)
 					return;
 
-				if (this.remaining_seconds <= 0) {
-					this.dispose();
+				if (remaining_seconds <= 0) {
+					dispose();
 					return;
 				}
 
-				String str = --this.remaining_seconds + "s";
-				this.progressBarCountDown.setString(str);
-				this.progressBarCountDown.setValue(this.remaining_seconds);
+				String str = --remaining_seconds + "s";
+				progressBarCountDown.setString(str);
+				progressBarCountDown.setValue(remaining_seconds);
 			});
-			this.countDownTimer.start();
+			countDownTimer.start();
 		}
 		super.showJDialog();
 	}

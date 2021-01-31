@@ -43,7 +43,7 @@ import org.fos.sw.SWMain;
 import org.fos.sw.core.NotificationLocation;
 import org.jetbrains.annotations.Nullable;
 
-public class Notification extends JDialog
+public abstract class AbstractNotification extends JDialog
 {
 	protected static ImageIcon swIcon; // static to avoid reading the image each time the notification is shown
 	private final int dispose_timeout_ms;
@@ -51,19 +51,30 @@ public class Notification extends JDialog
 	protected JLabel swIconLabel; // icon that contains the SW image
 	protected JButton closeBtn; // button to close the notification
 	protected JPanel mainPanel; // panel that will contain everything in the JDialog
+
+	/**
+	 * runnable to execute when the notification is shown
+	 * this class will call {@link Runnable#run()} when {@link #showJDialog()} is called
+	 */
 	@Nullable
-	protected Runnable onShown; // runnable when the notification is shown
+	protected Runnable onShown;
+
+	/**
+	 * runnable to execute when the notification is disposed
+	 * this class will NOT call the {@link Runnable#run()} when {@link #dispose()} is called
+	 */
 	@Nullable
-	protected Runnable onDisposed; // runnable when the notification is disposed
+	protected Runnable onDisposed;
+
 	@Nullable
 	private Timer timeoutTimer; // timer to automatically dispose the dialog
 
-	public Notification()
+	public AbstractNotification()
 	{
 		this(20_000, NotificationLocation.BOTTOM_RIGHT);
 	}
 
-	public Notification(NotificationLocation notificationLocation)
+	public AbstractNotification(NotificationLocation notificationLocation)
 	{
 		this(20_000, notificationLocation);
 	}
@@ -77,7 +88,7 @@ public class Notification extends JDialog
 	 *                             if this is less than or equal to 0, the notification will be never dismissed
 	 * @param notificationLocation this tells where to put the notification, check this class static constants for details
 	 */
-	public Notification(int dispose_timeout_ms, NotificationLocation notificationLocation)
+	public AbstractNotification(int dispose_timeout_ms, NotificationLocation notificationLocation)
 	{
 		super((Window) null); // pass null to create an unowned JDialog
 		assert SwingUtilities.isEventDispatchThread();
@@ -91,8 +102,8 @@ public class Notification extends JDialog
 		// create SW icon
 		this.loadSWIcon();
 		this.swIconLabel = new JLabel();
-		if (Notification.swIcon != null)
-			swIconLabel.setIcon(Notification.swIcon);
+		if (AbstractNotification.swIcon != null)
+			swIconLabel.setIcon(AbstractNotification.swIcon);
 		else
 			swIconLabel.setText("SW");
 
@@ -106,11 +117,19 @@ public class Notification extends JDialog
 	}
 
 	/**
+	 * Use this function to initialize and add the components to the {@link #mainPanel}
+	 */
+	protected abstract void initComponents();
+
+	/**
 	 * Method all derived classes should call once they've added content to the main panel
 	 * this method will pack, show the notification and set the timer to automatically dismiss the notification
 	 */
 	protected void showJDialog()
 	{
+		if (onShown != null)
+			onShown.run();
+
 		this.setContentPane(this.mainPanel);
 		this.setUndecorated(true);
 		this.setResizable(false);
@@ -137,7 +156,7 @@ public class Notification extends JDialog
 	 */
 	private void loadSWIcon()
 	{
-		if (Notification.swIcon != null)
+		if (AbstractNotification.swIcon != null)
 			return;
 
 		String iconImagePath = "/resources/media/SW_white.png";
@@ -150,7 +169,7 @@ public class Notification extends JDialog
 		}
 		icon = icon.getScaledInstance(67, 59, Image.SCALE_AREA_AVERAGING);
 
-		Notification.swIcon = new ImageIcon(icon);
+		AbstractNotification.swIcon = new ImageIcon(icon);
 	}
 
 	private Point getNotificationPointLocation()
@@ -185,6 +204,19 @@ public class Notification extends JDialog
 		return this.dispose_timeout_ms;
 	}
 
+
+	public AbstractNotification setOnShown(Runnable onShown)
+	{
+		this.onShown = onShown;
+		return this;
+	}
+
+	public AbstractNotification setOnDisposed(Runnable onDisposed)
+	{
+		this.onDisposed = onDisposed;
+		return this;
+	}
+
 	@Override
 	public void dispose()
 	{
@@ -196,7 +228,7 @@ public class Notification extends JDialog
 	@Override
 	public String toString()
 	{
-		return "Notification{" +
+		return "AbstractNotification{" +
 			"dispose_timeout_ms=" + dispose_timeout_ms +
 			", notificationLocation=" + notificationLocation +
 			", swIconLabel=" + swIconLabel +

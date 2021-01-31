@@ -21,12 +21,7 @@ package org.fos.sw.hooks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Wrapper class containing two {@link SingleBreakHooksConfig} objects
- * <p>
- * One for the notification hooks, and another for the break hooks
- */
-public class BreakHooksConfig
+public class ActiveHoursHooksConfig
 {
 	@NotNull
 	private final SingleBreakHooksConfig notificationHooksConf;
@@ -35,7 +30,7 @@ public class BreakHooksConfig
 
 	private HooksExecutor executor;
 
-	public BreakHooksConfig(@NotNull SingleBreakHooksConfig notificationHooksConf, @Nullable SingleBreakHooksConfig breakHooksConf)
+	public ActiveHoursHooksConfig(@NotNull SingleBreakHooksConfig notificationHooksConf, @Nullable SingleBreakHooksConfig breakHooksConf)
 	{
 		this.notificationHooksConf = notificationHooksConf;
 		this.breakHooksConf = breakHooksConf;

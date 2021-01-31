@@ -32,7 +32,7 @@ import org.fos.sw.timers.TimersManager;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
 
-public class BreakToDo implements Comparable<BreakToDo>, Runnable
+public class BreakToDo extends ToDo
 {
 	private final static byte MAX_N_DISMISSES = 3;
 	private final static byte MAX_N_POSTPONED = 4;
@@ -41,26 +41,7 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 	private final String takeABreakMessage;
 	private final String breakName;
 	private final boolean add_take_break_option;
-	/**
-	 * Number of seconds since unix epoch when the to do
-	 * was executed
-	 * <p>
-	 * This value should be always in the past
-	 */
-	private long last_execution_at;
-	/**
-	 * Time in seconds since the unix epoch when the to do
-	 * should be executed
-	 * <p>
-	 * This value should be most of the time in the future
-	 * It may be in the past only if the {@link #run()} is executing
-	 */
-	private long next_execution_at;
-	/**
-	 * Tells if the to do has been cancelled
-	 * and therefore {@link #run()} should not be executed
-	 */
-	private boolean is_cancelled;
+
 	// number of times the notification was dismissed
 	private int n_dismisses;
 	// number of times the notification was postponed
@@ -80,9 +61,9 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 		this.takeABreakMessage = takeABreakMessage;
 		this.breakName = breakName;
 		this.add_take_break_option = add_take_break_option;
-		postponeTime = breakConfig.getPostponeTimerSettings();
+		postponeTime = breakConfig.getPostponeWallClock();
 		if (breakConfig.isEnabled())
-			updateExecutionTimes(breakConfig.getWorkTimerSettings());
+			updateExecutionTimes(breakConfig.getWorkWallClock());
 	}
 
 	/**
@@ -109,7 +90,7 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 		return new BreakToDo(
 			MessageFormat.format(
 				messagesBundle.getString("notification_time_for_a_break"),
-				breakConfig.getBreakTimerSettings().get().getHMSAsString()
+				breakConfig.getBreakWallClock().get().getHMSAsString()
 			),
 			messagesBundle.getString("time_for_a_small_break"),
 			breakConfig,
@@ -133,10 +114,10 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 		if (Thread.currentThread().isInterrupted())
 			return;
 
-		postponeTime = breakConfig.getPostponeTimerSettings();
+		postponeTime = breakConfig.getPostponeWallClock();
 		BreakDecision breakDecision = showTakeBreakNotification(); // this is a blocking call
 		if (breakDecision == null) {
-			updateExecutionTimes(breakConfig.getWorkTimerSettings());
+			updateExecutionTimes(breakConfig.getWorkWallClock());
 			return;
 		}
 
@@ -144,25 +125,14 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 			if (breakDecision == BreakDecision.POSTPONE)
 				updateExecutionTimes(postponeTime);
 			else if (breakDecision == BreakDecision.DISMISS)
-				updateExecutionTimes(breakConfig.getWorkTimerSettings());
+				updateExecutionTimes(breakConfig.getWorkWallClock());
 			return;
 		}
 
 		if (Thread.currentThread().isInterrupted())
 			return;
 		showBreakCountDown(); // this is a blocking call
-		updateExecutionTimes(breakConfig.getWorkTimerSettings());
-	}
-
-	/**
-	 * Updates the execution times in the class
-	 *
-	 * @param timeoutTime The timeout configuration used to set the {@link #next_execution_at} value
-	 */
-	synchronized private void updateExecutionTimes(@NotNull WallClock timeoutTime)
-	{
-		last_execution_at = System.currentTimeMillis() / 1_000;
-		next_execution_at = last_execution_at + timeoutTime.getHMSAsSeconds();
+		updateExecutionTimes(breakConfig.getWorkWallClock());
 	}
 
 	/**
@@ -170,58 +140,7 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 	 */
 	public void reloadTimes()
 	{
-		this.updateExecutionTimes(breakConfig.getWorkTimerSettings());
-	}
-
-	/**
-	 * Postpone the execution of this to do by a given amount of seconds
-	 *
-	 * @param postponed_seconds the number of seconds to postpone the to do
-	 */
-	public void postponeExecution(int postponed_seconds)
-	{
-		last_execution_at += postponed_seconds;
-		next_execution_at += postponed_seconds;
-	}
-
-	/**
-	 * Tell if the {@link #run()} should be executed or not
-	 * <p>
-	 * This method will take into account if the to do is cancelled
-	 *
-	 * @param now the number of seconds since unix epoch at the time this function is called
-	 * @return true if the runnable should be executed, false otherwise
-	 */
-	public boolean shouldExecuteNow(long now)
-	{
-		return !is_cancelled && remainingSecondsForExecution(now) <= 0;
-	}
-
-	/**
-	 * @param now the number of seconds since unix epoch at the time this function is called
-	 * @return the number of seconds remaining for the {@link #run()} to be executed
-	 */
-	public long remainingSecondsForExecution(long now)
-	{
-		return next_execution_at - now;
-	}
-
-	/**
-	 * @return true if the To Do is cancelled and therefore should not be executed
-	 */
-	public boolean isCancelled()
-	{
-		return is_cancelled;
-	}
-
-	/**
-	 * Sets whether or not the to do should be cancelled
-	 *
-	 * @param cancelled true if the to do should be cancelled
-	 */
-	public void setCancelled(boolean cancelled)
-	{
-		this.is_cancelled = cancelled;
+		this.updateExecutionTimes(breakConfig.getWorkWallClock());
 	}
 
 	/**
@@ -237,16 +156,14 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 			this.n_dismisses = 0;
 			this.n_postponed = 0;
 
-			if (!this.breakConfig.getBreakTimerSettings().isPresent()) { // in case of the day limit timer
+			if (!this.breakConfig.getBreakWallClock().isPresent()) { // in case of the day limit timer
 				// this should almost never happen
-				SwingUtilities.invokeLater(() -> {
-					JOptionPane.showMessageDialog(
-						null,
-						"You really need to stop working!",
-						"That's enough",
-						JOptionPane.WARNING_MESSAGE
-					);
-				});
+				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+					null,
+					"You really need to stop working!",
+					"That's enough",
+					JOptionPane.WARNING_MESSAGE
+				));
 			}
 			return BreakDecision.TAKE_BREAK;
 		}
@@ -310,7 +227,7 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 		SwingUtilities.invokeLater(() -> breakCountDownRef.set(
 			new BreakCountDown(
 				this.breakName,
-				this.breakConfig.getBreakTimerSettings().get(),
+				this.breakConfig.getBreakWallClock().get(),
 				breakCountDownLatch,
 				hooksConfig != null ? hooksConfig::onStartBreakHooks : null,
 				hooksConfig != null ? hooksConfig::onEndBreakHooks : null
@@ -334,33 +251,6 @@ public class BreakToDo implements Comparable<BreakToDo>, Runnable
 	public @NotNull BreakConfig getBreakConfig()
 	{
 		return breakConfig;
-	}
-
-	/**
-	 * Compares this object with the specified object for order.  Returns a
-	 * negative integer, zero, or a positive integer as this object is less
-	 * than, equal to, or greater than the specified object.
-	 * <p>
-	 * A {@link BreakToDo} object is less than other object if the {@link #next_execution_at} is
-	 * less than the {@link #next_execution_at} of the other object
-	 *
-	 * @param o the object to be compared.
-	 * @return a negative integer, zero, or a positive integer as this object
-	 * is less than, equal to, or greater than the specified object.
-	 * @throws NullPointerException if the specified object is null
-	 * @throws ClassCastException   if the specified object's type prevents it
-	 *                              from being compared to this object.
-	 */
-	@Override
-	public int compareTo(@NotNull BreakToDo o)
-	{
-		long diff = this.next_execution_at - o.next_execution_at;
-		try {
-			return Math.toIntExact(diff);
-		} catch (ArithmeticException ex) {
-			return diff > 0 ? 1
-				: diff == 0 ? 0 : -1;
-		}
 	}
 
 	@Override

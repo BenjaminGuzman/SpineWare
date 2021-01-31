@@ -16,37 +16,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.hooks;
+package org.fos.sw.gui.sections;
 
-import org.junit.jupiter.api.Test;
+import java.awt.Window;
+import javax.swing.JScrollPane;
+import org.fos.sw.gui.Initializable;
+import org.jetbrains.annotations.NotNull;
 
-class BreakHooksConfigTest
+public abstract class AbstractSection extends JScrollPane implements Initializable
 {
+	protected Window owner;
 
-	static byte counter = 0;
-
-	@Test
-	void stopHooks()
+	/**
+	 * Sets the owner window, this may be used by the subclasses. Make sure you set the owner to avoid
+	 * NullPointerExceptions later
+	 *
+	 * @param owner the owner
+	 * @return this
+	 */
+	public AbstractSection setOwner(@NotNull Window owner)
 	{
+		this.owner = owner;
+		return this;
 	}
 
-	@Test
-	void onStartBreakHooks()
-	{
-	}
-
-	@Test
-	void onEndBreakHooks()
-	{
-	}
-
-	@Test
-	void onStartNotificationHooks()
-	{
-	}
-
-	@Test
-	void onEndNotificationHooks()
-	{
-	}
+	public abstract void initComponents();
 }

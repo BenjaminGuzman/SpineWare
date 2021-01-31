@@ -25,7 +25,9 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -40,10 +42,13 @@ import org.fos.sw.utils.AudioPlayer;
 import org.fos.sw.utils.CommandExecutor;
 import org.fos.sw.utils.DaemonAudioThreadFactory;
 import org.fos.sw.utils.DaemonThreadFactory;
+import org.jetbrains.annotations.Nullable;
 
 public class HooksExecutor
 {
+	@Nullable
 	private HooksConfig config;
+
 	private AudioPlayer audioPlayer;
 	private CommandExecutor cmdExecutor;
 
@@ -57,8 +62,9 @@ public class HooksExecutor
 	 */
 	private final ExecutorService audioThreadExecutor;
 	private List<String> supportedAudioExtensions;
-	private Future<?> audioPlayTask;  // future used to play audio in parallel
-	private Future<?> audioStartTask; // future used to start audio in parallel to command execution
+	private volatile Future<?> audioPlayTask;  // future used to play audio in parallel
+	private volatile Future<?> audioStartTask; // future used to start audio in parallel to command execution
+	private boolean wait_termination;
 
 	public HooksExecutor()
 	{
@@ -66,15 +72,24 @@ public class HooksExecutor
 		this.audioThreadExecutor = Executors.newSingleThreadExecutor(new DaemonAudioThreadFactory());
 	}
 
-	public HooksExecutor(HooksConfig config)
+	public HooksExecutor(@Nullable HooksConfig config)
 	{
 		this();
 		this.config = config;
 	}
 
-	synchronized public void setConfig(HooksConfig config)
+	synchronized public void setConfig(@Nullable HooksConfig config)
 	{
 		this.config = config;
+	}
+
+	/**
+	 * @param wait if true, when {@link #runStart()} or {@link #runEnd()} is executed, the current thread will be
+	 *             blocked until the running hooks are terminated or interrupted
+	 */
+	synchronized public void setWaitTermination(boolean wait)
+	{
+		this.wait_termination = wait;
 	}
 
 	/**
@@ -82,8 +97,8 @@ public class HooksExecutor
 	 */
 	synchronized public void runStart()
 	{
-		if (this.config != null && this.config.isStartEnabled())
-			this.runHooks(this.config.getOnStartAudioStr(), this.config.getOnStartCmdStr());
+		if (config != null && config.isStartEnabled())
+			runHooks(config.getOnStartAudioStr(), config.getOnStartCmdStr());
 	}
 
 	/**
@@ -91,8 +106,8 @@ public class HooksExecutor
 	 */
 	synchronized public void runEnd()
 	{
-		if (this.config != null && this.config.isEndEnabled())
-			this.runHooks(this.config.getOnEndAudioStr(), this.config.getOnEndCmdStr());
+		if (config != null && config.isEndEnabled())
+			runHooks(config.getOnEndAudioStr(), config.getOnEndCmdStr());
 	}
 
 	/**
@@ -118,6 +133,21 @@ public class HooksExecutor
 			this.audioStartTask = this.audioStartThreadExecutor.submit(
 				() -> this.playAudio(audioPath)
 			);
+
+		if (wait_termination) {
+			try {
+				if (cmd != null)
+					cmdExecutor.join();
+				if (audioPath != null) {
+					audioStartTask.get();
+					audioPlayTask.get();
+				}
+			} catch (InterruptedException | ExecutionException | CancellationException e) {
+				// if something went wrong or any thread was interrupted
+				// ensure all hooks are terminated
+				stop();
+			}
+		}
 	}
 
 	/**
@@ -233,16 +263,16 @@ public class HooksExecutor
 	 * <p>
 	 * This will internally interrupt the executing threads (those created to play audio or execute a command)
 	 */
-	synchronized public void stop()
+	public void stop()
 	{
-		if (this.audioPlayer != null)
-			this.audioPlayer.shutdown();
-		if (this.cmdExecutor != null)
-			this.cmdExecutor.interrupt();
-		if (this.audioStartTask != null)
-			this.audioStartTask.cancel(true);
-		if (this.audioPlayTask != null)
-			this.audioPlayTask.cancel(true);
+		if (audioPlayer != null)
+			audioPlayer.shutdown();
+		if (cmdExecutor != null)
+			cmdExecutor.interrupt();
+		if (audioStartTask != null)
+			audioStartTask.cancel(true);
+		if (audioPlayTask != null)
+			audioPlayTask.cancel(true);
 	}
 
 	public void onAudioError(Exception e)
