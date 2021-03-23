@@ -21,16 +21,32 @@ package org.fos.sw.gui.cv;
 import java.awt.Canvas;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.logging.Level;
+import javax.imageio.ImageIO;
+import org.fos.sw.Loggers;
+import org.fos.sw.SWMain;
+import org.fos.sw.gui.Hideable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.opencv.core.Mat;
 import org.opencv.highgui.HighGui;
 
-public class ProjectionScreen extends Canvas
+public class ProjectionScreen extends Canvas implements Hideable
 {
-	private Image projectedImage;
+	private Graphics graphics; // the graphics object for this Canvas
+
+	private Image technicalDifficultiesImg;
 
 	public ProjectionScreen()
 	{
 
+	}
+
+	public void initComponents(@NotNull Mat frame)
+	{
+		this.setSize(frame.width(), frame.height());
 	}
 
 	/**
@@ -38,19 +54,48 @@ public class ProjectionScreen extends Canvas
 	 *
 	 * @param frame the frame to be projected, it will be automatically converted from {@link Mat} to {@link Image}
 	 */
-	public void updateProjectedImage(Mat frame)
+	public void updateProjectedImage(@Nullable Mat frame)
 	{
-		this.projectedImage = HighGui.toBufferedImage(frame);
-		this.revalidate();
-		this.repaint();
+		//System.out.println("Is AWT: " + SwingUtilities.isEventDispatchThread());
+		if (frame == null) {
+			graphics.drawImage(this.getErrorImage(), 0, 0, this);
+			return;
+		}
+
+		if (graphics == null)
+			graphics = this.getGraphics();
+
+		Image projectedImage = HighGui.toBufferedImage(frame);
+		graphics.drawImage(projectedImage, 0, 0, this);
 	}
 
-
-	@Override
-	public void paint(Graphics g)
+	private Image getErrorImage()
 	{
-		super.paint(g);
+		if (this.technicalDifficultiesImg == null) {
+			String imgPath = "/resources/media/technical_difficulties.jpg";
+			try (InputStream imgIS =
+				     SWMain.getFileAsStream("/resources/media/technical_difficulties.jpg")
+			) {
+				this.technicalDifficultiesImg = ImageIO.read(imgIS);
+			} catch (IOException | IllegalArgumentException e) {
+				Loggers.getErrorLogger().log(
+					Level.SEVERE,
+					"Error while trying to read the error image!" + imgPath,
+					e
+				);
+			}
+		}
 
-		g.drawImage(projectedImage, 0, 0, this);
+		return this.technicalDifficultiesImg;
+
+	}
+
+	/**
+	 * Method to be invoked when the section is shown
+	 */
+	@Override
+	public void onHide()
+	{
+		this.graphics = null;
 	}
 }

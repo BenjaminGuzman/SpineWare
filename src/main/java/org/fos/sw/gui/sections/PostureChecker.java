@@ -35,6 +35,8 @@ public class PostureChecker extends AbstractSection
 {
 	private static boolean instantiated;
 
+	private CVConfigPanel cvConfigPanel;
+
 	public PostureChecker() throws InstanceAlreadyExistsException
 	{
 		super();
@@ -96,10 +98,10 @@ public class PostureChecker extends AbstractSection
 	private JPanel createCVConfigPanel()
 	{
 		JPanel panel = new JPanel();
-		CVConfigPanel configPanel = new CVConfigPanel();
-		panel.add(configPanel);
+		this.cvConfigPanel = new CVConfigPanel();
+		panel.add(this.cvConfigPanel);
 		panel.setBackground(Color.CYAN);
-		configPanel.initComponents();
+		cvConfigPanel.initComponents();
 		return panel;
 	}
 
@@ -144,5 +146,23 @@ public class PostureChecker extends AbstractSection
 		panel.add(descriptionLabel, gridBagConstraints);
 
 		return panel;
+	}
+
+	/**
+	 * Method to be invoked when the section is shown
+	 */
+	@Override
+	public void onShown()
+	{
+		this.cvConfigPanel.onShown();
+	}
+
+	/**
+	 * Method invoked whenever the section is not visible anymore
+	 */
+	@Override
+	public void onHide()
+	{
+		this.cvConfigPanel.onHide();
 	}
 }

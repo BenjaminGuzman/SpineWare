@@ -18,28 +18,37 @@
 
 package org.fos.sw.gui.cv;
 
-import java.awt.LayoutManager;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
 import org.fos.sw.cv.CVController;
+import org.fos.sw.gui.Hideable;
+import org.fos.sw.gui.Showable;
 import org.fos.sw.utils.DaemonThreadFactory;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
-public class CVConfigPanel extends JPanel
+public class CVConfigPanel extends JPanel implements Hideable, Showable
 {
 	/**
 	 * Number of frames per seconds to show in the projection (mirror) screen
 	 */
-	private static final int FPS = 30;
+	private static final int FPS = 20;
 
 	private final ProjectionScreen projectionScreen;
 
 	private final CVController cvController;
+
+	private ScheduledExecutorService grabberService;
 
 	public CVConfigPanel()
 	{
@@ -48,22 +57,14 @@ public class CVConfigPanel extends JPanel
 		projectionScreen = new ProjectionScreen();
 	}
 
-	public CVConfigPanel(LayoutManager layoutManager)
-	{
-		super(layoutManager);
-		cvController = SWMain.getCVController();
-		projectionScreen = new ProjectionScreen();
-	}
-
 	public void initComponents()
 	{
 		this.add(this.projectionScreen);
-		this.projectionScreen.setSize(640, 720);
 
-		ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
-		long period = (long) (1.0 / FPS * 1000);
-		timer.scheduleAtFixedRate(this::showMirror, 0, period, TimeUnit.MILLISECONDS);
-		Loggers.getDebugLogger().log(Level.INFO, "Updating the projection screen each " + period + "ms");
+
+		Mat frame;
+		if ((frame = cvController.captureFrame()) != null)
+			projectionScreen.initComponents(frame);
 	}
 
 	/**
@@ -73,12 +74,72 @@ public class CVConfigPanel extends JPanel
 	private void showMirror()
 	{
 		Mat frame = cvController.captureFrame();
-		if (frame == null || frame.empty()) {
-			Loggers.getErrorLogger().log(Level.WARNING, "Error capturing frame");
+		if ((frame == null || frame.empty()) && Thread.currentThread().isInterrupted())
+			return;
+
+		if (frame == null) {
+			SwingUtilities.invokeLater(() -> projectionScreen.updateProjectedImage(null));
 			return;
 		}
 
-		projectionScreen.updateProjectedImage(frame);
-		System.out.println(frame);
+		List<Rect> detectedFaces = cvController.detectFaces(frame);
+
+		// show error message if no face was detected or more than 1 face was detected
+		String errorMsg = null;
+		if (detectedFaces.size() > 1)
+			errorMsg = SWMain.getMessagesBundle().getString("too_many_faces");
+		else if (detectedFaces.isEmpty())
+			errorMsg = SWMain.getMessagesBundle().getString("no_faces_detected");
+
+		if (errorMsg != null)
+			Imgproc.putText(
+				frame,
+				errorMsg,
+				new Point(10, 30), // bottom left of the text
+				Imgproc.FONT_HERSHEY_PLAIN,
+				2.0,
+				new Scalar(0, 0, 255) // BGR
+			);
+
+		// draw rectangles on the detected faces
+		for (Rect detectedFaceRect : detectedFaces)
+			Imgproc.rectangle(frame, detectedFaceRect, new Scalar(0, 255, 0), 3);
+
+		SwingUtilities.invokeLater(() -> projectionScreen.updateProjectedImage(frame));
+	}
+
+	/**
+	 * Method invoked whenever the component is not visible anymore
+	 */
+	@Override
+	public void onShown()
+	{
+		if (!SWMain.getCVController().getCamCapture().isOpened())
+			SWMain.getCVController().open();
+
+		grabberService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
+		long period = (long) (1.0 / FPS * 1000);
+		grabberService.scheduleAtFixedRate(this::showMirror, 0, period, TimeUnit.MILLISECONDS);
+		Loggers.getDebugLogger().log(Level.INFO, "Updating the projection screen each " + period + "ms");
+	}
+
+	/**
+	 * Method to be invoked when the section is shown
+	 */
+	@Override
+	public void onHide()
+	{
+		if (grabberService != null) {
+			grabberService.shutdownNow();
+			Loggers.getDebugLogger().log(Level.INFO, "Stopping the frame capturing service");
+		}
+
+		try {
+			SWMain.getCVController().close();
+		} catch (Exception e) {
+			Loggers.getErrorLogger().log(Level.WARNING, "Error while closing the web cam", e);
+		}
+
+		projectionScreen.onHide();
 	}
 }

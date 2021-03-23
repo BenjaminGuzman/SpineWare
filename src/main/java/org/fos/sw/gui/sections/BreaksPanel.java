@@ -708,6 +708,16 @@ public class BreaksPanel extends AbstractSection
 		return panel;
 	}
 
+	@Override
+	public void onShown()
+	{
+	}
+
+	@Override
+	public void onHide()
+	{
+	}
+
 	/**
 	 * Class to enable or disable time inputs and buttons when checkbox is clicked
 	 */
