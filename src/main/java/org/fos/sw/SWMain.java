@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.TooManyListenersException;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
+import javax.management.InstanceAlreadyExistsException;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -40,13 +41,15 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.fos.sw.cv.CVController;
 import org.fos.sw.gui.MainFrame;
 import org.fos.sw.timers.TimersManager;
 
 public class SWMain
 {
-	private static volatile ResourceBundle messagesBundle;
-	private static volatile Image swIcon;
+	private static ResourceBundle messagesBundle;
+	private static CVController cvController;
+	private static Image swIcon;
 	private static final String OS = System.getProperty("os.name").toLowerCase();
 	public static boolean IS_WINDOWS = OS.contains("win");
 
@@ -159,7 +162,7 @@ public class SWMain
 		} catch (UnsupportedOperationException e) {
 			Loggers.getErrorLogger().log(
 				Level.SEVERE,
-				"Why are you using a system not POSIX-compliant? It is more difficult to write " +
+				"Why are you using a system not POSIX-like/complaint? It is more difficult to write " +
 					"software to your platform. SpineWare may not work well in your system",
 				e
 			);
@@ -251,6 +254,19 @@ public class SWMain
 	public static ResourceBundle getMessagesBundle()
 	{
 		return SWMain.messagesBundle;
+	}
+
+	synchronized public static CVController getCVController()
+	{
+		if (cvController == null)
+			try {
+				cvController = new CVController();
+				cvController.open();
+			} catch (InstanceAlreadyExistsException e) {
+				Loggers.getErrorLogger().log(Level.WARNING, "Error", e);
+			}
+
+		return cvController;
 	}
 
 	/**
