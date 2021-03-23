@@ -17,7 +17,6 @@
  */
 package org.fos.sw.gui.sections;
 
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -40,7 +39,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import org.fos.sw.Loggers;
@@ -66,10 +64,6 @@ import org.jetbrains.annotations.Nullable;
 public class BreaksPanel extends AbstractSection
 {
 	private static boolean instantiated;
-
-	private final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 24);
-	private final Font FULL_DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
-	private final Font DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 16);
 
 	private final List<BreakConfig> preferredBreakSettings;
 	@NotNull
@@ -179,11 +173,7 @@ public class BreaksPanel extends AbstractSection
 		panel.add(Box.createVerticalStrut(10));
 
 		this.setViewportView(panel);
-		this.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		this.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-		this.getHorizontalScrollBar().setUnitIncrement(16);
-		this.getVerticalScrollBar().setUnitIncrement(16);
+		this.configScrollBar();
 	}
 
 	/**

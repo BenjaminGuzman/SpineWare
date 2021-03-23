@@ -18,6 +18,7 @@
 
 package org.fos.sw.gui.sections;
 
+import java.awt.Font;
 import java.awt.Window;
 import javax.swing.JScrollPane;
 import org.fos.sw.gui.Initializable;
@@ -25,6 +26,10 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractSection extends JScrollPane implements Initializable
 {
+	public final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 24);
+	public final Font FULL_DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
+	public final Font DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 16);
+
 	protected Window owner;
 
 	/**
@@ -41,4 +46,16 @@ public abstract class AbstractSection extends JScrollPane implements Initializab
 	}
 
 	public abstract void initComponents();
+
+	/**
+	 * Configures general stuff in the scroll bar
+	 */
+	public void configScrollBar()
+	{
+		this.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		this.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+		this.getHorizontalScrollBar().setUnitIncrement(16);
+		this.getVerticalScrollBar().setUnitIncrement(16);
+	}
 }

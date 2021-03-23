@@ -52,14 +52,16 @@ import org.fos.sw.gui.notifications.StartUpNotification;
 import org.fos.sw.gui.sections.AbstractSection;
 import org.fos.sw.gui.sections.BreaksPanel;
 import org.fos.sw.gui.sections.HelpPanel;
+import org.fos.sw.gui.sections.PostureChecker;
 import org.fos.sw.timers.TimersManager;
 
 public class MainFrame extends JFrame
 {
 	private static final short BREAKS_PANEL_CACHE_IDX = 0;
-	private static final short HELP_PANEL_CACHE_IDX = 1;
+	private static final short POSTURE_PANEL_CACHE_IDX = 1;
+	private static final short HELP_PANEL_CACHE_IDX = 2;
 
-	private final AbstractSection[] mainPanelContentCaches = new AbstractSection[2];
+	private final AbstractSection[] mainPanelContentCaches = new AbstractSection[3];
 	private JComponent activeContentPanel = null;
 	private JPanel mainContentPanel = null;
 	private TrayIcon trayIcon;
@@ -149,9 +151,17 @@ public class MainFrame extends JFrame
 		menuPanel.add(swLogoImageLabel, gridBagConstraints);
 
 		// add all buttons
-		String[] buttonsLabels = new String[]{"menu_breaks", "menu_help"};
-		String[] buttonsIconsPaths = new String[]{"timer_white_18dp.png", "help_white_18dp.png"};
-		ActionListener[] buttonsListeners = new ActionListener[]{this::onClickBreaksMenu, this::onClickHelpMenu};
+		String[] buttonsLabels = new String[]{"menu_breaks", "menu_posture", "menu_help"};
+		String[] buttonsIconsPaths = new String[]{
+			"timer_white_18dp.png",
+			"self_improvement_white_18dp.png",
+			"help_white_18dp.png"
+		};
+		ActionListener[] buttonsListeners = new ActionListener[]{
+			this::onClickBreaksMenu,
+			this::onClickPostureMenu,
+			this::onClickHelpMenu
+		};
 
 		JButton button;
 		Insets buttonInsets = new Insets(10, 10, 10, 10);
@@ -191,6 +201,11 @@ public class MainFrame extends JFrame
 	public void onClickHelpMenu(final ActionEvent evt)
 	{
 		this.changePanel(HELP_PANEL_CACHE_IDX, HelpPanel.class);
+	}
+
+	public void onClickPostureMenu(final ActionEvent evt)
+	{
+		this.changePanel(POSTURE_PANEL_CACHE_IDX, PostureChecker.class);
 	}
 
 	/**
