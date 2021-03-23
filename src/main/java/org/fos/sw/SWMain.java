@@ -261,7 +261,8 @@ public class SWMain
 		if (cvController == null)
 			try {
 				cvController = new CVController();
-				cvController.open();
+				if (!cvController.getCamCapture().isOpened())
+					cvController.open();
 			} catch (InstanceAlreadyExistsException e) {
 				Loggers.getErrorLogger().log(Level.WARNING, "Error", e);
 			}
@@ -297,6 +298,7 @@ public class SWMain
 		mainFrame.dispose(); // close the main JFrame
 		TimersManager.shutdownAllThreads(); // shutdown all threads
 		TimersManager.killAllTimers(); // stop all timers
+		cvController.close(); // close the web cam
 
 		//System.exit(0); // this is not needed, when closing all windows and killing all timers, the JVM
 		// should exit gracefully

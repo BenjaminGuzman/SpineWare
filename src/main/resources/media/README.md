@@ -69,3 +69,6 @@ from here [https://material.io/resources/icons](https://material.io/resources/ic
 is
 
 `Copyright 2020 Google LLC`
+
+The file `technical_difficulties.jpg` copyright notice is:
+_"technical difficulties" by jaybowalkin is licensed under CC BY-NC-SA 2.0_ 

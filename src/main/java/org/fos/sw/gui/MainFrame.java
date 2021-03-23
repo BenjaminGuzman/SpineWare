@@ -34,6 +34,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -42,7 +44,6 @@ import java.util.prefs.Preferences;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -62,7 +63,7 @@ public class MainFrame extends JFrame
 	private static final short HELP_PANEL_CACHE_IDX = 2;
 
 	private final AbstractSection[] mainPanelContentCaches = new AbstractSection[3];
-	private JComponent activeContentPanel = null;
+	private AbstractSection activeContentPanel = null;
 	private JPanel mainContentPanel = null;
 	private TrayIcon trayIcon;
 
@@ -91,6 +92,112 @@ public class MainFrame extends JFrame
 			prefs.putBoolean("first time opened", false);
 		} else
 			new StartUpNotification();
+
+		this.addWindowListener(new WindowAdapter()
+		{
+			/**
+			 * Invoked when a window is in the process of being closed.
+			 * The close operation can be overridden at this point.
+			 *
+			 * @param e
+			 */
+			@Override
+			public void windowClosing(WindowEvent e)
+			{
+				super.windowClosing(e);
+				activeContentPanel.onHide();
+			}
+
+			/**
+			 * Invoked when a window is iconified.
+			 *
+			 * @param e
+			 */
+			@Override
+			public void windowIconified(WindowEvent e)
+			{
+				super.windowIconified(e);
+				activeContentPanel.onHide();
+			}
+
+			/**
+			 * Invoked when a window is de-activated.
+			 *
+			 * @param e
+			 */
+			@Override
+			public void windowDeactivated(WindowEvent e)
+			{
+				super.windowDeactivated(e);
+				activeContentPanel.onHide();
+			}
+
+			/**
+			 * Invoked when the Window is no longer the focused Window, which means
+			 * that keyboard events will no longer be delivered to the Window or any of
+			 * its subcomponents.
+			 *
+			 * @param e
+			 * @since 1.4
+			 */
+			@Override
+			public void windowLostFocus(WindowEvent e)
+			{
+				super.windowLostFocus(e);
+				activeContentPanel.onHide();
+			}
+
+			/**
+			 * Invoked when a window has been opened.
+			 *
+			 * @param e
+			 */
+			@Override
+			public void windowOpened(WindowEvent e)
+			{
+				super.windowOpened(e);
+				activeContentPanel.onShown();
+			}
+
+			/**
+			 * Invoked when a window is de-iconified.
+			 *
+			 * @param e
+			 */
+			@Override
+			public void windowDeiconified(WindowEvent e)
+			{
+				super.windowDeiconified(e);
+				activeContentPanel.onShown();
+			}
+
+			/**
+			 * Invoked when a window is activated.
+			 *
+			 * @param e
+			 */
+			@Override
+			public void windowActivated(WindowEvent e)
+			{
+				super.windowActivated(e);
+				activeContentPanel.onShown();
+			}
+
+			/**
+			 * Invoked when the Window is set to be the focused Window, which means
+			 * that the Window, or one of its subcomponents, will receive keyboard
+			 * events.
+			 *
+			 * @param e
+			 * @since 1.4
+			 */
+			@Override
+			public void windowGainedFocus(WindowEvent e)
+			{
+				super.windowGainedFocus(e);
+				activeContentPanel.onShown();
+			}
+		});
 	}
 
 	/**
@@ -245,14 +352,19 @@ public class MainFrame extends JFrame
 			return;
 		}
 
-		if (activeContentPanel != null)
+		if (activeContentPanel != null) {
+			activeContentPanel.onHide(); // notify the panel it will not be visible anymore
 			mainContentPanel.removeAll(); // clear the content panel
+		}
+
 		activeContentPanel = mainPanelContentCaches[panel_cache_idx];
 		mainContentPanel.add(activeContentPanel, BorderLayout.CENTER);
 		if (invoke_init_components)
 			mainPanelContentCaches[panel_cache_idx].initComponents();
 		mainContentPanel.revalidate();
 		mainContentPanel.repaint();
+
+		activeContentPanel.onShown(); // notify the panel it is being shown
 	}
 
 	/**
@@ -376,5 +488,12 @@ public class MainFrame extends JFrame
 		super.dispose();
 		if (SystemTray.isSupported()) // remove the systray
 			SystemTray.getSystemTray().remove(this.trayIcon);
+
+		// notify all sections they're being closed
+		for (AbstractSection section : mainPanelContentCaches)
+			if (section != null)
+				section.onHide();
 	}
+
+
 }

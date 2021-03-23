@@ -145,4 +145,14 @@ public class HelpPanel extends AbstractSection
 				);
 		}
 	}
+
+	@Override
+	public void onShown()
+	{
+	}
+
+	@Override
+	public void onHide()
+	{
+	}
 }

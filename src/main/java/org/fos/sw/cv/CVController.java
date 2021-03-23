@@ -180,26 +180,29 @@ public class CVController implements AutoCloseable
 	 * Tries to open the capture device at the given index
 	 *
 	 * @param device_idx the index of the device (usually 0)
+	 * @return true if the capturing device was successfully opened
 	 */
-	public void open(int device_idx)
+	public boolean open(int device_idx)
 	{
-		camCapture.open(device_idx);
+		return camCapture.open(device_idx);
 	}
 
 	/**
 	 * Tries to open the capture device at idx 0
 	 * (if just 1 camera is connected it will open it)
+	 *
+	 * @return true if the capturing device was successfully opened
 	 */
-	public void open()
+	public boolean open()
 	{
-		open(0);
+		return open(0);
 	}
 
 	/**
 	 * Closes the opened video source (if any)
 	 */
 	@Override
-	public void close() throws Exception
+	public void close()
 	{
 		camCapture.release();
 	}
