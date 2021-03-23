@@ -75,8 +75,6 @@ public class PostureChecker implements AutoCloseable
 				throw new RuntimeException("Couldn't capture frame after " + i + " tries");
 			++i;
 		}
-
-		this.computeThresholds(frame);
 	}
 
 	/**
