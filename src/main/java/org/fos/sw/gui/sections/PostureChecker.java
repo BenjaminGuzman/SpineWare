@@ -19,16 +19,15 @@
 package org.fos.sw.gui.sections;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import javax.management.InstanceAlreadyExistsException;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.fos.sw.SWMain;
+import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.cv.CVConfigPanel;
 
 public class PostureChecker extends AbstractSection
@@ -60,34 +59,11 @@ public class PostureChecker extends AbstractSection
 		// specific CVController feature config
 		JPanel cvConfigPanel = createCVConfigPanel();
 
-		// save / reset buttons
-		JPanel actionsPanel = createActionsPanel();
-
 		panel.add(generalConfigPanel, BorderLayout.NORTH);
 		panel.add(cvConfigPanel, BorderLayout.CENTER);
-		panel.add(actionsPanel, BorderLayout.SOUTH);
 
 		this.setViewportView(panel);
 		this.configScrollBar();
-	}
-
-	/**
-	 * @return a panel containing all the actions the user can perform
-	 * For example, save settings or put recommended values
-	 */
-	private JPanel createActionsPanel()
-	{
-		JPanel panel = new JPanel();
-
-		JButton saveBtn = new JButton(SWMain.getMessagesBundle().getString("save_settings"));
-		JButton setRecommendedValuesBtn = new JButton(
-			SWMain.getMessagesBundle().getString("set_recommended_values")
-		);
-
-		panel.add(setRecommendedValuesBtn);
-		panel.add(saveBtn);
-
-		return panel;
 	}
 
 	/**
@@ -100,7 +76,6 @@ public class PostureChecker extends AbstractSection
 		JPanel panel = new JPanel();
 		this.cvConfigPanel = new CVConfigPanel();
 		panel.add(this.cvConfigPanel);
-		panel.setBackground(Color.CYAN);
 		cvConfigPanel.initComponents();
 		return panel;
 	}
@@ -115,35 +90,35 @@ public class PostureChecker extends AbstractSection
 		JPanel panel = new JPanel(new GridBagLayout());
 
 		// labels creation
-		JLabel titleLabel = new JLabel(SWMain.getMessagesBundle().getString("posture_checker_title"));
-		titleLabel.setFont(TITLE_FONT);
+		JLabel titleLabel = new JLabel(SWMain.messagesBundle.getString("posture_checker_title"));
+		titleLabel.setFont(Fonts.TITLE_FONT);
 
 		JLabel descriptionLabel = new JLabel(
-			SWMain.getMessagesBundle().getString("posture_checker_description")
+			SWMain.messagesBundle.getString("posture_checker_description")
 		);
-		descriptionLabel.setFont(FULL_DESCRIPTION_FONT);
+		descriptionLabel.setFont(Fonts.FULL_DESCRIPTION_FONT);
 
 		// inputs creations
 		JCheckBox featureEnabledCheckBox = new JCheckBox(
-			SWMain.getMessagesBundle().getString("feature_enabled")
+			SWMain.messagesBundle.getString("feature_enabled")
 		);
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.weightx = 1;
-		gridBagConstraints.fill = GridBagConstraints.BOTH;
-		gridBagConstraints.anchor = GridBagConstraints.EAST;
-		gridBagConstraints.insets = new Insets(10, 10, 10, 10);
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.weightx = 1;
+		gbc.fill = GridBagConstraints.BOTH;
+		gbc.anchor = GridBagConstraints.EAST;
+		gbc.insets = new Insets(10, 10, 10, 10);
 
-		panel.add(titleLabel, gridBagConstraints);
+		panel.add(titleLabel, gbc);
 
-		++gridBagConstraints.gridx;
-		panel.add(featureEnabledCheckBox, gridBagConstraints);
+		++gbc.gridx;
+		panel.add(featureEnabledCheckBox, gbc);
 
-		--gridBagConstraints.gridx;
-		++gridBagConstraints.gridy;
-		panel.add(descriptionLabel, gridBagConstraints);
+		--gbc.gridx;
+		++gbc.gridy;
+		panel.add(descriptionLabel, gbc);
 
 		return panel;
 	}

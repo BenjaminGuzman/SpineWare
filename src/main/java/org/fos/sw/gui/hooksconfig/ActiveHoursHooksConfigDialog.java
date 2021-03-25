@@ -66,7 +66,7 @@ public class ActiveHoursHooksConfigDialog extends AbstractHooksConfigDialog
 
 		super.configDialog();
 
-		this.setTitle("SpineWare | Active Hours | " + SWMain.getMessagesBundle().getString("hooks_config"));
+		this.setTitle("SpineWare | Active Hours | " + SWMain.messagesBundle.getString("hooks_config"));
 		this.setVisible(true);
 	}
 
@@ -83,7 +83,7 @@ public class ActiveHoursHooksConfigDialog extends AbstractHooksConfigDialog
 		JPanel contentPanel = new JPanel();
 		contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		String playAudio = messagesBundle.getString("play_audio");
 		String selectAudio = messagesBundle.getString("select_audio");

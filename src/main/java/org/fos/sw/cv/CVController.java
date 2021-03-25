@@ -53,6 +53,8 @@ public class CVController implements AutoCloseable
 	private final VideoCapture camCapture;
 	private final CascadeClassifier facesClassifier;
 
+	public static final double INVALID_IDEAL_FOCAL_LENGTH = -1;
+
 	// thresholds
 	private Size minFaceDetectedSize;
 
@@ -160,6 +162,30 @@ public class CVController implements AutoCloseable
 		);
 
 		return detectedFaces.toList();
+	}
+
+	/**
+	 * Calibrates the camera (obtains the IDEAL, not real, focal length) with the given frame
+	 * The frame must contain a face, and face detection is performed
+	 * If no face is detected, {@link #INVALID_IDEAL_FOCAL_LENGTH} is returned
+	 * <p>
+	 * For details see the python notebook
+	 *
+	 * @param distance       the distance at which the frame was captured
+	 * @param face_height_cm the face real height in cm
+	 * @param frame          the captured frame
+	 * @return {@link #INVALID_IDEAL_FOCAL_LENGTH} if no face was detected
+	 */
+	public double getIdealFocalLength(double distance, double face_height_cm, Mat frame)
+	{
+		List<Rect> detectedFaces = this.detectFaces(frame);
+		if (detectedFaces.isEmpty())
+			return INVALID_IDEAL_FOCAL_LENGTH;
+
+		Rect detectedFace = detectedFaces.get(0);
+		double face_projected_height = detectedFace.height;
+
+		return distance * (face_projected_height / face_height_cm);
 	}
 
 	/**

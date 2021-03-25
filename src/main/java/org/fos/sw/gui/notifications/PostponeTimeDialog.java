@@ -31,11 +31,12 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import org.fos.sw.SWMain;
+import org.fos.sw.gui.Initializable;
 import org.fos.sw.gui.util.TimeInputPanel;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.Nullable;
 
-public class PostponeTimeDialog extends JDialog
+public class PostponeTimeDialog extends JDialog implements Initializable
 {
 	@Nullable
 	private WallClock postponeTime;
@@ -72,9 +73,10 @@ public class PostponeTimeDialog extends JDialog
 		this.setVisible(true);
 	}
 
-	private void initComponents()
+	@Override
+	public void initComponents()
 	{
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		Container contentPane = this.getContentPane();
 		contentPane.setLayout(new GridBagLayout());
@@ -105,28 +107,28 @@ public class PostponeTimeDialog extends JDialog
 		});
 
 		// add postpone time input
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.insets = new Insets(1, 3, 2, 3);
-		gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.gridy = 0;
+		gbc.gridx = 0;
+		gbc.insets = new Insets(1, 3, 2, 3);
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
 
 		contentPane.add(
-			new JLabel(SWMain.getMessagesBundle().getString("new_postpone_time")),
-			gridBagConstraints
+			new JLabel(SWMain.messagesBundle.getString("new_postpone_time")),
+			gbc
 		);
 
-		++gridBagConstraints.gridy;
-		contentPane.add(postponeTimeInput, gridBagConstraints);
+		++gbc.gridy;
+		contentPane.add(postponeTimeInput, gbc);
 
-		++gridBagConstraints.gridy;
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.weightx = 0.5;
-		gridBagConstraints.anchor = GridBagConstraints.CENTER;
-		contentPane.add(okButton, gridBagConstraints);
+		++gbc.gridy;
+		gbc.gridwidth = 1;
+		gbc.weightx = 0.5;
+		gbc.anchor = GridBagConstraints.CENTER;
+		contentPane.add(okButton, gbc);
 
-		++gridBagConstraints.gridx;
-		contentPane.add(cancelButton, gridBagConstraints);
+		++gbc.gridx;
+		contentPane.add(cancelButton, gbc);
 
 		this.getRootPane().setDefaultButton(okButton);
 	}
