@@ -41,9 +41,10 @@ import javax.swing.border.EmptyBorder;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.NotificationLocation;
+import org.fos.sw.gui.Initializable;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class AbstractNotification extends JDialog
+public abstract class AbstractNotification extends JDialog implements Initializable
 {
 	protected static ImageIcon swIcon; // static to avoid reading the image each time the notification is shown
 	private final int dispose_timeout_ms;
@@ -119,7 +120,7 @@ public abstract class AbstractNotification extends JDialog
 	/**
 	 * Use this function to initialize and add the components to the {@link #mainPanel}
 	 */
-	protected abstract void initComponents();
+	public abstract void initComponents();
 
 	/**
 	 * Method all derived classes should call once they've added content to the main panel

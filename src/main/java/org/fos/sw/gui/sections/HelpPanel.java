@@ -90,28 +90,28 @@ public class HelpPanel extends AbstractSection
 		JEditorPane moreEditorPane = new JEditorPane();
 		moreEditorPane.setEditorKit(JEditorPane.createEditorKitForContentType("text/html"));
 		moreEditorPane.setEditable(false);
-		moreEditorPane.setText(SWMain.getMessagesBundle().getString("help_text"));
+		moreEditorPane.setText(SWMain.messagesBundle.getString("help_text"));
 		moreEditorPane.addHyperlinkListener(this::onClickHyperLink);
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.ipadx = 30;
-		gridBagConstraints.ipady = 30;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.ipadx = 30;
+		gbc.ipady = 30;
 
 		// add spineware logo
-		gridBagConstraints.gridy = 0;
-		mainPanel.add(swLogoImageLabel, gridBagConstraints);
+		gbc.gridy = 0;
+		mainPanel.add(swLogoImageLabel, gbc);
 
 		// add copyright
-		++gridBagConstraints.gridy;
-		mainPanel.add(copyrightLabel, gridBagConstraints);
+		++gbc.gridy;
+		mainPanel.add(copyrightLabel, gbc);
 
 		// add GPLv3 image
-		++gridBagConstraints.gridy;
-		mainPanel.add(gplLicenseLabel, gridBagConstraints);
+		++gbc.gridy;
+		mainPanel.add(gplLicenseLabel, gbc);
 
 		// add the editor panel
-		++gridBagConstraints.gridy;
-		mainPanel.add(moreEditorPane, gridBagConstraints);
+		++gbc.gridy;
+		mainPanel.add(moreEditorPane, gbc);
 
 		this.setViewportView(mainPanel);
 		this.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -130,7 +130,7 @@ public class HelpPanel extends AbstractSection
 				} catch (IOException | URISyntaxException | UnsupportedOperationException e) {
 					JOptionPane.showMessageDialog(
 						null,
-						SWMain.getMessagesBundle().getString("error_couldnt_open_browser"),
+						SWMain.messagesBundle.getString("error_couldnt_open_browser"),
 						"Error",
 						JOptionPane.ERROR_MESSAGE
 					);
@@ -139,7 +139,7 @@ public class HelpPanel extends AbstractSection
 			} else
 				JOptionPane.showMessageDialog(
 					null,
-					SWMain.getMessagesBundle().getString("error_couldnt_open_browser"),
+					SWMain.messagesBundle.getString("error_couldnt_open_browser"),
 					"Error",
 					JOptionPane.ERROR_MESSAGE
 				);

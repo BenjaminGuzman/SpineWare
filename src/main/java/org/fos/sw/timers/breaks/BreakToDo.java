@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.fos.sw.SWMain;
-import org.fos.sw.gui.notifications.BreakCountDown;
+import org.fos.sw.gui.notifications.CountDownDialog;
 import org.fos.sw.gui.notifications.TakeABreakNotification;
 import org.fos.sw.hooks.BreakHooksConfig;
 import org.fos.sw.timers.TimersManager;
@@ -75,7 +75,7 @@ public class BreakToDo extends ToDo
 	 */
 	public static BreakToDo from(BreakConfig breakConfig)
 	{
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		if (breakConfig.getBreakType() == BreakType.DAY_BREAK)
 			return new BreakToDo(
@@ -223,9 +223,9 @@ public class BreakToDo extends ToDo
 		BreakHooksConfig hooksConfig = this.breakConfig.getHooksConfig();
 
 		CountDownLatch breakCountDownLatch = new CountDownLatch(1);
-		AtomicReference<BreakCountDown> breakCountDownRef = new AtomicReference<>();
+		AtomicReference<CountDownDialog> breakCountDownRef = new AtomicReference<>();
 		SwingUtilities.invokeLater(() -> breakCountDownRef.set(
-			new BreakCountDown(
+			new CountDownDialog(
 				this.breakName,
 				this.breakConfig.getBreakWallClock().get(),
 				breakCountDownLatch,
