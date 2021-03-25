@@ -48,9 +48,9 @@ public class OutsideActiveHoursNotification extends AbstractNotification
 	 * Use this function to initialize and add the components to the {@link #mainPanel}
 	 */
 	@Override
-	protected void initComponents()
+	public void initComponents()
 	{
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		// create warning working outside active hours label
 		JLabel workingOutsideActiveHoursLabel = new JLabel(
@@ -67,27 +67,27 @@ public class OutsideActiveHoursNotification extends AbstractNotification
 		JButton dismissButton = new JButton(messagesBundle.getString("ok"));
 		dismissButton.addActionListener((ActionEvent evt) -> this.dispose());
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.ipadx = 5;
-		gridBagConstraints.ipady = 5;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.ipadx = 5;
+		gbc.ipady = 5;
 
 		// add SW icon
-		gridBagConstraints.gridheight = 3;
-		super.mainPanel.add(super.swIconLabel, gridBagConstraints);
+		gbc.gridheight = 3;
+		super.mainPanel.add(super.swIconLabel, gbc);
 
 		// add warning label
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.gridheight = 1;
-		super.mainPanel.add(workingOutsideActiveHoursLabel, gridBagConstraints);
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.gridheight = 1;
+		super.mainPanel.add(workingOutsideActiveHoursLabel, gbc);
 
 		// add extra label
-		++gridBagConstraints.gridy;
-		super.mainPanel.add(extraInfoLabel, gridBagConstraints);
+		++gbc.gridy;
+		super.mainPanel.add(extraInfoLabel, gbc);
 
 		// add dismiss button
-		++gridBagConstraints.gridy;
-		super.mainPanel.add(dismissButton, gridBagConstraints);
+		++gbc.gridy;
+		super.mainPanel.add(dismissButton, gbc);
 
 		super.showJDialog();
 	}

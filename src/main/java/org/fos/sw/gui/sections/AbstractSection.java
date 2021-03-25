@@ -18,7 +18,6 @@
 
 package org.fos.sw.gui.sections;
 
-import java.awt.Font;
 import java.awt.Window;
 import javax.swing.JScrollPane;
 import org.fos.sw.gui.Hideable;
@@ -28,10 +27,6 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractSection extends JScrollPane implements Initializable, Hideable, Showable
 {
-	public final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 24);
-	public final Font FULL_DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
-	public final Font DESCRIPTION_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 16);
-
 	protected Window owner;
 
 	/**

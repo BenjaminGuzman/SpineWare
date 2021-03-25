@@ -89,45 +89,45 @@ public class TimeInputPanel extends JPanel
 		this.warningLabel.setFont(Fonts.SANS_SERIF_BOLD_12);
 
 		this.setLayout(new GridBagLayout());
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
+		GridBagConstraints gbc = new GridBagConstraints();
 
 		// add spinners
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.insets = new Insets(5, 5, 5, 5);
+		gbc.gridy = 0;
+		gbc.gridx = 0;
+		gbc.insets = new Insets(5, 5, 5, 5);
 
-		this.add(this.hoursSpinner, gridBagConstraints);
+		this.add(this.hoursSpinner, gbc);
 
-		++gridBagConstraints.gridx;
-		this.add(this.minutesSpinner, gridBagConstraints);
+		++gbc.gridx;
+		this.add(this.minutesSpinner, gbc);
 
-		++gridBagConstraints.gridx;
-		this.add(this.secondsSpinner, gridBagConstraints);
+		++gbc.gridx;
+		this.add(this.secondsSpinner, gbc);
 
 		// add labels for spinners
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 1;
+		gbc.gridx = 0;
+		gbc.gridy = 1;
 
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
-		this.add(new JLabel(messagesBundle.getString("hours")), gridBagConstraints);
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
+		this.add(new JLabel(messagesBundle.getString("hours")), gbc);
 
-		++gridBagConstraints.gridx;
-		this.add(new JLabel(messagesBundle.getString("minutes")), gridBagConstraints);
+		++gbc.gridx;
+		this.add(new JLabel(messagesBundle.getString("minutes")), gbc);
 
-		++gridBagConstraints.gridx;
-		this.add(new JLabel(messagesBundle.getString("seconds")), gridBagConstraints);
+		++gbc.gridx;
+		this.add(new JLabel(messagesBundle.getString("seconds")), gbc);
 
 		// add warning / error label
 		if (warningLabelPosition == WarningLabelPosition.RIGHT) {
-			gridBagConstraints.gridx = 3;
-			gridBagConstraints.gridy = 0;
+			gbc.gridx = 3;
+			gbc.gridy = 0;
 		} else if (warningLabelPosition == WarningLabelPosition.BOTTOM) {
-			gridBagConstraints.gridx = 0;
-			gridBagConstraints.gridy = 2;
-			gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;
+			gbc.gridx = 0;
+			gbc.gridy = 2;
+			gbc.gridwidth = GridBagConstraints.REMAINDER;
 		}
 
-		this.add(this.warningLabel, gridBagConstraints);
+		this.add(this.warningLabel, gbc);
 		this.warningLabel.setForeground(Color.YELLOW);
 	}
 
@@ -177,7 +177,7 @@ public class TimeInputPanel extends JPanel
 
 		if (selected_value <= 5) {
 			this.warningLabel.setForeground(Colors.RED);
-			this.warningLabel.setText(SWMain.getMessagesBundle().getString("must_be_greater_than"));
+			this.warningLabel.setText(SWMain.messagesBundle.getString("must_be_greater_than"));
 			return false;
 		}
 
@@ -186,12 +186,12 @@ public class TimeInputPanel extends JPanel
 			if (selected_value > max_recommended_value)
 				this.warningLabel.setText(
 					this.maxRecommendedTime.getHMSAsString()
-						+ " " + SWMain.getMessagesBundle().getString("is_the_maximum")
+						+ " " + SWMain.messagesBundle.getString("is_the_maximum")
 				);
 			else if (selected_value < min_recommended_value)
 				this.warningLabel.setText(
 					this.minRecommendedTime.getHMSAsString()
-						+ " " + SWMain.getMessagesBundle().getString("is_the_minimum")
+						+ " " + SWMain.messagesBundle.getString("is_the_minimum")
 				);
 			else {
 				clearWarning();
@@ -261,7 +261,7 @@ public class TimeInputPanel extends JPanel
 	public void showRecommendedValueWarning(boolean show_upper_bound)
 	{
 		WallClock wallClock = show_upper_bound ? this.maxRecommendedTime : this.minRecommendedTime;
-		this.warningLabel.setText(wallClock.getHMSAsString() + " " + SWMain.getMessagesBundle().getString("is_recommended"));
+		this.warningLabel.setText(wallClock.getHMSAsString() + " " + SWMain.messagesBundle.getString("is_recommended"));
 	}
 
 	/**

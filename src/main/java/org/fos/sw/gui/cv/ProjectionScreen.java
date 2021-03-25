@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
+import javax.swing.SwingUtilities;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
 import org.fos.sw.gui.Hideable;
@@ -56,14 +57,21 @@ public class ProjectionScreen extends Canvas implements Hideable
 	 */
 	public void updateProjectedImage(@Nullable Mat frame)
 	{
+		assert SwingUtilities.isEventDispatchThread();
 		//System.out.println("Is AWT: " + SwingUtilities.isEventDispatchThread());
-		if (frame == null) {
-			graphics.drawImage(this.getErrorImage(), 0, 0, this);
-			return;
-		}
 
 		if (graphics == null)
 			graphics = this.getGraphics();
+
+		if (frame == null) {
+			graphics.drawImage(
+				this.getErrorImage(),
+				0,
+				0,
+				this
+			);
+			return;
+		}
 
 		Image projectedImage = HighGui.toBufferedImage(frame);
 		graphics.drawImage(projectedImage, 0, 0, this);

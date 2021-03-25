@@ -181,7 +181,7 @@ public class AudioPlayer implements Runnable
 				e
 			);
 			SwingUtilities.invokeLater(
-				() -> this.showErrorAlert(SWMain.getMessagesBundle().getString("system_cannot_play_audio"))
+				() -> this.showErrorAlert(SWMain.messagesBundle.getString("system_cannot_play_audio"))
 			);
 			return false;
 		} catch (IllegalArgumentException e) {
@@ -191,7 +191,7 @@ public class AudioPlayer implements Runnable
 				e
 			);
 			SwingUtilities.invokeLater(
-				() -> this.showErrorAlert(SWMain.getMessagesBundle().getString("system_cannot_play_audio"))
+				() -> this.showErrorAlert(SWMain.messagesBundle.getString("system_cannot_play_audio"))
 			);
 			return false;
 		}
@@ -220,6 +220,6 @@ public class AudioPlayer implements Runnable
 	 */
 	private void showErrorAlert(String message)
 	{
-		SWMain.showErrorAlert(message, SWMain.getMessagesBundle().getString("error_while_playing_audio"));
+		SWMain.showErrorAlert(message, SWMain.messagesBundle.getString("error_while_playing_audio"));
 	}
 }

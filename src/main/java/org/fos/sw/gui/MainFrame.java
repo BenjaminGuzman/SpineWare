@@ -98,8 +98,6 @@ public class MainFrame extends JFrame
 			/**
 			 * Invoked when a window is in the process of being closed.
 			 * The close operation can be overridden at this point.
-			 *
-			 * @param e
 			 */
 			@Override
 			public void windowClosing(WindowEvent e)
@@ -110,8 +108,6 @@ public class MainFrame extends JFrame
 
 			/**
 			 * Invoked when a window is iconified.
-			 *
-			 * @param e
 			 */
 			@Override
 			public void windowIconified(WindowEvent e)
@@ -122,8 +118,6 @@ public class MainFrame extends JFrame
 
 			/**
 			 * Invoked when a window is de-activated.
-			 *
-			 * @param e
 			 */
 			@Override
 			public void windowDeactivated(WindowEvent e)
@@ -136,9 +130,6 @@ public class MainFrame extends JFrame
 			 * Invoked when the Window is no longer the focused Window, which means
 			 * that keyboard events will no longer be delivered to the Window or any of
 			 * its subcomponents.
-			 *
-			 * @param e
-			 * @since 1.4
 			 */
 			@Override
 			public void windowLostFocus(WindowEvent e)
@@ -149,8 +140,6 @@ public class MainFrame extends JFrame
 
 			/**
 			 * Invoked when a window has been opened.
-			 *
-			 * @param e
 			 */
 			@Override
 			public void windowOpened(WindowEvent e)
@@ -161,8 +150,6 @@ public class MainFrame extends JFrame
 
 			/**
 			 * Invoked when a window is de-iconified.
-			 *
-			 * @param e
 			 */
 			@Override
 			public void windowDeiconified(WindowEvent e)
@@ -173,8 +160,6 @@ public class MainFrame extends JFrame
 
 			/**
 			 * Invoked when a window is activated.
-			 *
-			 * @param e
 			 */
 			@Override
 			public void windowActivated(WindowEvent e)
@@ -187,9 +172,6 @@ public class MainFrame extends JFrame
 			 * Invoked when the Window is set to be the focused Window, which means
 			 * that the Window, or one of its subcomponents, will receive keyboard
 			 * events.
-			 *
-			 * @param e
-			 * @since 1.4
 			 */
 			@Override
 			public void windowGainedFocus(WindowEvent e)
@@ -233,12 +215,12 @@ public class MainFrame extends JFrame
 
 		JPanel menuPanel = new JPanel(new GridBagLayout());
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.insets = new Insets(10, 5, 10, 5);
-		gridBagConstraints.anchor = GridBagConstraints.NORTH;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.insets = new Insets(10, 5, 10, 5);
+		gbc.anchor = GridBagConstraints.NORTH;
 
 		// SpineWare logo image
 		ImageIcon swLogoImageIcon = null;
@@ -255,7 +237,7 @@ public class MainFrame extends JFrame
 			swLogoImageLabel = new JLabel(swLogoImageIcon);
 		else
 			swLogoImageLabel = new JLabel("SpineWare");
-		menuPanel.add(swLogoImageLabel, gridBagConstraints);
+		menuPanel.add(swLogoImageLabel, gbc);
 
 		// add all buttons
 		String[] buttonsLabels = new String[]{"menu_breaks", "menu_posture", "menu_help"};
@@ -273,14 +255,14 @@ public class MainFrame extends JFrame
 		JButton button;
 		Insets buttonInsets = new Insets(10, 10, 10, 10);
 		for (short i = 0; i < buttonsIconsPaths.length; ++i) {
-			button = new JButton(SWMain.getMessagesBundle().getString(buttonsLabels[i]));
+			button = new JButton(SWMain.messagesBundle.getString(buttonsLabels[i]));
 			button.setIcon(SWMain.readAndScaleIcon("/resources/media/" + buttonsIconsPaths[i]));
 
 			button.setFont(buttonFont);
 
-			++gridBagConstraints.gridy;
+			++gbc.gridy;
 			button.setMargin(buttonInsets);
-			menuPanel.add(button, gridBagConstraints);
+			menuPanel.add(button, gbc);
 
 			button.addActionListener(buttonsListeners[i]);
 		}

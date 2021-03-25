@@ -48,11 +48,13 @@ import org.fos.sw.gui.Fonts;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.Nullable;
 
-public class BreakCountDown extends JDialog
+public class CountDownDialog extends JDialog
 {
-	private static ImageIcon spineWareIcon; // static to avoid reading the image each time the dialog is shown
+	public static ImageIcon spineWareIcon; // static to avoid reading the image each time the dialog is shown
 
-	private final WallClock breakTime;
+	private final WallClock countDownTime;
+
+	@Nullable
 	private final CountDownLatch countDownLatch;
 
 	private final JLabel[] hmsRemainingTimeLabels;
@@ -63,92 +65,93 @@ public class BreakCountDown extends JDialog
 	@Nullable
 	private Runnable onDisposed;
 
-	public BreakCountDown(
-		final String breakMessage,
-		final WallClock breakTime,
-		final CountDownLatch countDownLatch,
+	public CountDownDialog(
+		final String countDownMessage,
+		final WallClock countDownTime,
+		final @Nullable CountDownLatch countDownLatch,
 		final @Nullable Runnable onShown,
 		final @Nullable Runnable onDisposed
 	)
 	{
-		this(breakMessage, breakTime, countDownLatch);
+		this(countDownMessage, countDownTime, countDownLatch, null);
 		this.onDisposed = onDisposed;
 		if (onShown != null)
 			onShown.run();
 	}
 
-	public BreakCountDown(
-		final String breakMessage,
-		final WallClock breakTime,
-		final CountDownLatch countDownLatch
+	public CountDownDialog(
+		final String countDownMessage,
+		final WallClock countDownTime,
+		final @Nullable CountDownLatch countDownLatch,
+		final @Nullable Window owner
 	)
 	{
-		super((Window) null); // make this an unowned dialog
+		super(owner); // if owner is null, the dialog is an unowned dialog
 		assert SwingUtilities.isEventDispatchThread();
 
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
-		this.breakTime = new WallClock(breakTime); // we need a copy because this class will modify it
+		this.countDownTime = new WallClock(countDownTime); // we need a copy because this class will modify it
 		this.countDownLatch = countDownLatch;
 
 		JPanel mainPanel = new JPanel(new GridBagLayout());
 		mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
 		// add SpineWare logo
-		this.loadSpineWareIcon();
+		loadSpineWareIcon();
 		JLabel spineWareIconLabel = new JLabel();
-		if (BreakCountDown.spineWareIcon != null)
-			spineWareIconLabel.setIcon(BreakCountDown.spineWareIcon);
+		if (CountDownDialog.spineWareIcon != null)
+			spineWareIconLabel.setIcon(CountDownDialog.spineWareIcon);
 		else
 			spineWareIconLabel.setText("SW");
 
 		// create break time message label
 		JLabel breakMessageLabel = new JLabel(
-			breakMessage + " (" + breakTime.getHMSAsString() + ")",
+			countDownMessage + " (" + countDownTime.getHMSAsString() + ")",
 			SwingConstants.CENTER
 		);
 		breakMessageLabel.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 16));
 
 		// create remaining time message label
-		JLabel remainingTimeLabel = new JLabel(messagesBundle.getString("remaining_break_time"));
+		JLabel remainingTimeLabel = new JLabel(messagesBundle.getString("remaining_count_down_time"));
 		remainingTimeLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
 
 		// create real-time remaining time labels
 		this.hmsRemainingTimeLabels = new JLabel[]{
-			new JLabel(String.valueOf(this.breakTime.getHours())),
-			new JLabel(String.valueOf(this.breakTime.getMinutes())),
-			new JLabel(String.valueOf(this.breakTime.getSeconds()))
+			new JLabel(String.valueOf(this.countDownTime.getHours())),
+			new JLabel(String.valueOf(this.countDownTime.getMinutes())),
+			new JLabel(String.valueOf(this.countDownTime.getSeconds()))
 		};
 
-		this.progressBar = new JProgressBar(0, this.breakTime.getHMSAsSeconds());
-		this.progressBar.setValue(this.breakTime.getHMSAsSeconds());
+		this.progressBar = new JProgressBar(0, this.countDownTime.getHMSAsSeconds());
+		this.progressBar.setValue(this.countDownTime.getHMSAsSeconds());
 		this.progressBar.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
 		// create cancel button
 		JButton cancelButton = new JButton(messagesBundle.getString("cancel"));
 		cancelButton.addActionListener((ActionEvent evt) -> this.dispose());
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.ipady = 10;
-		gridBagConstraints.ipadx = 10;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.ipady = 10;
+		gbc.ipadx = 10;
 
 		// add spineware logo
-		gridBagConstraints.gridwidth = 6;
-		mainPanel.add(spineWareIconLabel, gridBagConstraints);
+		gbc.gridwidth = 6;
+		mainPanel.add(spineWareIconLabel, gbc);
 
 		// add break time message
-		gridBagConstraints.gridy = 1;
-		mainPanel.add(breakMessageLabel, gridBagConstraints);
+		gbc.gridy = 1;
+		mainPanel.add(breakMessageLabel, gbc);
 
 		// add remaining time message
-		gridBagConstraints.gridy = 2;
-		mainPanel.add(remainingTimeLabel, gridBagConstraints);
+		gbc.gridy = 2;
+		mainPanel.add(remainingTimeLabel, gbc);
 
 		// add countdown indicators
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 3;
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.weightx = 1;
+		gbc.gridx = 0;
+		gbc.gridy = 3;
+		gbc.gridwidth = 1;
+		gbc.weightx = 1;
 
 		String[] hms = new String[]{
 			messagesBundle.getString("hours"),
@@ -159,34 +162,34 @@ public class BreakCountDown extends JDialog
 		for (JLabel label : this.hmsRemainingTimeLabels) {
 			label.setFont(Fonts.MONOSPACED_BOLD_24);
 			label.setHorizontalAlignment(JLabel.RIGHT);
-			mainPanel.add(label, gridBagConstraints); // add number label
+			mainPanel.add(label, gbc); // add number label
 
-			++gridBagConstraints.gridx;
+			++gbc.gridx;
 			label.setHorizontalAlignment(JLabel.LEFT);
-			mainPanel.add(new JLabel(hms[i]), gridBagConstraints); // add unit label
+			mainPanel.add(new JLabel(hms[i]), gbc); // add unit label
 
-			++gridBagConstraints.gridx;
+			++gbc.gridx;
 			++i;
 		}
 
 		// add progress bar
-		gridBagConstraints.gridy = 4;
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		mainPanel.add(this.progressBar, gridBagConstraints);
+		gbc.gridy = 4;
+		gbc.gridx = 0;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		mainPanel.add(this.progressBar, gbc);
 
 		// add the cancel button
-		++gridBagConstraints.gridy;
-		gridBagConstraints.fill = GridBagConstraints.NONE;
-		mainPanel.add(cancelButton, gridBagConstraints);
+		++gbc.gridy;
+		gbc.fill = GridBagConstraints.NONE;
+		mainPanel.add(cancelButton, gbc);
 
 
 		String iconPath = "/resources/media/SW_white.min.png";
 		try (InputStream iconInputStream = SWMain.getFileAsStream(iconPath)) {
 			this.setIconImage(ImageIO.read(iconInputStream));
 		} catch (IOException e) {
-			Loggers.getErrorLogger().log(Level.WARNING, "Error while setting JFrame image icon", e);
+			Loggers.getErrorLogger().log(Level.WARNING, "Error while setting JDialog image icon", e);
 		}
 
 		this.setContentPane(mainPanel);
@@ -194,41 +197,29 @@ public class BreakCountDown extends JDialog
 		// set default button
 		this.getRootPane().setDefaultButton(cancelButton);
 
-		this.setTitle(breakMessage);
+		this.setTitle(countDownMessage);
 		this.setResizable(false);
 		this.setUndecorated(true);
 		this.setAlwaysOnTop(true);
+		if (owner != null)
+			this.setModalityType(ModalityType.APPLICATION_MODAL);
 		this.pack();
-		this.setLocationRelativeTo(null);
+		this.setLocationRelativeTo(owner);
 		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		this.setVisible(true);
 
 		this.timerCountDown = new Timer(1_000, (ActionEvent evt) -> this.countDown());
 		this.timerCountDown.start();
-	}
 
-	public void countDown()
-	{
-		assert SwingUtilities.isEventDispatchThread();
-
-		if (!this.breakTime.subtractSeconds((byte) 1)) { // if the subtraction could not be done because timer is at 0
-			this.dispose();
-			return;
-		}
-
-		this.hmsRemainingTimeLabels[0].setText(String.valueOf(this.breakTime.getHours()));
-		this.hmsRemainingTimeLabels[1].setText(String.valueOf(this.breakTime.getMinutes()));
-		this.hmsRemainingTimeLabels[2].setText(String.valueOf(this.breakTime.getSeconds()));
-		this.progressBar.setValue(this.breakTime.getHMSAsSeconds());
+		this.setVisible(true);
 	}
 
 	/**
 	 * If the image icon has been already loaded, this will simply do nothing
 	 * If it hasn't been loaded, it tries to load it and stores it in the swIcon static member
 	 */
-	private void loadSpineWareIcon()
+	public static void loadSpineWareIcon()
 	{
-		if (BreakCountDown.spineWareIcon != null)
+		if (CountDownDialog.spineWareIcon != null)
 			return;
 
 		String iconImagePath = "/resources/media/SpineWare_white.png";
@@ -241,7 +232,22 @@ public class BreakCountDown extends JDialog
 		}
 		icon = icon.getScaledInstance(400, 120, Image.SCALE_AREA_AVERAGING);
 
-		BreakCountDown.spineWareIcon = new ImageIcon(icon);
+		CountDownDialog.spineWareIcon = new ImageIcon(icon);
+	}
+
+	public void countDown()
+	{
+		assert SwingUtilities.isEventDispatchThread();
+
+		if (!this.countDownTime.subtractSeconds((byte) 1)) { // if the subtraction could not be done because timer is at 0
+			this.dispose();
+			return;
+		}
+
+		this.hmsRemainingTimeLabels[0].setText(String.valueOf(this.countDownTime.getHours()));
+		this.hmsRemainingTimeLabels[1].setText(String.valueOf(this.countDownTime.getMinutes()));
+		this.hmsRemainingTimeLabels[2].setText(String.valueOf(this.countDownTime.getSeconds()));
+		this.progressBar.setValue(this.countDownTime.getHMSAsSeconds());
 	}
 
 	/**
@@ -264,15 +270,16 @@ public class BreakCountDown extends JDialog
 	public void disposeNoHooks()
 	{
 		super.dispose();
-		this.timerCountDown.stop();
-		this.countDownLatch.countDown();
+		timerCountDown.stop();
+		if (countDownLatch != null)
+			countDownLatch.countDown();
 	}
 
 	@Override
 	public String toString()
 	{
-		return "BreakCountDown{" +
-			"breakSettings=" + breakTime +
+		return "CountDownDialog{" +
+			"breakSettings=" + countDownTime +
 			", countDownLatch=" + countDownLatch +
 			", hmsRemainingTimeLabels=" + Arrays.toString(hmsRemainingTimeLabels) +
 			", timerCountDown=" + timerCountDown +

@@ -47,7 +47,7 @@ import org.fos.sw.timers.TimersManager;
 
 public class SWMain
 {
-	private static ResourceBundle messagesBundle;
+	public static ResourceBundle messagesBundle;
 	private static CVController cvController;
 	private static Image swIcon;
 	private static final String OS = System.getProperty("os.name").toLowerCase();
@@ -96,15 +96,15 @@ public class SWMain
 		System.setProperty("awt.useSystemAAFontSettings", "lcd");
 		System.setProperty("swing.aatext", "true");
 
+		SWMain.changeMessagesBundle(locale);
+
 		com.formdev.flatlaf.FlatDarkLaf.install();
 
 		// add shutdown hook for a clean shutdown
 		// kill all timers, java should take care of the gui, you take care of the timers
 		// this is probably not needed as the JVM GC should collect free resources on exit, including threads
 		// but still it is good to have it
-		Runtime.getRuntime().addShutdownHook(new Thread(TimersManager::killAllTimers));
-
-		SWMain.changeMessagesBundle(locale);
+		Runtime.getRuntime().addShutdownHook(new Thread(SWMain::exit));
 
 		try {
 			Loggers.init();
@@ -251,21 +251,17 @@ public class SWMain
 		SWMain.messagesBundle = newBundle;
 	}
 
-	public static ResourceBundle getMessagesBundle()
-	{
-		return SWMain.messagesBundle;
-	}
-
 	synchronized public static CVController getCVController()
 	{
 		if (cvController == null)
 			try {
 				cvController = new CVController();
-				if (!cvController.getCamCapture().isOpened())
-					cvController.open();
 			} catch (InstanceAlreadyExistsException e) {
 				Loggers.getErrorLogger().log(Level.WARNING, "Error", e);
 			}
+
+		if (!cvController.getCamCapture().isOpened())
+			cvController.open();
 
 		return cvController;
 	}
@@ -295,10 +291,12 @@ public class SWMain
 	public static void exit()
 	{
 		Loggers.getDebugLogger().log(Level.INFO, "Shutting down...");
-		mainFrame.dispose(); // close the main JFrame
+		if (mainFrame != null)
+			mainFrame.dispose(); // close the main JFrame
 		TimersManager.shutdownAllThreads(); // shutdown all threads
 		TimersManager.killAllTimers(); // stop all timers
-		cvController.close(); // close the web cam
+		if (cvController != null)
+			cvController.close(); // close the web cam
 
 		//System.exit(0); // this is not needed, when closing all windows and killing all timers, the JVM
 		// should exit gracefully

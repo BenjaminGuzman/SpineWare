@@ -198,7 +198,7 @@ public class BreaksPanel extends AbstractSection
 		WallClock recommendedPostponeTime
 	)
 	{
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		String breakPrefix = breakType.getMessagesPrefix();
 		byte break_idx = breakType.getIndex();
@@ -215,8 +215,8 @@ public class BreaksPanel extends AbstractSection
 		JLabel breakTitleLabel = new JLabel(breakTitle, JLabel.CENTER);
 		JLabel breakDescLabel = new JLabel(breakDescription, JLabel.CENTER);
 
-		breakTitleLabel.setFont(this.TITLE_FONT);
-		breakDescLabel.setFont(this.DESCRIPTION_FONT);
+		breakTitleLabel.setFont(Fonts.TITLE_FONT);
+		breakDescLabel.setFont(Fonts.DESCRIPTION_FONT);
 
 		/*
 		Second row:
@@ -226,7 +226,7 @@ public class BreaksPanel extends AbstractSection
 		featureEnabledCheckBox.setSelected(this.preferredBreakSettings.get(break_idx).isEnabled());
 
 		JLabel breakFullDescLabel = new JLabel(breakFullDescription, JLabel.CENTER);
-		breakFullDescLabel.setFont(this.FULL_DESCRIPTION_FONT);
+		breakFullDescLabel.setFont(Fonts.FULL_DESCRIPTION_FONT);
 
 		/*
 		Third row:
@@ -244,7 +244,7 @@ public class BreaksPanel extends AbstractSection
 		workingTimeInput.setEnabled(this.preferredBreakSettings.get(break_idx).isEnabled());
 
 		JButton hooksConfigBtn = new JButton(messagesBundle.getString("hooks_config"));
-		hooksConfigBtn.setToolTipText(SWMain.getMessagesBundle().getString("hooks_config_tooltip"));
+		hooksConfigBtn.setToolTipText(SWMain.messagesBundle.getString("hooks_config_tooltip"));
 		hooksConfigBtn.setIcon(hooksConfigIcon);
 
 		/*
@@ -299,49 +299,49 @@ public class BreaksPanel extends AbstractSection
 		// of nothing
 		statusLabel.setFont(Fonts.SANS_SERIF_BOLD_12);
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.insets = new Insets(10, 10, 10, 10);
-		gridBagConstraints.anchor = GridBagConstraints.NORTH;
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.gridx = 0;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(10, 10, 10, 10);
+		gbc.anchor = GridBagConstraints.NORTH;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridy = 0;
+		gbc.gridx = 0;
 
 		/*
 		Add first row
 			title	small description
 		 */
-		panel.add(breakTitleLabel, gridBagConstraints);
+		panel.add(breakTitleLabel, gbc);
 
-		gridBagConstraints.gridwidth = 4;
-		++gridBagConstraints.gridx;
-		panel.add(breakDescLabel, gridBagConstraints);
+		gbc.gridwidth = 4;
+		++gbc.gridx;
+		panel.add(breakDescLabel, gbc);
 
 		/*
 		Add second row
 			checkbox	description
 		 */
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 1;
-		panel.add(featureEnabledCheckBox, gridBagConstraints);
+		gbc.gridwidth = 1;
+		gbc.gridx = 0;
+		gbc.gridy = 1;
+		panel.add(featureEnabledCheckBox, gbc);
 
-		gridBagConstraints.gridwidth = 4;
-		gridBagConstraints.gridx = 1;
-		panel.add(breakFullDescLabel, gridBagConstraints);
+		gbc.gridwidth = 4;
+		gbc.gridx = 1;
+		panel.add(breakFullDescLabel, gbc);
 
 		/*
 		Add third row
 			hooks config	working time input
 		 */
-		gridBagConstraints.gridy = 3;
+		gbc.gridy = 3;
 
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		panel.add(hooksConfigBtn, gridBagConstraints);
+		gbc.gridx = 0;
+		gbc.gridwidth = 1;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(hooksConfigBtn, gbc);
 
-		++gridBagConstraints.gridx;
-		addTimeInputAndLabel2Panel(panel, workingTimeLabel, workingTimeInput, gridBagConstraints);
+		++gbc.gridx;
+		addTimeInputAndLabel2Panel(panel, workingTimeLabel, workingTimeInput, gbc);
 
 		/*
 		Add fourth row:
@@ -349,40 +349,40 @@ public class BreaksPanel extends AbstractSection
 
 		ONLY if it is not a day break
 		 */
-		gridBagConstraints.gridx = 0;
-		++gridBagConstraints.gridy;
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.anchor = GridBagConstraints.CENTER;
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		panel.add(setRecommendedValuesBtn, gridBagConstraints);
+		gbc.gridx = 0;
+		++gbc.gridy;
+		gbc.gridwidth = 1;
+		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(setRecommendedValuesBtn, gbc);
 		if (breakType != BreakType.DAY_BREAK) {
-			++gridBagConstraints.gridx;
-			addTimeInputAndLabel2Panel(panel, breakTimeLabel, breakTimeInput, gridBagConstraints);
+			++gbc.gridx;
+			addTimeInputAndLabel2Panel(panel, breakTimeLabel, breakTimeInput, gbc);
 		}
 
 		/*
 		Add fifth row:
 			save changes	postpone time
 		 */
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridwidth = 1;
-		++gridBagConstraints.gridy;
-		gridBagConstraints.anchor = GridBagConstraints.CENTER;
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		panel.add(saveConfigBtn, gridBagConstraints);
+		gbc.gridx = 0;
+		gbc.gridwidth = 1;
+		++gbc.gridy;
+		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(saveConfigBtn, gbc);
 
-		++gridBagConstraints.gridx;
-		addTimeInputAndLabel2Panel(panel, postponeTimeLabel, postponeTimeInput, gridBagConstraints);
+		++gbc.gridx;
+		addTimeInputAndLabel2Panel(panel, postponeTimeLabel, postponeTimeInput, gbc);
 
 		/*
 		Add sixth row:
 			Status label (expanding through all the columns)
 		 */
-		++gridBagConstraints.gridy;
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.anchor = GridBagConstraints.WEST;
-		gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;
-		panel.add(statusLabel, gridBagConstraints);
+		++gbc.gridy;
+		gbc.gridx = 0;
+		gbc.anchor = GridBagConstraints.WEST;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		panel.add(statusLabel, gbc);
 
 		/*
 		Add listeners to buttons
@@ -446,7 +446,7 @@ public class BreaksPanel extends AbstractSection
 	{
 		JPanel panel = new JPanel(new GridBagLayout());
 
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		String activeHoursTitle = messagesBundle.getString("active_hours_title");
 		String activeHoursDesc = messagesBundle.getString("active_hours_description");
@@ -459,8 +459,8 @@ public class BreaksPanel extends AbstractSection
 		JLabel titleLabel = new JLabel(activeHoursTitle, JLabel.CENTER);
 		JLabel descLabel = new JLabel(activeHoursDesc, JLabel.CENTER);
 
-		titleLabel.setFont(TITLE_FONT);
-		descLabel.setFont(DESCRIPTION_FONT);
+		titleLabel.setFont(Fonts.TITLE_FONT);
+		descLabel.setFont(Fonts.DESCRIPTION_FONT);
 
 		/*
 		Second row:
@@ -470,7 +470,7 @@ public class BreaksPanel extends AbstractSection
 		featureEnabledCheckBox.setSelected(preferredActiveHours.isEnabled());
 
 		JLabel fullDescLabel = new JLabel(activeHoursFullDesc, JLabel.CENTER);
-		fullDescLabel.setFont(FULL_DESCRIPTION_FONT);
+		fullDescLabel.setFont(Fonts.FULL_DESCRIPTION_FONT);
 
 		/*
 		Third row:
@@ -488,7 +488,7 @@ public class BreaksPanel extends AbstractSection
 		startTimeInput.setEnabled(preferredActiveHours.isEnabled());
 
 		JButton hooksConfigBtn = new JButton(messagesBundle.getString("hooks_config"));
-		hooksConfigBtn.setToolTipText(SWMain.getMessagesBundle().getString("hooks_config_tooltip"));
+		hooksConfigBtn.setToolTipText(SWMain.messagesBundle.getString("hooks_config_tooltip"));
 		hooksConfigBtn.setIcon(hooksConfigIcon);
 
 		/*
@@ -519,72 +519,72 @@ public class BreaksPanel extends AbstractSection
 		// of nothing
 		statusLabel.setFont(Fonts.SANS_SERIF_BOLD_12);
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.insets = new Insets(10, 10, 10, 10);
-		gridBagConstraints.anchor = GridBagConstraints.NORTH;
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.gridx = 0;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(10, 10, 10, 10);
+		gbc.anchor = GridBagConstraints.NORTH;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridy = 0;
+		gbc.gridx = 0;
 
 		/*
 		Add first row
 			title	small description
 		 */
-		panel.add(titleLabel, gridBagConstraints);
+		panel.add(titleLabel, gbc);
 
-		gridBagConstraints.gridwidth = 4;
-		++gridBagConstraints.gridx;
-		panel.add(descLabel, gridBagConstraints);
+		gbc.gridwidth = 4;
+		++gbc.gridx;
+		panel.add(descLabel, gbc);
 
 		/*
 		Add second row
 			checkbox	description
 		 */
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.gridx = 0;
-		++gridBagConstraints.gridy;
-		panel.add(featureEnabledCheckBox, gridBagConstraints);
+		gbc.gridwidth = 1;
+		gbc.gridx = 0;
+		++gbc.gridy;
+		panel.add(featureEnabledCheckBox, gbc);
 
-		gridBagConstraints.gridwidth = 4;
-		gridBagConstraints.gridx = 1;
-		panel.add(fullDescLabel, gridBagConstraints);
+		gbc.gridwidth = 4;
+		gbc.gridx = 1;
+		panel.add(fullDescLabel, gbc);
 
 		/*
 		Add third row
 			hooks config	working time input
 		 */
-		++gridBagConstraints.gridy;
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		panel.add(hooksConfigBtn, gridBagConstraints);
+		++gbc.gridy;
+		gbc.gridx = 0;
+		gbc.gridwidth = 1;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(hooksConfigBtn, gbc);
 
-		++gridBagConstraints.gridx;
-		addTimeInputAndLabel2Panel(panel, startTimeLabel, startTimeInput, gridBagConstraints);
+		++gbc.gridx;
+		addTimeInputAndLabel2Panel(panel, startTimeLabel, startTimeInput, gbc);
 
 		/*
 		Add fifth row:
 			save changes	end active hours time input
 		 */
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridwidth = 1;
-		++gridBagConstraints.gridy;
-		gridBagConstraints.anchor = GridBagConstraints.CENTER;
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		panel.add(saveConfigBtn, gridBagConstraints);
+		gbc.gridx = 0;
+		gbc.gridwidth = 1;
+		++gbc.gridy;
+		gbc.anchor = GridBagConstraints.CENTER;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(saveConfigBtn, gbc);
 
-		++gridBagConstraints.gridx;
-		addTimeInputAndLabel2Panel(panel, endTimeLabel, endTimeInput, gridBagConstraints);
+		++gbc.gridx;
+		addTimeInputAndLabel2Panel(panel, endTimeLabel, endTimeInput, gbc);
 
 		/*
 		Add sixth row:
 			Status label (expanding through all the columns)
 		 */
-		++gridBagConstraints.gridy;
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.anchor = GridBagConstraints.WEST;
-		gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;
-		panel.add(statusLabel, gridBagConstraints);
+		++gbc.gridy;
+		gbc.gridx = 0;
+		gbc.anchor = GridBagConstraints.WEST;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		panel.add(statusLabel, gbc);
 
 		/*
 		Add listeners to buttons
@@ -606,7 +606,7 @@ public class BreaksPanel extends AbstractSection
 
 			if (end_time <= start_time) {
 				statusLabel.setForeground(Colors.RED);
-				statusLabel.setText(SWMain.getMessagesBundle().getString("active_hours_time_invalid"));
+				statusLabel.setText(SWMain.messagesBundle.getString("active_hours_time_invalid"));
 				return;
 			}
 
@@ -621,11 +621,11 @@ public class BreaksPanel extends AbstractSection
 						.setBeforeStartHooks(hooksPrefsIO.loadForActiveHours(false))
 				);
 				statusLabel.setForeground(Colors.GREEN);
-				statusLabel.setText(SWMain.getMessagesBundle().getString("changes_saved"));
+				statusLabel.setText(SWMain.messagesBundle.getString("changes_saved"));
 			} catch (InstantiationException e) {
 				Loggers.getErrorLogger().log(Level.SEVERE, "Couldn't save preferences", e);
 				statusLabel.setForeground(Colors.RED);
-				statusLabel.setText(SWMain.getMessagesBundle().getString("error_while_saving_changes"));
+				statusLabel.setText(SWMain.messagesBundle.getString("error_while_saving_changes"));
 			}
 		});
 		saveConfigBtn.addFocusListener(onFocusLostClearLabel);
@@ -673,7 +673,7 @@ public class BreaksPanel extends AbstractSection
 	private JPanel createOptionsPanel()
 	{
 		JPanel panel = new JPanel(new GridBagLayout());
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 		NotificationPrefsIO notificationPrefsIO = TimersManager.getPrefsIO().getNotificationPrefsIO();
 
 		JLabel locationLabel = new JLabel(messagesBundle.getString("notification_location"));
@@ -689,14 +689,14 @@ public class BreaksPanel extends AbstractSection
 			notificationPrefsIO.getNotificationPrefLocation(true).getLocationIdx()
 		);
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.ipadx = 5;
-		gridBagConstraints.ipady = 5;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.ipadx = 5;
+		gbc.ipady = 5;
 
-		panel.add(locationLabel, gridBagConstraints);
+		panel.add(locationLabel, gbc);
 
-		gridBagConstraints.gridx = 1;
-		panel.add(notificationLocationCombobox, gridBagConstraints);
+		gbc.gridx = 1;
+		panel.add(notificationLocationCombobox, gbc);
 
 		// set the listener to automatically save config on changes
 		notificationLocationCombobox.addActionListener((ActionEvent evt) ->
@@ -785,7 +785,7 @@ public class BreaksPanel extends AbstractSection
 			saveButton.setEnabled(is_enabled);
 
 			statusLabel.setForeground(Colors.WHITE);
-			statusLabel.setText(SWMain.getMessagesBundle().getString(
+			statusLabel.setText(SWMain.messagesBundle.getString(
 				is_enabled
 					? "feature_successfully_enabled"
 					: "feature_successfully_disabled"
@@ -856,21 +856,21 @@ public class BreaksPanel extends AbstractSection
 			if (postponeTimeInput.getTime() > workingTimeInput.getTime()) {
 				statusLabel.setForeground(Colors.RED);
 				statusLabel.setText(
-					SWMain.getMessagesBundle().getString("working_time_greater_than_postpone_time")
+					SWMain.messagesBundle.getString("working_time_greater_than_postpone_time")
 				);
 				return;
 			} else if (breakTimeInput != null && breakTimeInput.getTime() > workingTimeInput.getTime()) {
 				statusLabel.setForeground(Colors.RED);
 				statusLabel.setText(
-					SWMain.getMessagesBundle().getString("working_time_greater_than_break_time")
+					SWMain.messagesBundle.getString("working_time_greater_than_break_time")
 				);
 				return;
 			}
 
 			// if everything went OK
 			this.statusLabel.setText(
-				SWMain.getMessagesBundle().getString("changes_saved")
-					+ ". " + SWMain.getMessagesBundle().getString("changes_saved_extra_text")
+				SWMain.messagesBundle.getString("changes_saved")
+					+ ". " + SWMain.messagesBundle.getString("changes_saved_extra_text")
 			);
 			this.statusLabel.setForeground(Colors.GREEN);
 
@@ -950,7 +950,7 @@ public class BreaksPanel extends AbstractSection
 			this.postponeTimeInput.setValues(this.postponeRecommendedValues);
 
 			// notify the user
-			this.statusLabel.setText(SWMain.getMessagesBundle().getString("recommended_values_were_set"));
+			this.statusLabel.setText(SWMain.messagesBundle.getString("recommended_values_were_set"));
 			this.statusLabel.setForeground(Colors.WHITE);
 		}
 	}

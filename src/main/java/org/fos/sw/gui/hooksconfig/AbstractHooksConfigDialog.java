@@ -88,7 +88,7 @@ public abstract class AbstractHooksConfigDialog extends JDialog implements Initi
 	protected JPanel createActionsPanel()
 	{
 		JPanel panel = new JPanel();
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		JButton saveBtn = new JButton(messagesBundle.getString("save_changes"));
 		saveBtn.setToolTipText(messagesBundle.getString("save_changes_timers_warning"));

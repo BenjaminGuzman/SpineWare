@@ -108,9 +108,9 @@ public class TakeABreakNotification extends AbstractNotification
 	 * Use this function to initialize and add the components to the {@link #mainPanel}
 	 */
 	@Override
-	protected void initComponents()
+	public void initComponents()
 	{
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		// create take a break label
 		JLabel takeABreakLabel = new JLabel(takeABreakMessage);
@@ -153,31 +153,31 @@ public class TakeABreakNotification extends AbstractNotification
 		progressBarCountDown.setBackground(Colors.RED_WINE);
 		progressBarCountDown.setForeground(Colors.GREEN_DARK);
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.ipadx = 5;
-		gridBagConstraints.ipady = 5;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.ipadx = 5;
+		gbc.ipady = 5;
 
 		// add SW icon
-		gridBagConstraints.gridheight = 3;
-		super.mainPanel.add(super.swIconLabel, gridBagConstraints);
+		gbc.gridheight = 3;
+		super.mainPanel.add(super.swIconLabel, gbc);
 
 		// add take a break label
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.gridheight = 1;
-		super.mainPanel.add(takeABreakLabel, gridBagConstraints);
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.gridheight = 1;
+		super.mainPanel.add(takeABreakLabel, gbc);
 
 		// add buttons panel
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 1;
-		super.mainPanel.add(buttonsPanel, gridBagConstraints);
+		gbc.gridx = 1;
+		gbc.gridy = 1;
+		super.mainPanel.add(buttonsPanel, gbc);
 
 		// add progress bar
 		if (is_not_day_limit_notification) {
-			gridBagConstraints.gridx = 1;
-			gridBagConstraints.gridy = 2;
-			gridBagConstraints.weightx = 2;
-			super.mainPanel.add(progressBarCountDown, gridBagConstraints);
+			gbc.gridx = 1;
+			gbc.gridy = 2;
+			gbc.weightx = 2;
+			super.mainPanel.add(progressBarCountDown, gbc);
 
 			countDownTimer = new Timer(1_000, (ActionEvent evt) -> {
 				if (pause_countdown)

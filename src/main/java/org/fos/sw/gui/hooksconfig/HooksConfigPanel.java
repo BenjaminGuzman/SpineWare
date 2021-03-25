@@ -156,7 +156,7 @@ public class HooksConfigPanel extends JPanel
 		 */
 		JLabel hookTitleLabel = new JLabel(hookTitle);
 		hookTitleLabel.setFont(Fonts.SANS_SERIF_BOLD_15);
-		this.enabledCheckBox = new JCheckBox(SWMain.getMessagesBundle().getString("feature_enabled"));
+		this.enabledCheckBox = new JCheckBox(SWMain.messagesBundle.getString("feature_enabled"));
 
 		/*
 		Second row:
@@ -187,66 +187,66 @@ public class HooksConfigPanel extends JPanel
 		this.cmdTextField = new JTextField();
 		this.cmdTextField.setFont(Fonts.MONOSPACED_BOLD_12);
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.insets = new Insets(5, 5, 5, 5);
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(5, 5, 5, 5);
 		/*
 		Add first row:
 			Hook title label        enabled checkbox
 		 */
-		gridBagConstraints.weightx = 2;
-		//gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		this.add(hookTitleLabel, gridBagConstraints);
+		gbc.weightx = 2;
+		//gbc.fill = GridBagConstraints.HORIZONTAL;
+		this.add(hookTitleLabel, gbc);
 
-		gridBagConstraints.weightx = 0;
-		gridBagConstraints.gridx = 2;
-		++gridBagConstraints.gridy;
-		gridBagConstraints.fill = GridBagConstraints.NONE;
-		this.add(enabledCheckBox, gridBagConstraints);
+		gbc.weightx = 0;
+		gbc.gridx = 2;
+		++gbc.gridy;
+		gbc.fill = GridBagConstraints.NONE;
+		this.add(enabledCheckBox, gbc);
 
 		/*
 		Add second row:
 			Play audio file         select audio file       no audio file
 		 */
-		gridBagConstraints.weightx = 2;
-		gridBagConstraints.gridx = 0;
-		++gridBagConstraints.gridy;
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		this.add(audioDescLabel, gridBagConstraints);
+		gbc.weightx = 2;
+		gbc.gridx = 0;
+		++gbc.gridy;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		this.add(audioDescLabel, gbc);
 
-		gridBagConstraints.weightx = 0;
-		++gridBagConstraints.gridx;
-		gridBagConstraints.fill = GridBagConstraints.NONE;
-		this.add(selectAudioBtn, gridBagConstraints);
+		gbc.weightx = 0;
+		++gbc.gridx;
+		gbc.fill = GridBagConstraints.NONE;
+		this.add(selectAudioBtn, gbc);
 
-		++gridBagConstraints.gridx;
-		this.add(noAudioBtn, gridBagConstraints);
+		++gbc.gridx;
+		this.add(noAudioBtn, gbc);
 
 		/*
 		Third row:
 			label showing the current selected file/directory
 		 */
-		gridBagConstraints.weightx = 0;
-		gridBagConstraints.gridwidth = GridBagConstraints.REMAINDER;
-		gridBagConstraints.fill = GridBagConstraints.BOTH;
-		gridBagConstraints.gridx = 0;
-		++gridBagConstraints.gridy;
-		this.add(selectedAudioLabel, gridBagConstraints);
+		gbc.weightx = 0;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		gbc.fill = GridBagConstraints.BOTH;
+		gbc.gridx = 0;
+		++gbc.gridy;
+		this.add(selectedAudioLabel, gbc);
 
 		/*
 		Fourth row:
 			Execute command
 		 */
-		++gridBagConstraints.gridy;
-		this.add(executeCmdLabel, gridBagConstraints);
+		++gbc.gridy;
+		this.add(executeCmdLabel, gbc);
 
 		/*
 		Fifth row:
 			input for the desired command to execute
 		 */
-		++gridBagConstraints.gridy;
-		gridBagConstraints.ipadx = 10;
-		gridBagConstraints.ipady = 10;
-		this.add(cmdTextField, gridBagConstraints);
+		++gbc.gridy;
+		gbc.ipadx = 10;
+		gbc.ipady = 10;
+		this.add(cmdTextField, gbc);
 
 
 		// set listeners for buttons

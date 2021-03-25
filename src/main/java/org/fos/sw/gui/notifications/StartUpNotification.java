@@ -35,34 +35,34 @@ public class StartUpNotification extends AbstractNotification
 	}
 
 	/**
-	 * Use this function to initialize and add the compoenents to the {@link #mainPanel}
+	 * Use this function to initialize and add the components to the {@link #mainPanel}
 	 */
 	@Override
-	protected void initComponents()
+	public void initComponents()
 	{
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.ipadx = 5;
-		gridBagConstraints.ipady = 5;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.ipadx = 5;
+		gbc.ipady = 5;
 
-		JLabel startUpLabel = new JLabel(SWMain.getMessagesBundle().getString("spineware_has_started"));
+		JLabel startUpLabel = new JLabel(SWMain.messagesBundle.getString("spineware_has_started"));
 		startUpLabel.setFont(Fonts.SANS_SERIF_BOLD_15);
 
 		// add SW icon
-		gridBagConstraints.gridheight = 2;
-		super.mainPanel.add(super.swIconLabel, gridBagConstraints);
+		gbc.gridheight = 2;
+		super.mainPanel.add(super.swIconLabel, gbc);
 
 		// add start up label
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.gridheight = 2;
-		super.mainPanel.add(startUpLabel, gridBagConstraints);
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.gridheight = 2;
+		super.mainPanel.add(startUpLabel, gbc);
 
 		// add close button
-		gridBagConstraints.gridx = 2;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.gridwidth = 1;
-		gridBagConstraints.gridheight = 1;
-		super.mainPanel.add(super.closeBtn, gridBagConstraints);
+		gbc.gridx = 2;
+		gbc.gridy = 0;
+		gbc.gridwidth = 1;
+		gbc.gridheight = 1;
+		super.mainPanel.add(super.closeBtn, gbc);
 		super.closeBtn.addActionListener((ActionEvent e) -> this.dispose());
 
 		super.showJDialog();

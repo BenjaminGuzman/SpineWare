@@ -18,6 +18,9 @@
 
 package org.fos.sw.gui.cv;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,6 +32,7 @@ import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
 import org.fos.sw.cv.CVController;
 import org.fos.sw.gui.Hideable;
+import org.fos.sw.gui.Initializable;
 import org.fos.sw.gui.Showable;
 import org.fos.sw.utils.DaemonThreadFactory;
 import org.opencv.core.Mat;
@@ -37,12 +41,12 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-public class CVConfigPanel extends JPanel implements Hideable, Showable
+public class CVConfigPanel extends JPanel implements Hideable, Showable, Initializable
 {
 	/**
 	 * Number of frames per seconds to show in the projection (mirror) screen
 	 */
-	private static final int FPS = 20;
+	private static final int FPS = 30;
 
 	private final ProjectionScreen projectionScreen;
 
@@ -57,10 +61,37 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable
 		projectionScreen = new ProjectionScreen();
 	}
 
+	@Override
 	public void initComponents()
 	{
-		this.add(this.projectionScreen);
+		this.setLayout(new GridBagLayout());
 
+		CamCalibrationPanel camCalibration = new CamCalibrationPanel(this::onHide, this::onShown);
+		camCalibration.initComponents();
+
+		CamMarginsPanel marginsPanel = new CamMarginsPanel();
+		marginsPanel.initComponents();
+
+		// add the components
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.weightx = 0;
+		gbc.insets = new Insets(15, 10, 15, 10);
+		gbc.anchor = GridBagConstraints.CENTER;
+
+		// add mirror
+		this.add(this.projectionScreen, gbc);
+
+		// add camera calibration
+		++gbc.gridy;
+		gbc.anchor = GridBagConstraints.WEST;
+		gbc.weightx = 1;
+		this.add(camCalibration, gbc);
+
+		// add cam margins configuration
+		++gbc.gridy;
+		this.add(marginsPanel, gbc);
 
 		Mat frame;
 		if ((frame = cvController.captureFrame()) != null)
@@ -87,9 +118,9 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable
 		// show error message if no face was detected or more than 1 face was detected
 		String errorMsg = null;
 		if (detectedFaces.size() > 1)
-			errorMsg = SWMain.getMessagesBundle().getString("too_many_faces");
+			errorMsg = SWMain.messagesBundle.getString("too_many_faces");
 		else if (detectedFaces.isEmpty())
-			errorMsg = SWMain.getMessagesBundle().getString("no_faces_detected");
+			errorMsg = SWMain.messagesBundle.getString("no_face_detected");
 
 		if (errorMsg != null)
 			Imgproc.putText(

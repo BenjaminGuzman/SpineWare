@@ -106,7 +106,7 @@ public class SysTrayMenu extends JDialog
 	public JPanel initComponents()
 	{
 		JPanel mainPanel = new JPanel(new GridBagLayout());
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		ImageIcon swLogoImageIcon = null;
 		try (InputStream inputStreamSWLogo = SWMain.getFileAsStream("/resources/media/SW_white.min.png")) {
@@ -150,51 +150,51 @@ public class SysTrayMenu extends JDialog
 			pauseButton.setText(main_loop_stopped ? continueStr : pauseStr);
 		});
 
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		gridBagConstraints.insets = new Insets(5, 5, 5, 5);
-		gridBagConstraints.anchor = GridBagConstraints.NORTH;
-		gridBagConstraints.ipady = 10;
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 0;
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.insets = new Insets(5, 5, 5, 5);
+		gbc.anchor = GridBagConstraints.NORTH;
+		gbc.ipady = 10;
+		gbc.gridx = 0;
+		gbc.gridy = 0;
 
-		gridBagConstraints.gridwidth = 2;
-		mainPanel.add(swLogoImageLabel, gridBagConstraints);
+		gbc.gridwidth = 2;
+		mainPanel.add(swLogoImageLabel, gbc);
 
-		++gridBagConstraints.gridy;
-		mainPanel.add(exitButton, gridBagConstraints);
+		++gbc.gridy;
+		mainPanel.add(exitButton, gbc);
 
-		++gridBagConstraints.gridy;
-		mainPanel.add(openButton, gridBagConstraints);
+		++gbc.gridy;
+		mainPanel.add(openButton, gbc);
 
-		++gridBagConstraints.gridy;
-		mainPanel.add(pauseButton, gridBagConstraints);
+		++gbc.gridy;
+		mainPanel.add(pauseButton, gbc);
 
-		gridBagConstraints.gridwidth = 1;
+		gbc.gridwidth = 1;
 
 		// small break progress bar
-		gridBagConstraints.gridx = 0;
-		++gridBagConstraints.gridy;
-		mainPanel.add(new JLabel(messagesBundle.getString("small_breaks_title")), gridBagConstraints);
+		gbc.gridx = 0;
+		++gbc.gridy;
+		mainPanel.add(new JLabel(messagesBundle.getString("small_breaks_title")), gbc);
 
-		gridBagConstraints.gridx = 1;
-		mainPanel.add(this.breaksProgressBars.get(BreakType.SMALL_BREAK.getIndex()), gridBagConstraints);
+		gbc.gridx = 1;
+		mainPanel.add(this.breaksProgressBars.get(BreakType.SMALL_BREAK.getIndex()), gbc);
 
 		// stretch break progress bar
-		gridBagConstraints.gridx = 0;
-		++gridBagConstraints.gridy;
-		mainPanel.add(new JLabel(messagesBundle.getString("stretch_breaks_title")), gridBagConstraints);
+		gbc.gridx = 0;
+		++gbc.gridy;
+		mainPanel.add(new JLabel(messagesBundle.getString("stretch_breaks_title")), gbc);
 
-		gridBagConstraints.gridx = 1;
-		mainPanel.add(this.breaksProgressBars.get(BreakType.STRETCH_BREAK.getIndex()), gridBagConstraints);
+		gbc.gridx = 1;
+		mainPanel.add(this.breaksProgressBars.get(BreakType.STRETCH_BREAK.getIndex()), gbc);
 
 		// day break progress bar
-		gridBagConstraints.gridx = 0;
-		++gridBagConstraints.gridy;
-		mainPanel.add(new JLabel(messagesBundle.getString("day_break_title")), gridBagConstraints);
+		gbc.gridx = 0;
+		++gbc.gridy;
+		mainPanel.add(new JLabel(messagesBundle.getString("day_break_title")), gbc);
 
-		gridBagConstraints.gridx = 1;
-		mainPanel.add(this.breaksProgressBars.get(BreakType.DAY_BREAK.getIndex()), gridBagConstraints);
+		gbc.gridx = 1;
+		mainPanel.add(this.breaksProgressBars.get(BreakType.DAY_BREAK.getIndex()), gbc);
 
 		return mainPanel;
 	}
@@ -210,7 +210,7 @@ public class SysTrayMenu extends JDialog
 	public void setVisible(boolean visible)
 	{
 		super.setVisible(visible);
-		ResourceBundle messagesBundle = SWMain.getMessagesBundle();
+		ResourceBundle messagesBundle = SWMain.messagesBundle;
 
 		if (!visible) {
 			if (this.statusTimer != null)
