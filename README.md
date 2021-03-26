@@ -42,7 +42,7 @@ A Java application to take care of your health while you're using the computer.
 This feature is specifically useful to remind you with a sound (along with a notification) to take a break or play music
 while you're taking the break.
 
-A hook can be configured to execute commands too!
+**A hook can be configured to execute commands too!**
 
 ![Breaks hooks configuration image](media/break_hooks_config.png)
 
@@ -62,10 +62,10 @@ Please, if you try SpineWare and discover that your SO is not compatible, try ma
 
 **TODO**: Complete this docs & make the feature.
 
-### Computer Vision program to check if you're getting too close to the screen
+### Computer Vision program to check if you're in a good posture or not
 
 Haven't you had that sensation of knowing that you're in a bad posture but do not remember how you got it? This feature
-can help you out to avoid adopting that bad posture.
+can help you to avoid adopting that bad posture.
 
 **TODO**: SCREENSHOT HERE, complete the feature.
 
@@ -80,11 +80,11 @@ This software is under the GPLv3 License, thus you're free to modify and improve
 
 There are three main areas where you can contribute:
 
-- **Help to bring SpineWare to Windows and MacOS**: We love free software and mainly use GNU/Linux to run and test
-  SpineWare, but we believe is part of the freedom of the user to choose what software to use and in which platform. A
-  great advantage is that SpineWare is written in Java.
-- **Translations**: Currently SpineWare is available only in 2 language: English and Spanish. It'd be great if you contribute with
-  translations of the [messages.properties](src/main/resources/bundles)
+- **Help to bring SpineWare to Windows and MacOS**: I love free software and mainly use GNU/Linux to run and test
+  SpineWare, but I believe is part of the user's freedom to choose what software to use and in which platform. A great
+  advantage is that SpineWare is written in Java.
+- **Translations**: Currently SpineWare is available only in 2 languages: English and Spanish. It'd be great if you
+  contribute with translations of the [messages.properties](src/main/resources/bundles)
 - **Ideas & code**: I (Benjamín Guzmán) wrote SpineWare according to my needs as developer, but maybe you've some other
   needs & ideas, you can contribute with that and even modify the source code to make it a reality.
 
@@ -139,8 +139,8 @@ When a hook command is executed, the
 - **stdout** of the command is redirected to the file `SW_hooks_stdout.log` inside the temp directory
 - **stderr** of the command is redirected to the file `SW_hooks_stderr.log` inside the temp directory
 
-These files are **NOT overwritten** but **appended**, therefore, there you can see all the logs for all executions. (
-since you powered up your computer, remember they're in the temp dir).
+These files are **NOT overwritten** but **appended**, therefore, there you can see all the logs for all executions.
+(Starting from when you powered up your computer, remember they're in the temp dir).
 
 ## How it works
 
@@ -160,14 +160,26 @@ Yes. It is most efficient in most cases. It may have no difference or may be eve
 break, but because the application is meant to have multiple breaks it was done that way. Remember each timer creates a
 thread, it is better to have a single thread (a single main loop timer) than multiple timers.
 
-- Why don't put the posture checker and the main loop timer in a single thread?
+- Why don't put use a single thread for the posture checker and the main timer loop?
 
 Since the posture checker does some calculations more expensive than the calculations done in the main loop timer, it
 was preferred to do those "expensive" calculations in a separate thread.
 
 - Why Swing and not JavaFX?
 
-I tried to use JavaFX, although I think GUI programming would have been simpler, it doesn't have some features required
-by SpineWare. For example, you cannot have a Stage undecorated and of type POPUP (which allows not to show the
-application icon in the taskbar)
+I tried to use JavaFX, I think GUI programming would have been easier, but it doesn't have some features required by
+SpineWare. For example, you cannot have an undecorated Stage of type POPUP (which allows not to show the application
+icon in the taskbar)
 at the same time.
+
+- Why singleton pattern is implemented differently in some classes?
+
+Let's take as an example the `CVController` class and the `CVPrefsManager`. Both classes use the singleton pattern, the
+former throws an exception in the constructor if an instance already exists, while the latter has only static members,
+why is that?
+
+That was done for performance, the `CVController` **loads** some of the **OpenCV** stuff so it was preferred just to
+load that stuff when needed (when explicitly calling the constructor) not when the JVM's ClassLoader loads the class as
+it is done with the `CVPrefsManager` because all members are static.
+
+It really doesn't impact much the overall performance and could be done either way.
