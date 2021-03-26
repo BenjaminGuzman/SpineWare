@@ -112,7 +112,7 @@ public class CommandExecutor extends Thread
 		ArrayList<String> executionCmd = new ArrayList<>(3);
 
 		// add the shell
-		// TODO: add support for other "shells" & test in various systems
+		// TODO: add support for other "shells" & test in various operative systems
 		executionCmd.add(SWMain.IS_WINDOWS ? "cmd" : "sh");
 
 		// add the argument for the shell to execute thegiven command

@@ -63,7 +63,7 @@ public class ProjectionScreen extends Canvas implements Hideable
 		if (graphics == null)
 			graphics = this.getGraphics();
 
-		if (frame == null) {
+		if (frame == null || frame.empty()) {
 			graphics.drawImage(
 				this.getErrorImage(),
 				0,
@@ -96,6 +96,16 @@ public class ProjectionScreen extends Canvas implements Hideable
 
 		return this.technicalDifficultiesImg;
 
+	}
+
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		super.setEnabled(enabled);
+
+		this.setVisible(enabled);
+		this.revalidate();
+		this.repaint();
 	}
 
 	/**

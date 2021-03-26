@@ -27,6 +27,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.fos.sw.SWMain;
+import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.cv.CVConfigPanel;
 
@@ -35,6 +36,7 @@ public class PostureChecker extends AbstractSection
 	private static boolean instantiated;
 
 	private CVConfigPanel cvConfigPanel;
+	private JCheckBox featureEnabledCheckBox;
 
 	public PostureChecker() throws InstanceAlreadyExistsException
 	{
@@ -44,8 +46,6 @@ public class PostureChecker extends AbstractSection
 				"There must exist a single instance of " + AbstractSection.class.getName()
 			);
 		instantiated = true;
-
-		// TODO: load preferred configs
 	}
 
 	@Override
@@ -53,11 +53,11 @@ public class PostureChecker extends AbstractSection
 	{
 		JPanel panel = new JPanel(new BorderLayout());
 
-		// general feature config
-		JPanel generalConfigPanel = createGeneralConfigPanel();
-
 		// specific CVController feature config
 		JPanel cvConfigPanel = createCVConfigPanel();
+
+		// general feature config
+		JPanel generalConfigPanel = createGeneralConfigPanel();
 
 		panel.add(generalConfigPanel, BorderLayout.NORTH);
 		panel.add(cvConfigPanel, BorderLayout.CENTER);
@@ -74,7 +74,7 @@ public class PostureChecker extends AbstractSection
 	private JPanel createCVConfigPanel()
 	{
 		JPanel panel = new JPanel();
-		this.cvConfigPanel = new CVConfigPanel();
+		cvConfigPanel = new CVConfigPanel();
 		panel.add(this.cvConfigPanel);
 		cvConfigPanel.initComponents();
 		return panel;
@@ -99,9 +99,16 @@ public class PostureChecker extends AbstractSection
 		descriptionLabel.setFont(Fonts.FULL_DESCRIPTION_FONT);
 
 		// inputs creations
-		JCheckBox featureEnabledCheckBox = new JCheckBox(
+		featureEnabledCheckBox = new JCheckBox(
 			SWMain.messagesBundle.getString("feature_enabled")
 		);
+		featureEnabledCheckBox.setSelected(CVPrefsManager.isFeatureEnabled());
+
+		// add listeners
+		featureEnabledCheckBox.addActionListener(e -> {
+			CVPrefsManager.setFeatureEnabled(featureEnabledCheckBox.isSelected());
+			cvConfigPanel.setEnabled(featureEnabledCheckBox.isSelected());
+		});
 
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = 0;
