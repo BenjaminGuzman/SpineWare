@@ -32,7 +32,6 @@ public class WallClock
 	public WallClock(int hours, int minutes, int seconds)
 	{
 		this((byte) hours, (byte) minutes, (byte) seconds);
-		// FIXME: is it ok to do this?
 		assert Byte.MIN_VALUE <= hours && hours <= Byte.MAX_VALUE;
 		assert Byte.MIN_VALUE <= minutes && minutes <= Byte.MAX_VALUE;
 		assert Byte.MIN_VALUE <= seconds && seconds <= Byte.MAX_VALUE;

@@ -55,6 +55,17 @@ public class CVController implements AutoCloseable
 
 	public static final double INVALID_IDEAL_FOCAL_LENGTH = -1;
 
+	/**
+	 * Estimated height (length) from the eyebrows to the lips in centimeters
+	 */
+	public static final double ESTIMATED_FACE_HEIGHT_CM = 12;
+
+	/**
+	 * It is recommended to have a distance from the screen greater than 50cm
+	 * That value may vary, but let's suppose 50 is good
+	 */
+	public static final double SAFE_DISTANCE_CM = 50;
+
 	// thresholds
 	private Size minFaceDetectedSize;
 
@@ -155,8 +166,8 @@ public class CVController implements AutoCloseable
 		facesClassifier.detectMultiScale(
 			grayFrame,
 			detectedFaces,
-			1.1,
-			2,
+			1.2,
+			5,
 			Objdetect.CASCADE_SCALE_IMAGE,
 			minFaceDetectedSize
 		);
@@ -185,7 +196,20 @@ public class CVController implements AutoCloseable
 		Rect detectedFace = detectedFaces.get(0);
 		double face_projected_height = detectedFace.height;
 
-		return distance * (face_projected_height / face_height_cm);
+		return distance * face_projected_height / face_height_cm;
+	}
+
+	/**
+	 * Computes an approximation of the distance to the camera
+	 *
+	 * @param focal_length          the ideal focal length
+	 * @param face_height_cm        the face height in cm
+	 * @param projected_face_height the projected face height (this is the height of the {@link Rect} of the face)
+	 * @return the computed (approximated) distance
+	 */
+	public double computeDistance(double focal_length, double face_height_cm, double projected_face_height)
+	{
+		return focal_length * face_height_cm / projected_face_height;
 	}
 
 	/**

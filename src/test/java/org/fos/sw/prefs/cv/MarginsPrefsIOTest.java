@@ -16,17 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.cv;
+package org.fos.sw.prefs.cv;
 
-import org.fos.sw.cv.PostureChecker;
-import org.junit.jupiter.api.Test;
-
-class PostureCheckerTest
+class MarginsPrefsIOTest
 {
 
-	@Test
-	void start()
-	{
-		new PostureChecker().start();
-	}
 }

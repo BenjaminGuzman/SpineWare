@@ -23,6 +23,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.text.DecimalFormat;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.stream.IntStream;
@@ -37,6 +38,9 @@ import javax.swing.SwingUtilities;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
 import org.fos.sw.cv.CVController;
+import org.fos.sw.cv.CVPrefsManager;
+import org.fos.sw.cv.IdealFocalLengthMeasure;
+import org.fos.sw.gui.Colors;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.Initializable;
 import org.fos.sw.gui.notifications.CountDownDialog;
@@ -48,11 +52,6 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 {
 	private static final String DISTANCE_UNITS = "cm";
 	/**
-	 * Conversion factor from the {@link #DISTANCE_UNITS} to meters
-	 * Multiply by this quantity to convert to meters
-	 */
-	private static final double DISTANCE_CONVERSION_FACTOR_2_M = 10e-2;
-	/**
 	 * Callback to execute when calibration is being performed
 	 */
 	@NotNull
@@ -62,21 +61,43 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 	 */
 	@NotNull
 	private final Runnable resumeMirror;
+
+	/**
+	 * Callback to execute when the "reset calibration" is clicked
+	 */
+	@NotNull
+	private final Runnable recomputeFocalLength;
+
 	private JComboBox<String> distanceDropdown;
-	private JComboBox<String> faceHeightDropdown;
+	@NotNull
+	private final JButton calibrateBtn;
+	@NotNull
+	private final JButton resetCalibrationBtn;
+	private final DecimalFormat distanceFormatter;
+	private JLabel distanceValueLabel;
 
 	/**
 	 * Stopping/resuming the mirror is required as the calibration algorithm will grab some frames.
 	 * Since the mirror also grabs frames, bad things (or at least is not good)
 	 * can happen if the resource is accessed twice
 	 *
-	 * @param stopMirror   Callback to execute when calibration is being performed
-	 * @param resumeMirror Callback to execute when calibration is done
+	 * @param stopMirror           Callback to execute when calibration is being performed
+	 * @param resumeMirror         Callback to execute when calibration is done
+	 * @param recomputeFocalLength Callback to execute when the "reset calibration" is clicked
 	 */
-	public CamCalibrationPanel(@NotNull final Runnable stopMirror, @NotNull final Runnable resumeMirror)
+	public CamCalibrationPanel(
+		@NotNull final Runnable stopMirror,
+		@NotNull final Runnable resumeMirror,
+		@NotNull final Runnable recomputeFocalLength
+	)
 	{
 		this.stopMirror = stopMirror;
 		this.resumeMirror = resumeMirror;
+		this.recomputeFocalLength = recomputeFocalLength;
+		this.distanceFormatter = new DecimalFormat("##.# cm");
+
+		calibrateBtn = new JButton(SWMain.messagesBundle.getString("calibrate"));
+		resetCalibrationBtn = new JButton(SWMain.messagesBundle.getString("reset_calibration"));
 	}
 
 	@Override
@@ -126,30 +147,70 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 	 */
 	private JPanel createActionsPanel()
 	{
-
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
 
 		// create the distance dropdown
 		this.distanceDropdown = new JComboBox<>(
-			IntStream.rangeClosed(2, 7)
+			IntStream.rangeClosed(3, 7) // 30cm, 40cm, ..., 60cm, 70cm
 				.map(i -> i * 10)
 				.mapToObj(i -> i + DISTANCE_UNITS)
 				.toArray(String[]::new)
 		);
 
-		// create the "take pic" button
-		JButton calibrateBtn = new JButton(SWMain.messagesBundle.getString("calibrate"));
+		// create "distance to camera: " label
+		JLabel distanceLabel = new JLabel(SWMain.messagesBundle.getString("distance_to_cam"));
 
-		// create label to tell if the cam has already been calibrated at that distance
-		JLabel calibrationStatus = new JLabel();
+		// create the label that will actually contain the distance value
+		distanceValueLabel = new JLabel();
+		distanceValueLabel.setFont(Fonts.MONOSPACED_BOLD_12);
 
 		// add listeners
 		calibrateBtn.addActionListener(this::onClickCalibrate);
+		resetCalibrationBtn.addActionListener(e -> {
+			int selected_option = JOptionPane.showConfirmDialog(
+				this,
+				SWMain.messagesBundle.getString("reset_calibration_warning"),
+				"SpineWare",
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE
+			);
+
+			if (selected_option != JOptionPane.YES_OPTION)
+				return;
+
+			CVPrefsManager.removeFocalLengths();
+			this.recomputeFocalLength.run();
+		});
 
 		panel.add(this.distanceDropdown);
 		panel.add(calibrateBtn);
+		panel.add(resetCalibrationBtn);
+		panel.add(distanceLabel);
+		panel.add(distanceValueLabel);
 
 		return panel;
+	}
+
+	/**
+	 * Updates the distance shown in the panel
+	 *
+	 * @param distance the new distance, if it is 0, an "error" message will be displayed
+	 *                 if it is -1, "no face was detected" message will be displayed
+	 */
+	public void updateDistance(double distance)
+	{
+		if (distance == 0) {
+			distanceValueLabel.setText(SWMain.messagesBundle.getString("cam_not_calibrated"));
+			distanceValueLabel.setForeground(Colors.YELLOW);
+			return;
+		} else if (distance == -1) {
+			distanceValueLabel.setText(SWMain.messagesBundle.getString("no_face_detected"));
+			distanceValueLabel.setForeground(Colors.YELLOW);
+			return;
+		}
+
+		distanceValueLabel.setText(this.distanceFormatter.format(distance));
+		distanceValueLabel.setForeground(distance > CVController.SAFE_DISTANCE_CM ? Colors.GREEN : Colors.YELLOW);
 	}
 
 	/**
@@ -192,7 +253,12 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 				if (frame == null || frame.empty())
 					continue;
 
-				if ((tmp_focal_length = cvController.getIdealFocalLength(distance, 12, frame)) == -1)
+				tmp_focal_length = cvController.getIdealFocalLength(
+					distance,
+					CVController.ESTIMATED_FACE_HEIGHT_CM,
+					frame
+				);
+				if (tmp_focal_length == -1)
 					continue;
 
 				avg_focal_length += tmp_focal_length;
@@ -215,14 +281,26 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 					Level.INFO,
 					"Average IDEAL focal length at distance " + distanceStr + " is: " + avg_focal_length
 				);
-			}
 
-			// TODO: save computed ideal focal length in preferences
+				CVPrefsManager.saveFocalLength(new IdealFocalLengthMeasure(distance, avg_focal_length));
+				this.recomputeFocalLength.run();
+			}
 
 			// finally, when calibration is done or cancelled, resume the mirror
 			SwingUtilities.invokeLater(this.resumeMirror);
 		});
 		calibrationThread.setDaemon(true);
 		calibrationThread.start();
+	}
+
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		super.setEnabled(enabled);
+
+		this.distanceDropdown.setEnabled(enabled);
+		this.calibrateBtn.setEnabled(enabled);
+		this.resetCalibrationBtn.setEnabled(enabled);
+		this.distanceValueLabel.setText(" ");
 	}
 }
