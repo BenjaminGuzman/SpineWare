@@ -229,7 +229,7 @@ public class HooksExecutor
 			// select a random file from the deque
 			file = audioFiles.pop();
 
-			// TODO: find a more efficient way of doing this concurrency handling
+			// TODO: find a more efficient way of handling concurrency
 			CountDownLatch latch = new CountDownLatch(1);
 
 			try {

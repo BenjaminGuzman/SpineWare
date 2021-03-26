@@ -16,24 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.sw.prefs.timers;
+package org.fos.sw.prefs.cv;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
-import java.util.prefs.Preferences;
-import org.fos.sw.hooks.HooksConfig;
+import java.util.stream.IntStream;
+import org.fos.sw.cv.IdealFocalLengthMeasure;
 import org.fos.sw.prefs.BackupPrefs;
+import org.fos.sw.prefs.timers.HooksPrefsIO;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class HooksPrefsIOTest
+class IdealFocalLengthPrefsIOTest
 {
 	static BackupPrefs backupPrefs = new BackupPrefs(
-		Paths.get(System.getProperty("java.io.tmpdir"), "sw_hooks_prefs.bak"),
+		Paths.get(System.getProperty("java.io.tmpdir"), "sw_focal_prefs.bak"),
 		HooksPrefsIO.class
 	);
 
@@ -50,37 +52,24 @@ class HooksPrefsIOTest
 	}
 
 	@Test
-	void saveActiveHoursHooks()
+	void saveIdealFocalLength()
 	{
-		HooksPrefsIO prefsIO = new HooksPrefsIO(Preferences.userNodeForPackage(TimersPrefsIO.class));
-		HooksConfig beforeActiveHours, afterActiveHours;
-		prefsIO.saveActiveHoursHooks(
-			(beforeActiveHours = new HooksConfig.Builder()
-				.isNotificationHook(true)
-				.startAudioIsDir(false)
-				.startEnabled(true)
-				.onStartAudioStr("some audio str")
-				.onStartCmdStr("some command")
-				.endEnabled(false) // the end is disabled 'cause there are no on disposed hooks
-				.createHooksConfig()),
-			false
-		);
-		prefsIO.saveActiveHoursHooks(
-			(afterActiveHours = new HooksConfig.Builder()
-				.isNotificationHook(true)
-				.startAudioIsDir(false)
-				.startEnabled(true)
-				.onStartAudioStr("some audio str")
-				.onStartCmdStr("some command")
-				.endEnabled(false) // the end is disabled 'cause there are no on disposed hooks
-				.createHooksConfig()),
-			true
-		);
+		IdealFocalLengthPrefsIO prefsIO = new IdealFocalLengthPrefsIO();
 
-		HooksConfig afterActiveHoursActual = prefsIO.loadForActiveHours(true);
-		HooksConfig beforeActiveHoursActual = prefsIO.loadForActiveHours(false);
+		IntStream.rangeClosed(1, 100).forEach(i -> {
+			prefsIO.saveIdealFocalLength(new IdealFocalLengthMeasure(i, i * 10));
+		});
+	}
 
-		assertEquals(afterActiveHours, afterActiveHoursActual);
-		assertEquals(beforeActiveHours, beforeActiveHoursActual);
+	@Test
+	void loadIdealFocalLengths()
+	{
+		IdealFocalLengthPrefsIO prefsIO = new IdealFocalLengthPrefsIO();
+
+		List<IdealFocalLengthMeasure> fLengths = prefsIO.loadIdealFocalLengths();
+
+		assertEquals(fLengths.size(), 100);
+
+		fLengths.forEach(fLength -> assertEquals(fLength.getDistance(), fLength.getIdealFocalLength() / 10));
 	}
 }

@@ -21,15 +21,39 @@ package org.fos.sw.gui.cv;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.function.Consumer;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import org.fos.sw.SWMain;
+import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.Initializable;
+import org.jetbrains.annotations.NotNull;
 
 public class CamMarginsPanel extends JPanel implements Initializable
 {
+	@NotNull
+	private final Consumer<Integer> onMarginXSet;
+
+	@NotNull
+	private final Consumer<Integer> onMarginYSet;
+
+	private final JSlider marginXSlider;
+	private final JSlider marginYSlider;
+
+	public CamMarginsPanel(
+		@NotNull final Consumer<Integer> onMarginXSet,
+		@NotNull final Consumer<Integer> onMarginYSet
+	)
+	{
+		this.onMarginXSet = onMarginXSet;
+		this.onMarginYSet = onMarginYSet;
+
+		this.marginXSlider = new JSlider(10, 40);
+		this.marginYSlider = new JSlider(10, 40);
+	}
+
 	@Override
 	public void initComponents()
 	{
@@ -54,28 +78,60 @@ public class CamMarginsPanel extends JPanel implements Initializable
 		this.add(descLabel, gbc);
 
 		++gbc.gridy;
-		this.add(this.createMarginSlider(SWMain.messagesBundle.getString("cam_margin_x")), gbc);
+		this.add(this.createMarginSlider(true), gbc);
 
 		++gbc.gridy;
-		this.add(this.createMarginSlider(SWMain.messagesBundle.getString("cam_margin_y")), gbc);
+		this.add(this.createMarginSlider(false), gbc);
 	}
 
 	/**
 	 * Creates a panel with the given label and a slider
 	 *
-	 * @param label the label
+	 * @param is_X if true, slider will be configured to set X values
 	 * @return the panel containing the label and the slider
 	 */
-	private JPanel createMarginSlider(String label)
+	private JPanel createMarginSlider(boolean is_X)
 	{
 		JPanel panel = new JPanel();
-		JSlider slider = new JSlider(10, 90);
+		JSlider slider = is_X ? this.marginXSlider : this.marginYSlider;
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
+		slider.setPaintTrack(true);
 
-		panel.add(new JLabel(label));
+		panel.add(new JLabel(SWMain.messagesBundle.getString(is_X ? "cam_margin_x" : "cam_margin_y")));
 		panel.add(slider);
 
+		// add listeners
+		slider.addChangeListener(e -> {
+			int selected_margin_percentage = slider.getValue();
+			if (is_X)
+				this.onMarginXSet.accept(selected_margin_percentage);
+			else
+				this.onMarginYSet.accept(selected_margin_percentage);
+
+			// improve performance with this if, dont save values on each change, just when the user has
+			// set a value
+			if (!slider.getValueIsAdjusting()) // if the scroll has been adjusted
+				CVPrefsManager.saveMargin(is_X, selected_margin_percentage);
+		});
+
 		return panel;
+	}
+
+	public void setMargin(boolean is_margin_X, int margin)
+	{
+		if (is_margin_X)
+			this.marginXSlider.setValue(margin);
+		else
+			this.marginYSlider.setValue(margin);
+	}
+
+	@Override
+	public void setEnabled(boolean enabled)
+	{
+		super.setEnabled(enabled);
+
+		this.marginXSlider.setEnabled(enabled);
+		this.marginYSlider.setEnabled(enabled);
 	}
 }

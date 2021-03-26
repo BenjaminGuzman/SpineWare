@@ -16,17 +16,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.cv;
+package org.fos.sw.cv;
 
-import org.fos.sw.cv.PostureChecker;
-import org.junit.jupiter.api.Test;
-
-class PostureCheckerTest
+/**
+ * Wrapper class for the measurements of an Ideal Focal Length
+ */
+public class IdealFocalLengthMeasure
 {
+	/**
+	 * The distance at which {@link #ideal_focal_length} was obtained
+	 */
+	private final double distance;
 
-	@Test
-	void start()
+	/**
+	 * The obtained IDEAL (not real) focal length at {@link #distance}
+	 */
+	private final double ideal_focal_length;
+
+	public IdealFocalLengthMeasure(double distance, double ideal_focal_length)
 	{
-		new PostureChecker().start();
+		this.distance = distance;
+		this.ideal_focal_length = ideal_focal_length;
+	}
+
+	public double getDistance()
+	{
+		return distance;
+	}
+
+	public double getIdealFocalLength()
+	{
+		return ideal_focal_length;
 	}
 }
