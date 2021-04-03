@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import org.fos.sw.Loggers;
-import org.fos.sw.cv.CVController;
+import org.fos.sw.cv.CVUtils;
 import org.fos.sw.cv.IdealFocalLengthMeasure;
 import org.fos.sw.prefs.PrefsIO;
 import org.jetbrains.annotations.NotNull;
@@ -72,7 +72,7 @@ public class IdealFocalLengthPrefsIO extends PrefsIO
 
 				fLengths.add(new IdealFocalLengthMeasure(
 					Double.parseDouble(key.replace(IDEAL_FOCAL_LENGTH_PREFIX, "").trim()),
-					this.prefs.getDouble(key, CVController.INVALID_IDEAL_FOCAL_LENGTH)
+					this.prefs.getDouble(key, CVUtils.INVALID_IDEAL_FOCAL_LENGTH)
 				));
 			}
 		} catch (BackingStoreException e) {

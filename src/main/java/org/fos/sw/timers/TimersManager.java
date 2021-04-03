@@ -23,7 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
+import org.fos.sw.Loggers;
 import org.fos.sw.prefs.timers.TimersPrefsIO;
 import org.fos.sw.timers.breaks.ActiveHours;
 import org.fos.sw.timers.breaks.BreakConfig;
@@ -35,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 public class TimersManager
 {
 	/**
-	 * Make this volatile to remove visibility issues
+	 * Make this volatile to avoid visibility issues
 	 * atomicity is not needed here (or at least it'd be an overkill)
 	 */
 	private static volatile boolean initialized;
@@ -98,13 +100,17 @@ public class TimersManager
 	public static void startMainLoop()
 	{
 		mainLoopExecutor = Executors.newSingleThreadScheduledExecutor(
-			new DaemonThreadFactory("Main-Loop-Timer-Thread", Thread.MAX_PRIORITY)
+			new DaemonThreadFactory("Main-Loop-Timer-Thread")
 		);
 		mainLoopExecutor.scheduleAtFixedRate(
 			mainTimerLoop,
 			0,
-			MainTimerLoop.UPDATE_RATE_S,
+			MainTimerLoop.UPDATE_FREQUENCY_S,
 			TimeUnit.SECONDS
+		);
+		Loggers.getDebugLogger().log(
+			Level.INFO,
+			"Main timer loop started. Executing every " + MainTimerLoop.UPDATE_FREQUENCY_S + "s."
 		);
 	}
 

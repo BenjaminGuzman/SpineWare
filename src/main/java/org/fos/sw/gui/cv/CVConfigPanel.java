@@ -30,8 +30,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
-import org.fos.sw.cv.CVController;
 import org.fos.sw.cv.CVPrefsManager;
+import org.fos.sw.cv.CVUtils;
 import org.fos.sw.gui.Hideable;
 import org.fos.sw.gui.Initializable;
 import org.fos.sw.gui.Showable;
@@ -53,13 +53,13 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	private final CamCalibrationPanel camCalibrationPanel;
 	private final CamMarginsPanel marginsPanel;
 
-	private final CVController cvController;
+	private final CVUtils cvUtils;
 
 	private ScheduledExecutorService grabberService;
 	private final Scalar CV_RED = new Scalar(0, 0, 255), CV_BLUE = new Scalar(255, 0, 0); // BGR not RGB
 	/**
 	 * The ideal focal length
-	 * It may be {@link CVController#INVALID_IDEAL_FOCAL_LENGTH}
+	 * It may be {@link CVUtils#INVALID_IDEAL_FOCAL_LENGTH}
 	 */
 	private double ideal_focal_length;
 	private int margin_x = 10, margin_y = 10;
@@ -70,7 +70,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	public CVConfigPanel()
 	{
 		super();
-		cvController = SWMain.getCVController();
+		cvUtils = SWMain.getCVUtils();
 		projectionScreen = new ProjectionScreen();
 		camCalibrationPanel = new CamCalibrationPanel(
 			this::onHide,
@@ -110,7 +110,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		this.add(marginsPanel, gbc);
 
 		Mat frame;
-		if ((frame = cvController.captureFrame()) != null) {
+		if ((frame = cvUtils.captureFrame()) != null) {
 			projectionScreen.initComponents(frame);
 			this.frame_width = frame.width();
 			this.frame_height = frame.height();
@@ -161,7 +161,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	 */
 	private void showMirror()
 	{
-		Mat frame = cvController.captureFrame();
+		Mat frame = cvUtils.captureFrame();
 		if ((frame == null || frame.empty()) && Thread.currentThread().isInterrupted())
 			return;
 
@@ -174,7 +174,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 			this.frame_height = frame.height();
 		}
 
-		List<Rect> detectedFaces = cvController.detectFaces(frame);
+		List<Rect> detectedFaces = cvUtils.detectFaces(frame);
 		boolean faces_were_detected = !detectedFaces.isEmpty();
 
 		// show error message if no face was detected or more than 1 face was detected
@@ -188,7 +188,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 			Imgproc.putText(
 				frame,
 				errorMsg,
-				new Point(10, 30), // bottom left of the text
+				new Point(10, 30), // top left of the frame
 				Imgproc.FONT_HERSHEY_PLAIN,
 				2.0,
 				new Scalar(0, 0, 255) // BGR
@@ -198,38 +198,38 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		/*for (Rect detectedFaceRect : detectedFaces)
 			Imgproc.rectangle(frame, detectedFaceRect, new Scalar(0, 255, 0), 3);*/
 
-		Rect tmpFace = faces_were_detected ? detectedFaces.get(0) : null;
+		Rect faceRect = faces_were_detected ? detectedFaces.get(0) : null;
 
 		if (faces_were_detected) // draw just the first detected face to improve performance
-			Imgproc.rectangle(frame, tmpFace, new Scalar(0, 255, 0), 3);
+			Imgproc.rectangle(frame, faceRect, new Scalar(0, 255, 0), 3);
 
 		// draw margins
 		Imgproc.line( // vertical margin left
 			frame,
 			new Point(min_acceptable_x, 0),
 			new Point(min_acceptable_x, this.frame_height),
-			faces_were_detected && tmpFace.x < min_acceptable_x ? CV_RED : CV_BLUE,
+			faces_were_detected && faceRect.x < min_acceptable_x ? CV_RED : CV_BLUE,
 			2
 		);
 		Imgproc.line( // vertical margin right
 			frame,
 			new Point(max_acceptable_x, 0),
 			new Point(max_acceptable_x, this.frame_height),
-			faces_were_detected && tmpFace.x + tmpFace.width > max_acceptable_x ? CV_RED : CV_BLUE,
+			faces_were_detected && faceRect.x + faceRect.width > max_acceptable_x ? CV_RED : CV_BLUE,
 			2
 		);
 		Imgproc.line( // horizontal margin top
 			frame,
 			new Point(0, min_acceptable_y),
 			new Point(this.frame_width, min_acceptable_y),
-			faces_were_detected && tmpFace.y < min_acceptable_y ? CV_RED : CV_BLUE,
+			faces_were_detected && faceRect.y < min_acceptable_y ? CV_RED : CV_BLUE,
 			2
 		);
 		Imgproc.line( // horizontal margin bottom
 			frame,
 			new Point(0, max_acceptable_y),
 			new Point(this.frame_width, max_acceptable_y),
-			faces_were_detected && tmpFace.y + tmpFace.height > max_acceptable_y ? CV_RED : CV_BLUE,
+			faces_were_detected && faceRect.y + faceRect.height > max_acceptable_y ? CV_RED : CV_BLUE,
 			2
 		);
 
@@ -241,7 +241,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 			if (--compute_distance_countdown > 0)
 				return;
 
-			if (this.ideal_focal_length == CVController.INVALID_IDEAL_FOCAL_LENGTH) {
+			if (this.ideal_focal_length == CVUtils.INVALID_IDEAL_FOCAL_LENGTH) {
 				camCalibrationPanel.updateDistance(0);
 				return;
 			} else if (detectedFaces.isEmpty()) {
@@ -250,10 +250,10 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 			}
 
 			camCalibrationPanel.updateDistance(
-				cvController.computeDistance(
+				cvUtils.computeDistance(
 					this.ideal_focal_length,
-					CVController.ESTIMATED_FACE_HEIGHT_CM,
-					detectedFaces.get(0).height
+					detectedFaces.get(0).height,
+					CVUtils.ESTIMATED_FACE_HEIGHT_CM
 				)
 			);
 
@@ -295,8 +295,8 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	 */
 	private void startMirror()
 	{
-		if (!cvController.getCamCapture().isOpened())
-			cvController.open();
+		if (!cvUtils.getCamCapture().isOpened())
+			cvUtils.open();
 
 		grabberService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 		long period = (long) (1.0 / FPS * 1000);
@@ -315,7 +315,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		}
 
 		try {
-			SWMain.getCVController().close();
+			SWMain.getCVUtils().close();
 		} catch (Exception e) {
 			Loggers.getErrorLogger().log(Level.WARNING, "Error while closing the web cam", e);
 		}

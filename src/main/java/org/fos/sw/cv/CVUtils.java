@@ -41,7 +41,7 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 import org.opencv.videoio.VideoCapture;
 
-public class CVController implements AutoCloseable
+public class CVUtils implements AutoCloseable
 {
 	// min ratio for the detected face, any face with width less than this ratio (compared to the width of the frame)
 	// will be ignored
@@ -69,7 +69,7 @@ public class CVController implements AutoCloseable
 	// thresholds
 	private Size minFaceDetectedSize;
 
-	public CVController() throws InstanceAlreadyExistsException
+	public CVUtils() throws InstanceAlreadyExistsException
 	{
 		super();
 
@@ -125,6 +125,8 @@ public class CVController implements AutoCloseable
 
 	/**
 	 * Captures a single frame from the video source
+	 * The code inside this method is synchronized to avoid problems, for example, calling {@link #close()} from
+	 * another thread but at the same time calling this method from another thread
 	 *
 	 * @return the captured frame or null if the video source is not opened
 	 * it may return an empty image if there was an error with the video source, check that with {@link Mat#empty()}
@@ -132,11 +134,13 @@ public class CVController implements AutoCloseable
 	@Nullable
 	public Mat captureFrame()
 	{
-		if (!camCapture.isOpened())
-			return null;
-
 		Mat frame = new Mat();
-		camCapture.read(frame); // Mat.empty() == true if something went wrong
+		synchronized (camCapture) {
+			if (!camCapture.isOpened())
+				return null;
+
+			camCapture.read(frame); // Mat.empty() == true if something went wrong
+		}
 
 		return frame;
 	}
@@ -207,9 +211,21 @@ public class CVController implements AutoCloseable
 	 * @param projected_face_height the projected face height (this is the height of the {@link Rect} of the face)
 	 * @return the computed (approximated) distance
 	 */
-	public double computeDistance(double focal_length, double face_height_cm, double projected_face_height)
+	public double computeDistance(double focal_length, double projected_face_height, double face_height_cm)
 	{
 		return focal_length * face_height_cm / projected_face_height;
+	}
+
+	/**
+	 * Computes an approximation of the distance to the camera
+	 *
+	 * @param focal_length          the ideal focal length
+	 * @param projected_face_height the projected face height (this is the height of the {@link Rect} of the face)
+	 * @return the computed (approximated) distance
+	 */
+	public double computeDistance(double focal_length, double projected_face_height)
+	{
+		return computeDistance(focal_length, projected_face_height, ESTIMATED_FACE_HEIGHT_CM);
 	}
 
 	/**
@@ -228,18 +244,24 @@ public class CVController implements AutoCloseable
 
 	/**
 	 * Tries to open the capture device at the given index
+	 * This method is synchronized (the code in it) to avoid problems if 2 threads try to open the camera
+	 * This method will also check if the cam is already open, if so it will not try to open it
 	 *
 	 * @param device_idx the index of the device (usually 0)
-	 * @return true if the capturing device was successfully opened
+	 * @return true if the capturing device was successfully opened or is already opened
 	 */
 	public boolean open(int device_idx)
 	{
-		return camCapture.open(device_idx);
+		synchronized (camCapture) {
+			return camCapture.isOpened() || camCapture.open(device_idx);
+		}
 	}
 
 	/**
 	 * Tries to open the capture device at idx 0
 	 * (if just 1 camera is connected it will open it)
+	 * This method is synchronized (the code in it) to avoid problems if 2 threads try to open the camera
+	 * This method will also check if the cam is already open, if so it will not try to open it
 	 *
 	 * @return true if the capturing device was successfully opened
 	 */
@@ -250,11 +272,15 @@ public class CVController implements AutoCloseable
 
 	/**
 	 * Closes the opened video source (if any)
+	 * This method is synchronized (the code in it) to avoid problems if 2 threads try to close the camera
 	 */
 	@Override
 	public void close()
 	{
-		camCapture.release();
+		synchronized (camCapture) {
+			if (camCapture.isOpened())
+				camCapture.release();
+		}
 	}
 
 	public VideoCapture getCamCapture()
@@ -265,7 +291,7 @@ public class CVController implements AutoCloseable
 	@Override
 	public String toString()
 	{
-		return "CVController{" +
+		return "CVUtils{" +
 			"camCapture=" + camCapture +
 			", facesClassifier=" + facesClassifier +
 			", minFaceDetectedSize=" + minFaceDetectedSize +

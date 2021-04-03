@@ -104,38 +104,7 @@ public class MainFrame extends JFrame
 			{
 				super.windowClosing(e);
 				activeContentPanel.onHide();
-			}
 
-			/**
-			 * Invoked when a window is iconified.
-			 */
-			@Override
-			public void windowIconified(WindowEvent e)
-			{
-				super.windowIconified(e);
-				activeContentPanel.onHide();
-			}
-
-			/**
-			 * Invoked when a window is de-activated.
-			 */
-			@Override
-			public void windowDeactivated(WindowEvent e)
-			{
-				super.windowDeactivated(e);
-				activeContentPanel.onHide();
-			}
-
-			/**
-			 * Invoked when the Window is no longer the focused Window, which means
-			 * that keyboard events will no longer be delivered to the Window or any of
-			 * its subcomponents.
-			 */
-			@Override
-			public void windowLostFocus(WindowEvent e)
-			{
-				super.windowLostFocus(e);
-				activeContentPanel.onHide();
 			}
 
 			/**
@@ -146,6 +115,16 @@ public class MainFrame extends JFrame
 			{
 				super.windowOpened(e);
 				activeContentPanel.onShown();
+			}
+
+			/**
+			 * Invoked when a window is iconified.
+			 */
+			@Override
+			public void windowIconified(WindowEvent e)
+			{
+				super.windowIconified(e);
+				activeContentPanel.onHide();
 			}
 
 			/**
@@ -168,6 +147,17 @@ public class MainFrame extends JFrame
 				activeContentPanel.onShown();
 			}
 
+
+			/**
+			 * Invoked when a window is de-activated.
+			 */
+			@Override
+			public void windowDeactivated(WindowEvent e)
+			{
+				super.windowDeactivated(e);
+				activeContentPanel.onHide();
+			}
+
 			/**
 			 * Invoked when the Window is set to be the focused Window, which means
 			 * that the Window, or one of its subcomponents, will receive keyboard
@@ -178,6 +168,18 @@ public class MainFrame extends JFrame
 			{
 				super.windowGainedFocus(e);
 				activeContentPanel.onShown();
+			}
+
+			/**
+			 * Invoked when the Window is no longer the focused Window, which means
+			 * that keyboard events will no longer be delivered to the Window or any of
+			 * its subcomponents.
+			 */
+			@Override
+			public void windowLostFocus(WindowEvent e)
+			{
+				super.windowLostFocus(e);
+				activeContentPanel.onHide();
 			}
 		});
 	}

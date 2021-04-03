@@ -41,14 +41,15 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.fos.sw.cv.CVController;
+import org.fos.sw.cv.CVManager;
+import org.fos.sw.cv.CVUtils;
 import org.fos.sw.gui.MainFrame;
 import org.fos.sw.timers.TimersManager;
 
 public class SWMain
 {
 	public static ResourceBundle messagesBundle;
-	private static CVController cvController;
+	private static CVUtils cvUtils;
 	private static Image swIcon;
 	private static final String OS = System.getProperty("os.name").toLowerCase();
 	public static boolean IS_WINDOWS = OS.contains("win");
@@ -109,6 +110,7 @@ public class SWMain
 		try {
 			Loggers.init();
 			TimersManager.init();
+			CVManager.init();
 		} catch (TooManyListenersException e) {
 			Loggers.getErrorLogger().log(
 				Level.SEVERE,
@@ -251,19 +253,19 @@ public class SWMain
 		SWMain.messagesBundle = newBundle;
 	}
 
-	synchronized public static CVController getCVController()
+	synchronized public static CVUtils getCVUtils()
 	{
-		if (cvController == null)
+		if (cvUtils == null)
 			try {
-				cvController = new CVController();
+				cvUtils = new CVUtils();
 			} catch (InstanceAlreadyExistsException e) {
 				Loggers.getErrorLogger().log(Level.WARNING, "Error", e);
 			}
 
-		if (!cvController.getCamCapture().isOpened())
-			cvController.open();
+		if (!cvUtils.getCamCapture().isOpened())
+			cvUtils.open();
 
-		return cvController;
+		return cvUtils;
 	}
 
 	/**
@@ -295,8 +297,9 @@ public class SWMain
 			mainFrame.dispose(); // close the main JFrame
 		TimersManager.shutdownAllThreads(); // shutdown all threads
 		TimersManager.killAllTimers(); // stop all timers
-		if (cvController != null)
-			cvController.close(); // close the web cam
+		CVManager.stopCVLoop();
+		if (cvUtils != null)
+			cvUtils.close(); // close the web cam
 
 		//System.exit(0); // this is not needed, when closing all windows and killing all timers, the JVM
 		// should exit gracefully

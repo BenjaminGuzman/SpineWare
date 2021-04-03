@@ -37,8 +37,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
-import org.fos.sw.cv.CVController;
 import org.fos.sw.cv.CVPrefsManager;
+import org.fos.sw.cv.CVUtils;
 import org.fos.sw.cv.IdealFocalLengthMeasure;
 import org.fos.sw.gui.Colors;
 import org.fos.sw.gui.Fonts;
@@ -210,7 +210,7 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 		}
 
 		distanceValueLabel.setText(this.distanceFormatter.format(distance));
-		distanceValueLabel.setForeground(distance > CVController.SAFE_DISTANCE_CM ? Colors.GREEN : Colors.YELLOW);
+		distanceValueLabel.setForeground(distance > CVUtils.SAFE_DISTANCE_CM ? Colors.GREEN : Colors.YELLOW);
 	}
 
 	/**
@@ -241,7 +241,7 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 		// start calibration
 		Thread calibrationThread = new Thread(() -> {
 			Mat frame;
-			CVController cvController = SWMain.getCVController();
+			CVUtils cvUtils = SWMain.getCVUtils();
 
 			double avg_focal_length = 0;
 			double n_focal_lengths = 0;
@@ -249,13 +249,13 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 
 			// capture frames while the notification is showing
 			while (latch.getCount() != 0 && !Thread.currentThread().isInterrupted()) {
-				frame = SWMain.getCVController().captureFrame();
+				frame = SWMain.getCVUtils().captureFrame();
 				if (frame == null || frame.empty())
 					continue;
 
-				tmp_focal_length = cvController.getIdealFocalLength(
+				tmp_focal_length = cvUtils.getIdealFocalLength(
 					distance,
-					CVController.ESTIMATED_FACE_HEIGHT_CM,
+					CVUtils.ESTIMATED_FACE_HEIGHT_CM,
 					frame
 				);
 				if (tmp_focal_length == -1)
