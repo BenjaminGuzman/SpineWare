@@ -27,6 +27,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.fos.sw.SWMain;
+import org.fos.sw.cv.CVManager;
 import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.cv.CVConfigPanel;
@@ -53,7 +54,7 @@ public class PostureChecker extends AbstractSection
 	{
 		JPanel panel = new JPanel(new BorderLayout());
 
-		// specific CVController feature config
+		// specific CVUtils feature config
 		JPanel cvConfigPanel = createCVConfigPanel();
 
 		// general feature config
@@ -67,7 +68,7 @@ public class PostureChecker extends AbstractSection
 	}
 
 	/**
-	 * @return a panel containing all the controllers to change the CVController configuration
+	 * @return a panel containing all the controllers to change the CVUtils configuration
 	 * This includes a "mirror" where the user can see himself and inputs to configure the parameters of
 	 * the posture checking algorithm
 	 */
@@ -108,6 +109,9 @@ public class PostureChecker extends AbstractSection
 		featureEnabledCheckBox.addActionListener(e -> {
 			CVPrefsManager.setFeatureEnabled(featureEnabledCheckBox.isSelected());
 			cvConfigPanel.setEnabled(featureEnabledCheckBox.isSelected());
+			if (!featureEnabledCheckBox.isSelected())
+				CVManager.stopCVLoop();
+			// CVManager.startCVLoop(); will be invoked in the hook onHide
 		});
 
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -136,6 +140,7 @@ public class PostureChecker extends AbstractSection
 	@Override
 	public void onShown()
 	{
+		CVManager.stopCVLoop(false);
 		this.cvConfigPanel.onShown();
 	}
 
@@ -146,5 +151,6 @@ public class PostureChecker extends AbstractSection
 	public void onHide()
 	{
 		this.cvConfigPanel.onHide();
+		CVManager.startCVLoop();
 	}
 }
