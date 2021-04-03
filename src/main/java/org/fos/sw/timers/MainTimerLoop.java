@@ -22,9 +22,6 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
-import org.fos.sw.Loggers;
 import org.fos.sw.timers.breaks.ActiveHours;
 import org.fos.sw.timers.breaks.ActiveHoursToDo;
 import org.fos.sw.timers.breaks.BreakToDo;
@@ -41,7 +38,7 @@ public class MainTimerLoop implements Runnable
 	/**
 	 * The number of seconds to wait before the {@link #run()} is invoked again
 	 */
-	public static final int UPDATE_RATE_S = 1;
+	public static final int UPDATE_FREQUENCY_S = 1;
 
 	/**
 	 * Flag to tell if the {@link #run()} should be stopped or not
@@ -182,7 +179,7 @@ public class MainTimerLoop implements Runnable
 					|| breakToDo.getBreakConfig().getBreakType() == breakTypeRunning)
 					continue;
 
-				breakToDo.postponeExecution(UPDATE_RATE_S);
+				breakToDo.postponeExecution(UPDATE_FREQUENCY_S);
 			}
 
 			checkWorkingDuringActiveHours();
@@ -199,7 +196,7 @@ public class MainTimerLoop implements Runnable
 				if (breakToDo.isCancelled() || !breakToDo.getBreakConfig().isEnabled())
 					continue;
 
-				breakToDo.postponeExecution(UPDATE_RATE_S);
+				breakToDo.postponeExecution(UPDATE_FREQUENCY_S);
 			}
 
 			checkWorkingDuringActiveHours();
@@ -264,32 +261,6 @@ public class MainTimerLoop implements Runnable
 		}
 	}
 
-	private void checkToDos2Execute()
-	{
-		// if the thread is currently running or the list is null, do nothing
-		if (isThreadRunning(executeAtToDoThread))
-			return;
-
-		int curr_time_s = Math.toIntExact(System.currentTimeMillis() / 1_000);
-		List<ExecuteAtToDo> toDoByNowList = executeAtToDoList.stream()
-			.filter(toDo -> !toDo.isCancelled() && toDo.shouldExecuteNow(curr_time_s))
-			.collect(Collectors.toList());
-
-		if (toDoByNowList.isEmpty())
-			return;
-
-		if (toDoByNowList.size() > 1)
-			Loggers.getErrorLogger().log(
-				Level.WARNING,
-				"More than one To Do should be executed by now: "
-					+ toDoByNowList
-					+ ". For performance purposes, just the first To Do will be executed"
-			);
-
-		executeAtToDoThread = threadFactory.newThread(toDoByNowList.get(0));
-		executeAtToDoThread.start();
-	}
-
 	/**
 	 * Shutdowns the current break thread running
 	 * (if there is a break happening) at the time of the invocation
@@ -344,17 +315,6 @@ public class MainTimerLoop implements Runnable
 		breaksToDoList.get(breakType).getBreakConfig().setEnabled(enabled);
 		if (enabled)
 			breaksToDoList.get(breakType).reloadTimes();
-	}
-
-	/**
-	 * Updates all the values inside the {@link #executeAtToDoList} with the given new values
-	 *
-	 * @param executables the new values
-	 */
-	public void updateExecuteAtToDoList(@NotNull List<ExecuteAtToDo> executables)
-	{
-		this.executeAtToDoList.clear();
-		this.executeAtToDoList.addAll(executables);
 	}
 
 	synchronized public void setActiveHours(@NotNull ActiveHours activeHours)

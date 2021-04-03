@@ -174,12 +174,12 @@ at the same time.
 
 - Why singleton pattern is implemented differently in some classes?
 
-Let's take as an example the `CVController` class and the `CVPrefsManager`. Both classes use the singleton pattern, the
+Let's take as an example the `CVUtils` class and the `CVPrefsManager`. Both classes use the singleton pattern, the
 former throws an exception in the constructor if an instance already exists, while the latter has only static members,
 why is that?
 
-That was done for performance, the `CVController` **loads** some of the **OpenCV** stuff so it was preferred just to
-load that stuff when needed (when explicitly calling the constructor) not when the JVM's ClassLoader loads the class as
-it is done with the `CVPrefsManager` because all members are static.
+That was done for performance, the `CVUtils` **loads** some of the **OpenCV** stuff so it was preferred just to load
+that stuff when needed (when explicitly calling the constructor) not when the JVM's ClassLoader loads the class as it is
+done with the `CVPrefsManager` because all members are static.
 
 It really doesn't impact much the overall performance and could be done either way.

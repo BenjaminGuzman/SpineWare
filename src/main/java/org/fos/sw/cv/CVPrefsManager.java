@@ -34,8 +34,9 @@ public class CVPrefsManager
 	private static final Preferences cvPrefs = Preferences.userNodeForPackage(CVPrefsManager.class);
 	private static final String FEATURE_ENABLED_KEY = "cv feature enabled";
 
-	private CVPrefsManager()
+	private CVPrefsManager() // prevent instantiation
 	{
+		throw new RuntimeException(this.getClass().getName() + " cannot be instantiated");
 	}
 
 	/**
@@ -52,20 +53,20 @@ public class CVPrefsManager
 	/**
 	 * Gets the average ideal focal length from the saved focal lengths
 	 *
-	 * @return the average focal length or {@link CVController#INVALID_IDEAL_FOCAL_LENGTH} if nothing has been saved
+	 * @return the average focal length or {@link CVUtils#INVALID_IDEAL_FOCAL_LENGTH} if nothing has been saved
 	 */
 	public static double getFocalLength()
 	{
 		List<IdealFocalLengthMeasure> fLengths = fLengthPrefsIO.loadIdealFocalLengths();
 
 		if (fLengths.isEmpty())
-			return CVController.INVALID_IDEAL_FOCAL_LENGTH;
+			return CVUtils.INVALID_IDEAL_FOCAL_LENGTH;
 
 		OptionalDouble fLengthAvg = fLengths.stream()
 			.mapToDouble(IdealFocalLengthMeasure::getIdealFocalLength)
 			.average();
 
-		return fLengthAvg.orElse(CVController.INVALID_IDEAL_FOCAL_LENGTH);
+		return fLengthAvg.orElse(CVUtils.INVALID_IDEAL_FOCAL_LENGTH);
 	}
 
 	/**
@@ -118,5 +119,15 @@ public class CVPrefsManager
 		} catch (BackingStoreException e) {
 			Loggers.getErrorLogger().log(Level.WARNING, "Error while flushing prefs", e);
 		}
+	}
+
+	public static CVPrefs getCVPrefs()
+	{
+		return new CVPrefs(
+			getMargin(true),
+			getMargin(false),
+			getFocalLength(),
+			isFeatureEnabled()
+		);
 	}
 }
