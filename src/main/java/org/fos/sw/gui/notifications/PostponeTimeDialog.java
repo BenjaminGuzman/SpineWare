@@ -32,7 +32,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import org.fos.sw.SWMain;
 import org.fos.sw.gui.Initializable;
-import org.fos.sw.gui.util.TimeInputPanel;
+import org.fos.sw.gui.util.TimeInputComponent;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.Nullable;
 
@@ -81,12 +81,12 @@ public class PostponeTimeDialog extends JDialog implements Initializable
 		Container contentPane = this.getContentPane();
 		contentPane.setLayout(new GridBagLayout());
 
-		TimeInputPanel postponeTimeInput = new TimeInputPanel(
+		TimeInputComponent postponeTimeInput = new TimeInputComponent(
 			new WallClock((byte) 0, (byte) 0, (byte) 5),
 			new WallClock((byte) 0, (byte) 30, (byte) 0),
 			new WallClock((byte) 0, (byte) 5, (byte) 0),
 			true,
-			TimeInputPanel.WarningLabelPosition.BOTTOM
+			TimeInputComponent.WarningLabelPosition.BOTTOM
 		);
 		postponeTimeInput.setHoursEnabled(false);
 		JButton okButton = new JButton(messagesBundle.getString("ok"));

@@ -35,7 +35,7 @@ import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TimeInputPanel extends JPanel
+public class TimeInputComponent extends JPanel
 {
 	private final JSpinner hoursSpinner;
 	private final JSpinner minutesSpinner;
@@ -47,7 +47,7 @@ public class TimeInputPanel extends JPanel
 	private final WallClock maxRecommendedTime;
 	private final boolean use_hard_limits; // check the constructor for details
 
-	public TimeInputPanel(
+	public TimeInputComponent(
 		@NotNull final WallClock minRecommendedTime,
 		@NotNull final WallClock maxRecommendedTime,
 		@Nullable final WallClock preferredTime
@@ -56,12 +56,12 @@ public class TimeInputPanel extends JPanel
 		this(minRecommendedTime, maxRecommendedTime, preferredTime, false);
 	}
 
-	public TimeInputPanel(
+	public TimeInputComponent(
 		@NotNull final WallClock minRecommendedTime,
 		@NotNull final WallClock maxRecommendedTime,
 		@Nullable final WallClock preferredTime,
 		final boolean use_hard_limits,
-		@NotNull TimeInputPanel.WarningLabelPosition warningLabelPosition
+		@NotNull TimeInputComponent.WarningLabelPosition warningLabelPosition
 	)
 	{
 		super();
@@ -144,7 +144,7 @@ public class TimeInputPanel extends JPanel
 	 *                           but as a MUST have, therefore, if this is true error messages will appear instead
 	 *                           of warning messages
 	 */
-	public TimeInputPanel(
+	public TimeInputComponent(
 		@NotNull final WallClock minRecommendedTime,
 		@NotNull final WallClock maxRecommendedTime,
 		@Nullable final WallClock preferredTime,

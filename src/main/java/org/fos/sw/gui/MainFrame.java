@@ -53,7 +53,7 @@ import org.fos.sw.gui.notifications.StartUpNotification;
 import org.fos.sw.gui.sections.AbstractSection;
 import org.fos.sw.gui.sections.BreaksPanel;
 import org.fos.sw.gui.sections.HelpPanel;
-import org.fos.sw.gui.sections.PostureChecker;
+import org.fos.sw.gui.sections.PosturePanel;
 import org.fos.sw.timers.TimersManager;
 
 public class MainFrame extends JFrame
@@ -296,7 +296,7 @@ public class MainFrame extends JFrame
 
 	public void onClickPostureMenu(final ActionEvent evt)
 	{
-		this.changePanel(POSTURE_PANEL_CACHE_IDX, PostureChecker.class);
+		this.changePanel(POSTURE_PANEL_CACHE_IDX, PosturePanel.class);
 	}
 
 	/**

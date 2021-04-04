@@ -32,14 +32,14 @@ import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.cv.CVConfigPanel;
 
-public class PostureChecker extends AbstractSection
+public class PosturePanel extends AbstractSection
 {
 	private static boolean instantiated;
 
 	private CVConfigPanel cvConfigPanel;
 	private JCheckBox featureEnabledCheckBox;
 
-	public PostureChecker() throws InstanceAlreadyExistsException
+	public PosturePanel() throws InstanceAlreadyExistsException
 	{
 		super();
 		if (instantiated)

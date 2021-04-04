@@ -60,8 +60,8 @@ public class ProjectionScreen extends Canvas implements Hideable
 		assert SwingUtilities.isEventDispatchThread();
 		//System.out.println("Is AWT: " + SwingUtilities.isEventDispatchThread());
 
-		if (graphics == null)
-			graphics = this.getGraphics();
+		if (graphics == null && ((graphics = this.getGraphics()) == null))
+			return;
 
 		if (frame == null || frame.empty()) {
 			graphics.drawImage(

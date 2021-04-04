@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.fos.sw.prefs.NotificationPrefsIO;
 import org.fos.sw.timers.breaks.ActiveHours;
 import org.fos.sw.timers.breaks.ActiveHoursToDo;
 import org.fos.sw.timers.breaks.BreakToDo;
@@ -246,14 +247,18 @@ public class MainTimerLoop implements Runnable
 		int curr_time_s = WallClock.localNow().getHMSAsSeconds();
 		if (activeHours.isAfterEnd(curr_time_s)) {
 			activeHoursToDo.setNotificationLocation(
-				TimersManager.getPrefsIO().getNotificationPrefsIO().getNotificationPrefLocation()
+				NotificationPrefsIO.getNotificationPrefLocation(
+					NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
+				)
 			);
 			activeHoursThread = threadFactory.newThread(activeHoursToDo::executeAfterEndHooks);
 			activeHoursThread.start();
 			activeHours.setEnabled(false); // don't show the notification again
 		} else if (activeHours.isBeforeStart(curr_time_s)) {
 			activeHoursToDo.setNotificationLocation(
-				TimersManager.getPrefsIO().getNotificationPrefsIO().getNotificationPrefLocation()
+				NotificationPrefsIO.getNotificationPrefLocation(
+					NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
+				)
 			);
 			activeHoursThread = threadFactory.newThread(activeHoursToDo::executeBeforeStartHooks);
 			activeHoursThread.start();
@@ -322,7 +327,9 @@ public class MainTimerLoop implements Runnable
 		shutdownThread(activeHoursThread);
 		activeHoursToDo = new ActiveHoursToDo(activeHours);
 		activeHoursToDo.setNotificationLocation(
-			TimersManager.getPrefsIO().getNotificationPrefsIO().getNotificationPrefLocation()
+			NotificationPrefsIO.getNotificationPrefLocation(
+				NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
+			)
 		);
 	}
 

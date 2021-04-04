@@ -81,4 +81,13 @@ public class PostureState
 	{
 		return to_the_bottom;
 	}
+
+	public boolean isPostureOk()
+	{
+		return distance <= CVUtils.SAFE_DISTANCE_CM
+			&& !to_the_left
+			&& !to_the_right
+			&& !to_the_top
+			&& !to_the_bottom;
+	}
 }
