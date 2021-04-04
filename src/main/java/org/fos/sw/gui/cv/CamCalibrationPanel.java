@@ -200,7 +200,7 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 	public void updateDistance(double distance)
 	{
 		if (distance == 0) {
-			distanceValueLabel.setText(SWMain.messagesBundle.getString("cam_not_calibrated"));
+			distanceValueLabel.setText(SWMain.messagesBundle.getString("calibrate_camera"));
 			distanceValueLabel.setForeground(Colors.YELLOW);
 			return;
 		} else if (distance == -1) {

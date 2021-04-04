@@ -43,15 +43,17 @@ import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
+import org.fos.sw.core.NotificationLocation;
 import org.fos.sw.gui.Colors;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.hooksconfig.AbstractHooksConfigDialog;
 import org.fos.sw.gui.hooksconfig.ActiveHoursHooksConfigDialog;
 import org.fos.sw.gui.hooksconfig.BreakHooksConfigDialog;
-import org.fos.sw.gui.util.TimeInputPanel;
+import org.fos.sw.gui.util.NotificationLocationComponent;
+import org.fos.sw.gui.util.TimeInputComponent;
 import org.fos.sw.hooks.BreakHooksConfig;
+import org.fos.sw.prefs.NotificationPrefsIO;
 import org.fos.sw.prefs.timers.HooksPrefsIO;
-import org.fos.sw.prefs.timers.NotificationPrefsIO;
 import org.fos.sw.prefs.timers.TimersPrefsIO;
 import org.fos.sw.timers.TimersManager;
 import org.fos.sw.timers.WallClock;
@@ -236,7 +238,7 @@ public class BreaksPanel extends AbstractSection
 			messagesBundle.getString(breakPrefix + "_working_time_label"),
 			SwingConstants.RIGHT
 		);
-		TimeInputPanel workingTimeInput = new TimeInputPanel(
+		TimeInputComponent workingTimeInput = new TimeInputComponent(
 			this.minWorkRecommendedTimes[break_idx],
 			this.maxWorkRecommendedTimes[break_idx],
 			this.preferredBreakSettings.get(break_idx).getWorkWallClock()
@@ -256,13 +258,13 @@ public class BreaksPanel extends AbstractSection
 		JLabel breakTimeLabel = null;
 		JLabel postponeTimeLabel;
 		JButton setRecommendedValuesBtn = new JButton(messagesBundle.getString("set_recommended_values"));
-		TimeInputPanel breakTimeInput = null;
+		TimeInputComponent breakTimeInput = null;
 		if (breakType != BreakType.DAY_BREAK) { // the day break doesn't have break time inputs, only working time inputs
 			breakTimeLabel = new JLabel(
 				messagesBundle.getString("break_time_label"),
 				SwingConstants.RIGHT
 			);
-			breakTimeInput = new TimeInputPanel(
+			breakTimeInput = new TimeInputComponent(
 				this.minBreakRecommendedTimes[break_idx],
 				this.maxBreakRecommendedTimes[break_idx],
 				this.preferredBreakSettings.get(break_idx).getBreakWallClock().get()
@@ -283,7 +285,7 @@ public class BreaksPanel extends AbstractSection
 			messagesBundle.getString("postpone_time_label"),
 			SwingConstants.RIGHT
 		);
-		TimeInputPanel postponeTimeInput = new TimeInputPanel(
+		TimeInputComponent postponeTimeInput = new TimeInputComponent(
 			this.minRequiredPostponeTime,
 			this.maxRequiredPostponeTime,
 			this.preferredBreakSettings.get(break_idx).getPostponeWallClock(),
@@ -390,8 +392,8 @@ public class BreaksPanel extends AbstractSection
 		FocusListener onFocusLostClearLabel = new OnFocusLostClearLabel(statusLabel);
 		featureEnabledCheckBox.addActionListener(new OnActionCheckBoxListener(
 			breakType == BreakType.DAY_BREAK
-				? new TimeInputPanel[]{workingTimeInput, postponeTimeInput}
-				: new TimeInputPanel[]{workingTimeInput, breakTimeInput, postponeTimeInput},
+				? new TimeInputComponent[]{workingTimeInput, postponeTimeInput}
+				: new TimeInputComponent[]{workingTimeInput, breakTimeInput, postponeTimeInput},
 			featureEnabledCheckBox.isSelected(),
 			breakType,
 			statusLabel,
@@ -480,7 +482,7 @@ public class BreaksPanel extends AbstractSection
 			messagesBundle.getString("active_hours_start_label"),
 			SwingConstants.RIGHT
 		);
-		TimeInputPanel startTimeInput = new TimeInputPanel(
+		TimeInputComponent startTimeInput = new TimeInputComponent(
 			new WallClock((byte) 5, (byte) 0, (byte) 0),
 			new WallClock((byte) 13, (byte) 0, (byte) 0),
 			preferredActiveHours.getStart()
@@ -504,7 +506,7 @@ public class BreaksPanel extends AbstractSection
 			messagesBundle.getString("active_hours_end_label"),
 			SwingConstants.RIGHT
 		);
-		TimeInputPanel endTimeInput = new TimeInputPanel(
+		TimeInputComponent endTimeInput = new TimeInputComponent(
 			new WallClock((byte) 18, (byte) 0, (byte) 0),
 			new WallClock((byte) 23, (byte) 0, (byte) 0),
 			preferredActiveHours.getEnd()
@@ -591,7 +593,7 @@ public class BreaksPanel extends AbstractSection
 		 */
 		FocusListener onFocusLostClearLabel = new OnFocusLostClearLabel(statusLabel);
 		featureEnabledCheckBox.addActionListener(new OnActionCheckBoxListener(
-			new TimeInputPanel[]{startTimeInput, endTimeInput},
+			new TimeInputComponent[]{startTimeInput, endTimeInput},
 			featureEnabledCheckBox.isSelected(),
 			null,
 			statusLabel,
@@ -646,7 +648,7 @@ public class BreaksPanel extends AbstractSection
 	private void addTimeInputAndLabel2Panel(
 		@NotNull JPanel panel,
 		@NotNull JLabel timeInputLabel,
-		@NotNull TimeInputPanel timeInput,
+		@NotNull TimeInputComponent timeInput,
 		@NotNull GridBagConstraints gbc
 	)
 	{
@@ -673,37 +675,30 @@ public class BreaksPanel extends AbstractSection
 	private JPanel createOptionsPanel()
 	{
 		JPanel panel = new JPanel(new GridBagLayout());
-		ResourceBundle messagesBundle = SWMain.messagesBundle;
-		NotificationPrefsIO notificationPrefsIO = TimersManager.getPrefsIO().getNotificationPrefsIO();
 
-		JLabel locationLabel = new JLabel(messagesBundle.getString("notification_location"));
-
-		String[] locationOptions = new String[]{
-			messagesBundle.getString("notification_location_bottom_right"),
-			messagesBundle.getString("notification_location_bottom_left"),
-			messagesBundle.getString("notification_location_top_right"),
-			messagesBundle.getString("notification_location_top_left")
-		};
-		this.notificationLocationCombobox = new JComboBox<>(locationOptions);
-		this.notificationLocationCombobox.setSelectedIndex(
-			notificationPrefsIO.getNotificationPrefLocation(true).getLocationIdx()
+		NotificationLocation cvNotifLocation = NotificationPrefsIO.getNotificationPrefLocation(
+			NotificationPrefsIO.NotificationPreferenceType.CV_NOTIFICATION
 		);
 
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.ipadx = 5;
-		gbc.ipady = 5;
+		panel.add(new NotificationLocationComponent(
+			(NotificationLocation selectedLocation) -> {
+				if (selectedLocation == cvNotifLocation)
+					SWMain.showErrorAlert(
+						SWMain.messagesBundle.getString(
+							"notification_location_collision_with_cv_alert"
+						),
+						SWMain.messagesBundle.getString(
+							"notification_location_collision_with_cv_alert_title"
+						)
+					);
 
-		panel.add(locationLabel, gbc);
-
-		gbc.gridx = 1;
-		panel.add(notificationLocationCombobox, gbc);
-
-		// set the listener to automatically save config on changes
-		notificationLocationCombobox.addActionListener((ActionEvent evt) ->
-			notificationPrefsIO.saveNotificationPrefLocation(
-				(byte) notificationLocationCombobox.getSelectedIndex()
-			)
-		);
+				NotificationPrefsIO.saveNotificationPrefLocation(
+					selectedLocation,
+					false
+				);
+			},
+			NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
+		));
 
 		return panel;
 	}
@@ -724,7 +719,7 @@ public class BreaksPanel extends AbstractSection
 	private static class OnActionCheckBoxListener implements ActionListener
 	{
 		@NotNull
-		private final TimeInputPanel[] relatedTimeInputPanels;
+		private final TimeInputComponent[] relatedTimeInputComponents;
 		@Nullable
 		private final BreakType breakType;
 		@NotNull
@@ -739,18 +734,18 @@ public class BreaksPanel extends AbstractSection
 		 * Constructs a new object capable of handling checkbox click events as it implements the method
 		 * {@link #actionPerformed(ActionEvent)}
 		 *
-		 * @param relatedTimeInputPanels the related time input panels, these panels will be enabled or
-		 *                               disabled if the check box is enabled or disabled
-		 * @param is_enabled             this is used to set the initial state for the checkbox
-		 * @param breakType              the break type associated to the checkbox, this will be used to
-		 *                               identify which break to enable/disable in the
-		 *                               preferences with
-		 *                               {@link TimersManager#setBreakEnabled(BreakType, boolean)}
-		 * @param relatedButtons         the list of buttons that must be enabled/disabled if this checkbox is
-		 *                               enabled/disabled
+		 * @param relatedTimeInputComponents the related time input panels, these panels will be enabled or
+		 *                                   disabled if the check box is enabled or disabled
+		 * @param is_enabled                 this is used to set the initial state for the checkbox
+		 * @param breakType                  the break type associated to the checkbox, this will be used to
+		 *                                   identify which break to enable/disable in the
+		 *                                   preferences with
+		 *                                   {@link TimersManager#setBreakEnabled(BreakType, boolean)}
+		 * @param relatedButtons             the list of buttons that must be enabled/disabled if this checkbox is
+		 *                                   enabled/disabled
 		 */
 		public OnActionCheckBoxListener(
-			@NotNull TimeInputPanel[] relatedTimeInputPanels,
+			@NotNull TimeInputComponent[] relatedTimeInputComponents,
 			final boolean is_enabled,
 			@Nullable BreakType breakType,
 			@NotNull JLabel statusLabel,
@@ -758,7 +753,7 @@ public class BreaksPanel extends AbstractSection
 			JButton... relatedButtons
 		)
 		{
-			this.relatedTimeInputPanels = relatedTimeInputPanels;
+			this.relatedTimeInputComponents = relatedTimeInputComponents;
 			this.is_enabled = is_enabled;
 			this.relatedButtons = relatedButtons;
 			this.breakType = breakType;
@@ -775,9 +770,9 @@ public class BreaksPanel extends AbstractSection
 		{
 			is_enabled = !is_enabled;
 
-			for (TimeInputPanel timeInputPanel : relatedTimeInputPanels) {
-				timeInputPanel.clearWarning();
-				timeInputPanel.setEnabled(is_enabled);
+			for (TimeInputComponent timeInputComponent : relatedTimeInputComponents) {
+				timeInputComponent.clearWarning();
+				timeInputComponent.setEnabled(is_enabled);
 			}
 
 			for (JButton btn : relatedButtons)
@@ -806,17 +801,17 @@ public class BreaksPanel extends AbstractSection
 	{
 		private final BreakType breakType;
 
-		private final TimeInputPanel workingTimeInput;
-		private final TimeInputPanel breakTimeInput;
-		private final TimeInputPanel postponeTimeInput;
+		private final TimeInputComponent workingTimeInput;
+		private final TimeInputComponent breakTimeInput;
+		private final TimeInputComponent postponeTimeInput;
 
 		private final JLabel statusLabel;
 		private BreakConfig.Builder breakSettingsBuilder;
 
 		public OnSaveConfigListener(
-			final TimeInputPanel workingTimeInput,
-			final TimeInputPanel breakTimeInput,
-			final TimeInputPanel postponeTimeInput,
+			final TimeInputComponent workingTimeInput,
+			final TimeInputComponent breakTimeInput,
+			final TimeInputComponent postponeTimeInput,
 			final BreakType breakType,
 			final JLabel statusLabel
 		)
@@ -902,9 +897,9 @@ public class BreaksPanel extends AbstractSection
 
 	private static class OnSetRecommendedValues implements ActionListener
 	{
-		private final TimeInputPanel workingTimeInput;
-		private final TimeInputPanel breakTimeInput;
-		private final TimeInputPanel postponeTimeInput;
+		private final TimeInputComponent workingTimeInput;
+		private final TimeInputComponent breakTimeInput;
+		private final TimeInputComponent postponeTimeInput;
 
 		private final WallClock workingRecommendedValues;
 		private final WallClock breakRecommendedValues;
@@ -912,9 +907,9 @@ public class BreaksPanel extends AbstractSection
 		private final JLabel statusLabel;
 
 		public OnSetRecommendedValues(
-			final TimeInputPanel workingTimeInput,
-			final TimeInputPanel breakTimeInput,
-			final TimeInputPanel postponeTimeInput,
+			final TimeInputComponent workingTimeInput,
+			final TimeInputComponent breakTimeInput,
+			final TimeInputComponent postponeTimeInput,
 			final JLabel statusLabel,
 			final WallClock recommendedWorkingTime,
 			final WallClock recommendedBreakTime,

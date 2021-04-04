@@ -43,8 +43,11 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import org.fos.sw.SWMain;
+import org.fos.sw.cv.CVManager;
+import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.timers.TimersManager;
 import org.fos.sw.timers.WallClock;
 import org.fos.sw.timers.breaks.BreakToDo;
@@ -58,7 +61,11 @@ public class SysTrayMenu extends JDialog
 	private final List<JProgressBar> breaksProgressBars;
 	private Timer statusTimer;
 
-	private JButton pauseButton;
+	private JLabel camNotCalibratedLabel;
+
+	private JButton pauseTimersButton, stopCVButton;
+
+	private String restartCVLoopStr, stopCVLoopStr;
 
 	public SysTrayMenu(final JFrame owner, final ActionListener onClickExitButton, final ActionListener onClickOpenButton)
 	{
@@ -124,14 +131,22 @@ public class SysTrayMenu extends JDialog
 
 		ImageIcon pauseIcon = SWMain.readAndScaleIcon("/resources/media/pause_white_18dp.png");
 		ImageIcon continueIcon = SWMain.readAndScaleIcon("/resources/media/play_arrow_white_18dp.png");
-		String pauseStr = messagesBundle.getString("pause_timers");
-		String continueStr = messagesBundle.getString("resume_timers");
+		String pauseTimersStr = messagesBundle.getString("pause_timers");
+		String continueTimersStr = messagesBundle.getString("resume_timers");
+		stopCVLoopStr = messagesBundle.getString("stop_cv_loop");
+		restartCVLoopStr = messagesBundle.getString("restart_cv_loop");
 
 		JButton exitButton = new JButton(messagesBundle.getString("systray_exit"));
 		JButton openButton = new JButton(messagesBundle.getString("systray_open"));
-		pauseButton = new JButton(pauseStr);
-		pauseButton.setIcon(pauseIcon);
-		pauseButton.setToolTipText(messagesBundle.getString("pause_timers_tooltip"));
+
+		pauseTimersButton = new JButton(pauseTimersStr);
+		pauseTimersButton.setIcon(pauseIcon);
+		pauseTimersButton.setToolTipText(messagesBundle.getString("pause_timers_tooltip"));
+
+		stopCVButton = new JButton(CVManager.isCVLoopStopped() ? restartCVLoopStr : stopCVLoopStr);
+		stopCVButton.setToolTipText(messagesBundle.getString("stop_restart_cv_loop_tooltip"));
+
+		camNotCalibratedLabel = new JLabel(messagesBundle.getString("cam_not_calibrated"));
 
 		exitButton.addActionListener((ActionEvent evt) -> {
 			this.dispose();
@@ -141,13 +156,23 @@ public class SysTrayMenu extends JDialog
 			this.setVisible(false);
 			this.onClickOpenButton.actionPerformed(evt);
 		});
-		pauseButton.addActionListener((ActionEvent evt) -> {
-			boolean main_loop_stopped = !TimersManager.mainLoopIsStopped();
-			TimersManager.setMainLoopStopped(main_loop_stopped);
+		pauseTimersButton.addActionListener((ActionEvent evt) -> {
+			boolean stop_main_loop = !TimersManager.isMainLoopStopped();
+			TimersManager.setMainLoopStopped(stop_main_loop);
+			//if (stop_main_loop)
 			TimersManager.shutdownAllThreads();
 
-			pauseButton.setIcon(main_loop_stopped ? continueIcon : pauseIcon);
-			pauseButton.setText(main_loop_stopped ? continueStr : pauseStr);
+			pauseTimersButton.setIcon(stop_main_loop ? continueIcon : pauseIcon);
+			pauseTimersButton.setText(stop_main_loop ? continueTimersStr : pauseTimersStr);
+		});
+		stopCVButton.addActionListener((ActionEvent evt) -> {
+			boolean stop_cv_loop = !CVManager.isCVLoopStopped();
+			if (stop_cv_loop)
+				CVManager.stopCVLoop();
+			else
+				CVManager.startCVLoop();
+
+			stopCVButton.setText(stop_cv_loop ? restartCVLoopStr : stopCVLoopStr);
 		});
 
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -168,7 +193,18 @@ public class SysTrayMenu extends JDialog
 		mainPanel.add(openButton, gbc);
 
 		++gbc.gridy;
-		mainPanel.add(pauseButton, gbc);
+		mainPanel.add(pauseTimersButton, gbc);
+
+		++gbc.gridy;
+		mainPanel.add(stopCVButton, gbc);
+
+		if (!CVPrefsManager.isCamCalibrated()) {
+			++gbc.gridy;
+			camNotCalibratedLabel.setHorizontalAlignment(SwingConstants.CENTER);
+			camNotCalibratedLabel.setForeground(Colors.YELLOW);
+			camNotCalibratedLabel.setToolTipText(messagesBundle.getString("cam_not_calibrated_tooltip"));
+			mainPanel.add(camNotCalibratedLabel, gbc);
+		}
 
 		gbc.gridwidth = 1;
 
@@ -218,6 +254,12 @@ public class SysTrayMenu extends JDialog
 			return;
 		}
 
+		// cv stuff
+		camNotCalibratedLabel.setVisible(!CVPrefsManager.isCamCalibrated());
+		stopCVButton.setVisible(CVPrefsManager.isFeatureEnabled());
+		stopCVButton.setText(CVManager.isCVLoopStopped() ? restartCVLoopStr : stopCVLoopStr);
+
+		// timers stuff
 		AbstractMap<BreakType, BreakToDo> toDoList = TimersManager.getToDoList();
 
 		long curr_s_since_epoch = System.currentTimeMillis() / 1_000;
@@ -265,10 +307,10 @@ public class SysTrayMenu extends JDialog
 					.filter(Component::isEnabled)
 					.forEach(progressBar -> progressBar.setString(notificationIsShowing));
 
-				pauseButton.setEnabled(false);
+				pauseTimersButton.setEnabled(false);
 				return;
 			} else
-				pauseButton.setEnabled(true);
+				pauseTimersButton.setEnabled(true);
 
 			long curr_s = System.currentTimeMillis() / 1_000;
 			BreakType breakType;

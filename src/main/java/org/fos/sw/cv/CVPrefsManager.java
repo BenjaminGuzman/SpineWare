@@ -121,6 +121,14 @@ public class CVPrefsManager
 		}
 	}
 
+	/**
+	 * @return true if the camera has been calibrated (and the ideal focal length has been calculated)
+	 */
+	public static boolean isCamCalibrated()
+	{
+		return getFocalLength() != CVUtils.INVALID_IDEAL_FOCAL_LENGTH;
+	}
+
 	public static CVPrefs getCVPrefs()
 	{
 		return new CVPrefs(

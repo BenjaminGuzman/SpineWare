@@ -131,7 +131,7 @@ public class TimersManager
 		mainTimerLoop.setStopped(stopped);
 	}
 
-	public static boolean mainLoopIsStopped()
+	public static boolean isMainLoopStopped()
 	{
 		return mainTimerLoop.isStopped();
 	}

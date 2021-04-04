@@ -30,11 +30,14 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
+import org.fos.sw.core.NotificationLocation;
 import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.cv.CVUtils;
 import org.fos.sw.gui.Hideable;
 import org.fos.sw.gui.Initializable;
 import org.fos.sw.gui.Showable;
+import org.fos.sw.gui.util.NotificationLocationComponent;
+import org.fos.sw.prefs.NotificationPrefsIO;
 import org.fos.sw.utils.DaemonThreadFactory;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -52,6 +55,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	private final ProjectionScreen projectionScreen;
 	private final CamCalibrationPanel camCalibrationPanel;
 	private final CamMarginsPanel marginsPanel;
+	private final NotificationLocationComponent notificationLocationSelect;
 
 	private final CVUtils cvUtils;
 
@@ -78,6 +82,29 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 			() -> setFocalLength(CVPrefsManager.getFocalLength())
 		);
 		marginsPanel = new CamMarginsPanel(this::onMarginXSet, this::onMarginYSet);
+
+		NotificationLocation timersNotificationLocation = NotificationPrefsIO.getNotificationPrefLocation(
+			NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
+		);
+		notificationLocationSelect = new NotificationLocationComponent(
+			(NotificationLocation selectedLocation) -> {
+				if (selectedLocation == timersNotificationLocation)
+					SWMain.showErrorAlert(
+						SWMain.messagesBundle.getString(
+							"notification_location_collision_with_timers_alert"
+						),
+						SWMain.messagesBundle.getString(
+							"notification_location_collision_with_timers_alert_title"
+						)
+					);
+
+				NotificationPrefsIO.saveNotificationPrefLocation(
+					selectedLocation,
+					true
+				);
+			},
+			NotificationPrefsIO.NotificationPreferenceType.CV_NOTIFICATION
+		);
 	}
 
 	@Override
@@ -103,11 +130,16 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		++gbc.gridy;
 		gbc.anchor = GridBagConstraints.WEST;
 		gbc.weightx = 1;
+		++gbc.gridy;
 		this.add(camCalibrationPanel, gbc);
 
 		// add cam margins configuration
 		++gbc.gridy;
 		this.add(marginsPanel, gbc);
+
+		// add dropdown for the notification location
+		++gbc.gridy;
+		this.add(notificationLocationSelect, gbc);
 
 		Mat frame;
 		if ((frame = cvUtils.captureFrame()) != null) {

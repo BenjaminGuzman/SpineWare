@@ -30,20 +30,34 @@ import org.opencv.core.Rect;
 
 public class CVLoop implements Runnable
 {
+	public static double frame_width = 720, frame_height = 460;
 	/**
 	 * The number of seconds to wait before the {@link #run()} is invoked again
 	 */
-	public static final int UPDATE_FREQUENCY_S = 5;
+	public static final int UPDATE_FREQUENCY_S = 2;
 	/**
-	 * The alert "No face was detected" will be shown after this number of tries
+	 * The hook {@link #onSeveralNoFaceDetected} will be invoked after this number of tries
 	 */
-	private static final int EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES = 5;
-	public static double frame_width = 720, frame_height = 460;
+	private static final int EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES = 10;
+	/**
+	 * The hook {@link #onUserPostureStateComputed} will be invoked after this number of iterations (invocations
+	 * to {@link #run()})
+	 */
+	private static final int EXEC_POSTURE_UPDATED_AFTER_N_ITERATIONS = 3;
 	/**
 	 * Counter of the number of times a face was not detected while performing the algorithm
 	 * Note: this variable does not require synchronization because it SHOULD be used inside {@link #run()}
 	 */
 	private static int NO_FACE_DETECTED_TIMES = 0;
+	/**
+	 * Counter of the number of iterations occurred since the last call to {@link #onUserPostureStateComputed}
+	 * <p>
+	 * {@link #onUserPostureStateComputed} will be invoked whenever the users posture is ok, disregarding this value
+	 * <p>
+	 * Note: this variable does not require synchronization because it SHOULD be used inside {@link #run()}
+	 */
+	private static int POSTURE_UPDATED_ITERATIONS = 0;
+
 	@NotNull
 	private final Consumer<PostureState> onUserPostureStateComputed;
 	/**
@@ -120,9 +134,11 @@ public class CVLoop implements Runnable
 
 		if (detectedFaces.isEmpty()) {
 			++NO_FACE_DETECTED_TIMES;
-			if (NO_FACE_DETECTED_TIMES >= EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES)
+			if (NO_FACE_DETECTED_TIMES >= EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES) {
+				NO_FACE_DETECTED_TIMES = 0;
 				if (this.onSeveralNoFaceDetected != null)
 					this.onSeveralNoFaceDetected.run();
+			}
 
 			return; // there is no point to continue if no face was detected
 		}
@@ -147,7 +163,13 @@ public class CVLoop implements Runnable
 			faceRect.y + faceRect.height > max_acceptable_y
 		);
 
-		this.onUserPostureStateComputed.accept(this.postureStateRef);
+		++POSTURE_UPDATED_ITERATIONS;
+		if (POSTURE_UPDATED_ITERATIONS >= EXEC_POSTURE_UPDATED_AFTER_N_ITERATIONS) {
+			this.onUserPostureStateComputed.accept(this.postureStateRef);
+			POSTURE_UPDATED_ITERATIONS = 0;
+		} else if (postureStateRef.isPostureOk())
+			this.onUserPostureStateComputed.accept(this.postureStateRef);
+
 		// 3rd checker ratio of the face with respect to the screen size
 		// TODO: add the 3rd checker
 	}
