@@ -39,7 +39,7 @@ public class Loggers
 
 	/**
 	 * @return the logger that should be used to log debug messages
-	 * This log is meant to be used application-wise so no other class have to deal will any other logger
+	 * This log is meant to be used application-wide so no other class have to deal will any other logger
 	 */
 	public static Logger getDebugLogger()
 	{
@@ -48,7 +48,7 @@ public class Loggers
 
 	/**
 	 * @return the logger that should be used to log errors or warnings
-	 * This log is meant to be used application-wise so no other class have to deal will any other logger
+	 * This log is meant to be used application-wide so no other class have to deal will any other logger
 	 */
 	public static Logger getErrorLogger()
 	{

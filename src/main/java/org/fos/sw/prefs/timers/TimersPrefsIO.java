@@ -39,7 +39,6 @@ public class TimersPrefsIO extends PrefsIO
 	private static final String POSTPONE_TIME = " postpone time";
 
 	private final HooksPrefsIO hooksPrefsIO;
-	private final NotificationPrefsIO notificationPrefsIO;
 	private final ActiveHoursPrefsIO activeHoursPrefsIO;
 
 	public TimersPrefsIO()
@@ -47,7 +46,6 @@ public class TimersPrefsIO extends PrefsIO
 		super();
 		prefs = Preferences.userNodeForPackage(this.getClass());
 		hooksPrefsIO = new HooksPrefsIO(prefs);
-		notificationPrefsIO = new NotificationPrefsIO(prefs);
 		activeHoursPrefsIO = new ActiveHoursPrefsIO(prefs);
 	}
 
@@ -187,11 +185,6 @@ public class TimersPrefsIO extends PrefsIO
 	public HooksPrefsIO getHooksPrefsIO()
 	{
 		return hooksPrefsIO;
-	}
-
-	public NotificationPrefsIO getNotificationPrefsIO()
-	{
-		return notificationPrefsIO;
 	}
 
 	public ActiveHoursPrefsIO getActiveHoursPrefsIO()

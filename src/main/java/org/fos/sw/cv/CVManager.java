@@ -87,19 +87,20 @@ public class CVManager
 		if (!cvPrefs.is_enabled)
 			return;
 
-		if (cvPrefs.ideal_f_length == CVUtils.INVALID_IDEAL_FOCAL_LENGTH) {
+		// the "not calibrated" warning is show in the sys tray menu
+		/*if (cvPrefs.ideal_f_length == CVUtils.INVALID_IDEAL_FOCAL_LENGTH) {
 			Loggers.getErrorLogger().log(
 				Level.WARNING,
-				SWMain.messagesBundle.getString("cam_not_calibrated_warning_title")
+				SWMain.messagesBundle.getString("cam_not_calibrated")
 					+ SWMain.messagesBundle.getString("cam_not_calibrated_warning")
 			);
 
 			// showing an alert may be a little intrusive and annoying
-			/*SWMain.showErrorAlert(
-				SWMain.messagesBundle.getString("cam_not_calibrated_warning"),
-				SWMain.messagesBundle.getString("cam_not_calibrated_warning_title")
-			);*/
-		}
+			// SWMain.showErrorAlert(
+			// 	SWMain.messagesBundle.getString("cam_not_calibrated_warning"),
+			//	SWMain.messagesBundle.getString("cam_not_calibrated_warning_title")
+			// );
+		}*/
 
 		SWMain.getCVUtils().open();
 		cvLoop.setCVPrefs(cvPrefs);
@@ -167,6 +168,11 @@ public class CVManager
 	 */
 	private static void processUserPostureState(PostureState postureState)
 	{
+		if (postureState.isPostureOk()) {
+			System.out.println("Remove notifications");
+			return;
+		}
+
 		if (postureState.getDistance() > CVUtils.SAFE_DISTANCE_CM)
 			Loggers.getDebugLogger().log(Level.INFO, "User is NOT at safe distance " + postureState.getDistance());
 		else
@@ -174,5 +180,13 @@ public class CVManager
 
 		if (postureState.isToTheRight() || postureState.isToTheLeft() || postureState.isToTheTop() || postureState.isToTheBottom())
 			Loggers.getDebugLogger().log(Level.INFO, "User is not in the center of the screen");
+	}
+
+	/**
+	 * @return true if the loop is NOT running, false otherwise
+	 */
+	synchronized public static boolean isCVLoopStopped()
+	{
+		return cvLoopExecutor == null || cvLoopExecutor.isShutdown();
 	}
 }

@@ -28,7 +28,7 @@ import org.fos.sw.SWMain;
 import org.fos.sw.gui.notifications.CountDownDialog;
 import org.fos.sw.gui.notifications.TakeABreakNotification;
 import org.fos.sw.hooks.BreakHooksConfig;
-import org.fos.sw.timers.TimersManager;
+import org.fos.sw.prefs.NotificationPrefsIO;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
 
@@ -177,7 +177,9 @@ public class BreakToDo extends ToDo
 				takeABreakMessage,
 				notificationCountDownLatch,
 				this.add_take_break_option,
-				TimersManager.getPrefsIO().getNotificationPrefsIO().getNotificationPrefLocation(),
+				NotificationPrefsIO.getNotificationPrefLocation(
+					NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
+				),
 				hooksConfig != null ? hooksConfig::onStartNotificationHooks : null,
 				hooksConfig != null ? hooksConfig::onEndNotificationHooks : null
 			)
