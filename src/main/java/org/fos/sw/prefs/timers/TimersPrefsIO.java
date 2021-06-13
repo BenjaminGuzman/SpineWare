@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
-import org.fos.sw.Loggers;
+import org.fos.sw.core.Loggers;
 import org.fos.sw.hooks.BreakHooksConfig;
 import org.fos.sw.hooks.SingleBreakHooksConfig;
 import org.fos.sw.prefs.PrefsIO;

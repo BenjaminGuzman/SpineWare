@@ -41,6 +41,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.fos.sw.core.Loggers;
 import org.fos.sw.cv.CVManager;
 import org.fos.sw.cv.CVUtils;
 import org.fos.sw.gui.MainFrame;
@@ -63,9 +64,6 @@ public class SWMain
 
 	public static void main(String[] args)
 	{
-		if (!ensureSingleJVMInstance())
-			return;
-
 		Locale locale = Locale.getDefault();
 
 		// parse cli options
@@ -73,17 +71,27 @@ public class SWMain
 		opts.addOption("v", "version", false, "Show the SpineWare version and exit");
 		opts.addOption("l", "lang", true, "Specify the GUI language as an ISO ISO 3166-1 alpha-2, e. g. " +
 			"\"en\" to specify english, \"es\" to specify español");
+		opts.addOption("r", "rm-lock", false, "Remove the SW lock before start. Use this option if " +
+			"SpineWare does not start and says there is already an instance running.");
 
 		CommandLineParser cliParser = new DefaultParser();
 		try {
 			CommandLine cli = cliParser.parse(opts, args);
 			if (cli.hasOption('v')) {
-				System.out.println("SpineWare version: " + SWMain.class.getPackage().getImplementationVersion());
+				System.out.println("SpineWare version: " + SWMain.class.getPackage()
+				                                                       .getImplementationVersion());
 				return;
 			}
 			if (cli.hasOption('l')) {
 				String lang = cli.getOptionValue('l');
 				locale = new Locale(lang.toLowerCase());
+			}
+			if (cli.hasOption('r')) {
+				String tmpDir = System.getProperty("java.io.tmpdir");
+				if (Paths.get(tmpDir, "sw.lock").toFile().delete())
+					System.out.println("Lock removed prior start.");
+				else
+					System.out.println("Lock could not be removed.");
 			}
 		} catch (ParseException e) {
 			Loggers.getErrorLogger().log(
@@ -92,6 +100,9 @@ public class SWMain
 				e
 			);
 		}
+
+		if (!ensureSingleJVMInstance())
+			return;
 
 		// use font antialiasing
 		System.setProperty("awt.useSystemAAFontSettings", "lcd");

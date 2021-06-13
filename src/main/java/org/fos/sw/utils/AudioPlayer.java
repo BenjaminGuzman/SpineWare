@@ -31,8 +31,8 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.SwingUtilities;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
-import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
+import org.fos.sw.core.Loggers;
 import static javax.sound.sampled.LineEvent.Type.STOP;
 
 public class AudioPlayer implements Runnable
