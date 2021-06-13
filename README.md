@@ -26,21 +26,26 @@ A Java application to take care of your health while you're using the computer.
 
 ### Timer to let you know you've been working hard and need break:
 
-- The program has 3 types of breaks:
-  + **micro break**: To relax the eyes and move a little. Sometimes while we've been working hard for a long time we
-    blink less than usual and don't move much. This will remind you to do so.
+- SpineWare has 3 types of breaks:
+  + **micro break**: To relax the eyes and move a little. When you've been working hard for a long time you blink less
+    than usual and stress your eyes. This will remind you to avoid doing so.
   + **rest break**: To stretch your muscles. You need to move from time to time to avoid atrophying your muscular and
     bone structure.
   + **day break**: To stop working. It is good you are passionate about your job but still, you have to rest and sleep.
 
+When it's time for a break, a notification will show up in the corner you selected in the configuration. The
+notification will look like this
+
 ![Break notification image](media/break_notification.png)
+
+Notifications and breaks configuration
 
 ![Breaks configuration image](media/breaks_config.png)
 
-- Each break can have configured hooks that can be executed when a break ends/starts.
+Each break can have configured hooks that can be executed when the break starts or ends.
 
-This feature is specifically useful to remind you with a sound (along with a notification) to take a break or play music
-while you're taking the break.
+This feature is specifically useful to remind you with a sound (along with the notification) to take a break or play
+music while you're taking the break.
 
 **A hook can be configured to execute commands too!**
 
@@ -56,11 +61,11 @@ The status for each break is shown in the system tray.
 
 - Ubuntu 18.04
 
-Please, if you try SpineWare and discover that your SO is not compatible, try making a GitHub issue.
+Please, if you try SpineWare and discover that your SO is not compatible, make a GitHub issue.
 
 ### List of exercises you can do while taking a break
 
-**TODO**: Complete this docs & make the feature.
+**TODO**: Complete these docs & make the feature.
 
 ### Computer Vision program to check if you're in a good posture or not
 
@@ -85,8 +90,8 @@ There are three main areas where you can contribute:
   advantage is that SpineWare is written in Java.
 - **Translations**: Currently SpineWare is available only in 2 languages: English and Spanish. It'd be great if you
   contribute with translations of the [messages.properties](src/main/resources/bundles)
-- **Ideas & code**: I (Benjamín Guzmán) wrote SpineWare according to my needs as developer, but maybe you've some other
-  needs & ideas, you can contribute with that and even modify the source code to make it a reality.
+- **Ideas & code**: I (Benjamín Guzmán) wrote SpineWare according to my needs as developer, but maybe you've other needs
+  or ideas. You can contribute by simply suggesting changes or by modifying the source code to make them a reality.
 
 ## Dependencies
 
@@ -104,8 +109,6 @@ There are three main areas where you can contribute:
 Possible dependencies:
 
 - [SystemTray](https://github.com/dorkbox/SystemTray) to have a better system tray more compatible & modern.
-
-- [log4j2](https://logging.apache.org/log4j/2.x/) to have better logging mechanisms
 
 ## Troubleshooting
 
@@ -134,25 +137,25 @@ If you want you can open a GitHub issue and upload the log.
 
 ### Logs and errors for execution hooks
 
-When a hook command is executed, the
+When a hook command is executed
 
 - **stdout** of the command is redirected to the file `SW_hooks_stdout.log` inside the temp directory
 - **stderr** of the command is redirected to the file `SW_hooks_stderr.log` inside the temp directory
 
-These files are **NOT overwritten** but **appended**, therefore, there you can see all the logs for all executions.
+These files are **NOT overwritten** but **appended**, therefore, you can see all the logs for all executions.
 (Starting from when you powered up your computer, remember they're in the temp dir).
 
 ## How it works
 
-### Thread model
+### Threading
 
-The following model is the one used within SpineWare
+The following diagram gives an overview of the threading stuff used in SpineWare
 
 ![Thread model](docs/threads.jpg)
 
 The diagram is self-explanatory.
 
-#### FAQs
+#### Q & A
 
 - Is it better to use a single main loop timer thread than creating a timer for each break?
 
