@@ -25,7 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-import org.fos.sw.Loggers;
+import org.fos.sw.core.Loggers;
 import org.fos.sw.prefs.timers.TimersPrefsIO;
 import org.fos.sw.timers.breaks.ActiveHours;
 import org.fos.sw.timers.breaks.BreakConfig;

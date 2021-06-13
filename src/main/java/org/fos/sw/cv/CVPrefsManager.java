@@ -23,7 +23,7 @@ import java.util.OptionalDouble;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-import org.fos.sw.Loggers;
+import org.fos.sw.core.Loggers;
 import org.fos.sw.prefs.cv.IdealFocalLengthPrefsIO;
 import org.fos.sw.prefs.cv.MarginsPrefsIO;
 

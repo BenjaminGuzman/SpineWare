@@ -22,8 +22,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
+import org.fos.sw.core.Loggers;
 import org.fos.sw.utils.DaemonThreadFactory;
 
 public class CVManager

@@ -35,8 +35,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.event.HyperlinkEvent;
-import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
+import org.fos.sw.core.Loggers;
 
 public class HelpPanel extends AbstractSection
 {
