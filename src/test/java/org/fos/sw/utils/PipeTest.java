@@ -222,8 +222,8 @@ class PipeTest
 		// verify the pipe wrote everything
 		assertEquals(
 			"-Start-\n" +
-				prefix + "Testing data" + suffix + "\n" +
-				prefix + "Testing text" + suffix + "\n" +
+				prefix + "Testing data" + suffix + System.lineSeparator() +
+				prefix + "Testing text" + suffix + System.lineSeparator() +
 				"-End-\n",
 			new String(Files.readAllBytes(outTmpPath), StandardCharsets.UTF_8)
 		);
