@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-import org.fos.sw.Loggers;
+import org.fos.sw.core.Loggers;
 import org.fos.sw.cv.CVUtils;
 import org.fos.sw.cv.IdealFocalLengthMeasure;
 import org.fos.sw.prefs.PrefsIO;

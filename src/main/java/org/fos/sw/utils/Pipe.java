@@ -27,7 +27,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.function.Consumer;
 import java.util.logging.Level;
-import org.fos.sw.Loggers;
+import org.fos.sw.core.Loggers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

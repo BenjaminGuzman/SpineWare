@@ -27,8 +27,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.logging.Level;
-import org.fos.sw.Loggers;
 import org.fos.sw.SWMain;
+import org.fos.sw.core.Loggers;
 
 public class CommandExecutor extends Thread
 {
