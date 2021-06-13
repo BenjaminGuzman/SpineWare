@@ -131,6 +131,8 @@ public class SysTrayMenu extends JDialog
 
 		ImageIcon pauseIcon = SWMain.readAndScaleIcon("/resources/media/pause_white_18dp.png");
 		ImageIcon continueIcon = SWMain.readAndScaleIcon("/resources/media/play_arrow_white_18dp.png");
+		ImageIcon cvOnIcon = SWMain.readAndScaleIcon("/resources/media/visibility_white_18dp.png");
+		ImageIcon cvOffIcon = SWMain.readAndScaleIcon("/resources/media/visibility_off_white_18dp.png");
 		String pauseTimersStr = messagesBundle.getString("pause_timers");
 		String continueTimersStr = messagesBundle.getString("resume_timers");
 		stopCVLoopStr = messagesBundle.getString("stop_cv_loop");
@@ -144,6 +146,7 @@ public class SysTrayMenu extends JDialog
 		pauseTimersButton.setToolTipText(messagesBundle.getString("pause_timers_tooltip"));
 
 		stopCVButton = new JButton(CVManager.isCVLoopStopped() ? restartCVLoopStr : stopCVLoopStr);
+		stopCVButton.setIcon(cvOffIcon);
 		stopCVButton.setToolTipText(messagesBundle.getString("stop_restart_cv_loop_tooltip"));
 
 		camNotCalibratedLabel = new JLabel(messagesBundle.getString("cam_not_calibrated"));
@@ -172,6 +175,7 @@ public class SysTrayMenu extends JDialog
 			else
 				CVManager.startCVLoop();
 
+			stopCVButton.setIcon(stop_cv_loop ? cvOnIcon : cvOffIcon);
 			stopCVButton.setText(stop_cv_loop ? restartCVLoopStr : stopCVLoopStr);
 		});
 

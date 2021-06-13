@@ -16,11 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.core;
+package org.fos.sw.utils;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import org.fos.sw.utils.CommandExecutor;
 import org.junit.jupiter.api.Test;
 
 class CommandExecutorTest
@@ -29,7 +28,7 @@ class CommandExecutorTest
 	void run() throws InterruptedException
 	{
 		CommandExecutor cmdExecutor = new CommandExecutor("echo \"hello world\" && echo goodbye && echo " +
-			"multiple");
+			"multiple & >&2 echo should go to stderr");
 		Thread t = new Thread(cmdExecutor);
 		t.start();
 

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.timers;
+package org.fos.sw.timers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +28,6 @@ import java.util.stream.Collectors;
 import org.fos.sw.SWMain;
 import org.fos.sw.hooks.BreakHooksConfig;
 import org.fos.sw.hooks.SingleBreakHooksConfig;
-import org.fos.sw.timers.MainTimerLoop;
-import org.fos.sw.timers.TimersManager;
-import org.fos.sw.timers.WallClock;
 import org.fos.sw.timers.breaks.BreakConfig;
 import org.fos.sw.timers.breaks.BreakToDo;
 import org.fos.sw.timers.breaks.BreakType;

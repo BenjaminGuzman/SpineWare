@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.hooks;
+package org.fos.sw.hooks;
 
 import org.junit.jupiter.api.Test;
 

@@ -18,12 +18,9 @@
 
 package org.fos.sw.utils;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -109,71 +106,44 @@ public class CommandExecutor extends Thread
 	@Override
 	public void run()
 	{
+		// It is better to create this list of arguments than simply doing
+		// Runtime.getRuntime().exec(cmd);
+		// because the former does not allow multiple executions, for example
+		// echo hello && echo world
+		// would just execute the command "echo" with the argument "hello && echo world"
 		ArrayList<String> executionCmd = new ArrayList<>(3);
 
 		// add the shell
 		// TODO: add support for other "shells" & test in various operative systems
 		executionCmd.add(SWMain.IS_WINDOWS ? "cmd" : "sh");
 
-		// add the argument for the shell to execute thegiven command
+		// add the argument for the shell to execute the given command
 		executionCmd.add(SWMain.IS_WINDOWS ? "/c" : "-c");
 
 		// add the command (or commands)
 		executionCmd.add(cmd);
 
-		String executionCmdStr = executionCmd.get(0) + " " + executionCmd.get(1) + " " + executionCmd.get(2);
-
 		try {
 			this.process = Runtime.getRuntime().exec(executionCmd.toArray(new String[0]));
 
-			int read;
-			try (
-				// stdout stuff
-				BufferedInputStream processStdout =
-					new BufferedInputStream(this.process.getInputStream());
-				BufferedOutputStream stdoutBuff =
-					new BufferedOutputStream(new FileOutputStream(hookSTDOUT, true));
+			Pipe stdoutPipe = new Pipe(
+				new Pipe.Builder(
+					this.process.getInputStream(),
+					new FileOutputStream(hookSTDOUT, true)
+				).prependStr("---BEGIN STDOUT for: " + this.cmd + "---\n")
+				 .appendStr("---END STDOUT for: " + this.cmd + "---\n\n")
+			);
 
-				// stderr stuff
-				BufferedInputStream processStderr =
-					new BufferedInputStream(this.process.getErrorStream());
-				BufferedOutputStream stderrBuff =
-					new BufferedOutputStream(new FileOutputStream(hookSTDERR, true))
-			) {
-				String lineSeparator = System.lineSeparator();
+			Pipe stderrPipe = new Pipe(
+				new Pipe.Builder(
+					this.process.getErrorStream(),
+					new FileOutputStream(hookSTDERR, true)
+				).prependStr("---BEGIN STDERR for: " + this.cmd + "---\n")
+				 .appendStr("---END STDERR for: " + this.cmd + "---\n\n")
+			);
 
-				// write stdout output
-				stdoutBuff.write(
-					(
-						lineSeparator
-							+ "--- EXECUTION STDOUT ---"
-							+ lineSeparator
-							+ "--- COMMAND: "
-							+ executionCmdStr
-							+ " ---"
-							+ lineSeparator
-					).getBytes(StandardCharsets.UTF_8)
-				);
-				while ((read = processStdout.read()) != -1) {
-					stdoutBuff.write(read);
-					System.out.print((char) read);
-				}
-
-				// write stderr output
-				stderrBuff.write(
-					(
-						lineSeparator
-							+ "--- EXECUTION STDERR ---"
-							+ lineSeparator
-							+ "--- COMMAND: "
-							+ executionCmdStr
-							+ " ---"
-							+ lineSeparator
-					).getBytes(StandardCharsets.UTF_8)
-				);
-				while ((read = processStderr.read()) != -1)
-					stderrBuff.write(read);
-			}
+			stdoutPipe.start();
+			stderrPipe.start();
 
 			this.process.waitFor();
 		} catch (IOException | SecurityException | IllegalArgumentException | InterruptedException e) {
