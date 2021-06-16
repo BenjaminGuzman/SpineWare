@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 public class ActiveHours
 {
 	private boolean is_enabled;
+
 	/**
 	 * When the active hours start
 	 * this should be less than or equal to {@link #end}

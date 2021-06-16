@@ -71,16 +71,11 @@ public class ExecuteAtToDo extends ToDo
 		executable.run();
 	}
 
-	public void reloadExecutionTimes()
-	{
-		updateExecutionTimes();
-	}
-
 	/**
 	 * Updates the execution times in the class
 	 * the update is done with the value set in {@link #executeAt}
 	 */
-	protected synchronized void updateExecutionTimes()
+	protected void updateExecutionTimes()
 	{
 		// use local time to calculate the next execution time
 		LocalTime now = LocalTime.now();

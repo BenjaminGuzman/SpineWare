@@ -80,7 +80,7 @@ public class CommandExecutor extends Thread
 	}
 
 	/**
-	 * Set the {@link Consumer} object to execute if there is an error WHILE executing the command
+	 * Set the {@link Consumer} object to execute if there is an error during command execution
 	 *
 	 * @param onError the action to run on error
 	 */

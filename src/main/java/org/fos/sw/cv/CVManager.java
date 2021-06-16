@@ -24,7 +24,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
+import org.fos.sw.core.NotificationLocation;
 import org.fos.sw.utils.DaemonThreadFactory;
+import org.jetbrains.annotations.NotNull;
 
 public class CVManager
 {
@@ -34,8 +36,20 @@ public class CVManager
 	 */
 	private static volatile boolean instantiated;
 
+	private static final Object cvLoopExecutorLock = new Object();
+
 	private static CVLoop cvLoop;
 	private static ScheduledExecutorService cvLoopExecutor;
+	/**
+	 * Volatile here is required because the value will be set from the thread calling {@link #startCVLoop()}
+	 * while it will be retrieved/read from the CV-thread in functions like {@link #onUserHasGoneAway()}.
+	 * <p>
+	 * Mutex is not required because the probability of setting the value concurrently and having inconsistent
+	 * state is very very low. It is almost guaranteed that {@link #startCVLoop()} (the only method that writes
+	 * this value) will be called before calling methods like {@link #onUserHasGoneAway()} (the only methods that
+	 * read this value)
+	 */
+	private static volatile NotificationLocation notifLocation;
 
 	private CVManager()
 	{
@@ -48,7 +62,11 @@ public class CVManager
 			throw new RuntimeException("Don't invoke init() method more than once");
 
 		instantiated = true;
-		cvLoop = new CVLoop(CVManager::onUserGoneAway, CVManager::processUserPostureState);
+		cvLoop = new CVLoop(
+			CVManager::processUserPostureState,
+			CVManager::onUserHasGoneAway,
+			CVManager::onMultipleFacesDetected
+		);
 		startCVLoop();
 	}
 
@@ -80,32 +98,29 @@ public class CVManager
 	 *
 	 * @param cvPrefs the CV preferences that will be used by all the CV features
 	 */
-	synchronized public static void startCVLoop(CVPrefs cvPrefs)
+	public static void startCVLoop(@NotNull CVPrefs cvPrefs)
 	{
-		Loggers.getDebugLogger().log(Level.INFO, "Starting CV Loop...");
-
 		if (!cvPrefs.is_enabled)
 			return;
 
-		// the "not calibrated" warning is show in the sys tray menu
-		/*if (cvPrefs.ideal_f_length == CVUtils.INVALID_IDEAL_FOCAL_LENGTH) {
-			Loggers.getErrorLogger().log(
-				Level.WARNING,
-				SWMain.messagesBundle.getString("cam_not_calibrated")
-					+ SWMain.messagesBundle.getString("cam_not_calibrated_warning")
-			);
+		Loggers.getDebugLogger().log(Level.INFO, "Starting CV Loop...");
+		notifLocation = cvPrefs.notifLocation;
 
-			// showing an alert may be a little intrusive and annoying
-			// SWMain.showErrorAlert(
-			// 	SWMain.messagesBundle.getString("cam_not_calibrated_warning"),
-			//	SWMain.messagesBundle.getString("cam_not_calibrated_warning_title")
-			// );
-		}*/
+		synchronized (cvLoopExecutorLock) {
+			// if the CV loop is already running, do nothing
+			if (cvLoopExecutor != null && !cvLoopExecutor.isShutdown())
+				return;
 
-		SWMain.getCVUtils().open();
-		cvLoop.setCVPrefs(cvPrefs);
+			if (!SWMain.getCVUtils().open()) {
+				SWMain.showErrorAlert(
+					SWMain.messagesBundle.getString("cam_open_error"),
+					SWMain.messagesBundle.getString("cv_error")
+				);
+				return;
+			}
 
-		if (cvLoopExecutor == null) {
+			cvLoop.setCVPrefs(cvPrefs);
+
 			cvLoopExecutor = Executors.newSingleThreadScheduledExecutor(
 				// min priority is used because the computation is expensive an can slow down the
 				// user's computer, and the CV features should not interfere with top priority threads
@@ -127,7 +142,7 @@ public class CVManager
 	 *
 	 * @see #stopCVLoop(boolean)
 	 */
-	synchronized public static void stopCVLoop()
+	public static void stopCVLoop()
 	{
 		stopCVLoop(true);
 	}
@@ -138,55 +153,75 @@ public class CVManager
 	 *
 	 * @param close_cam if true the cam will be closed
 	 */
-	synchronized public static void stopCVLoop(boolean close_cam)
+	public static void stopCVLoop(boolean close_cam)
 	{
-		Loggers.getDebugLogger().log(Level.INFO, "Stopping CV Loop...");
-		if (cvLoopExecutor != null) {
+		synchronized (cvLoopExecutorLock) {
+			if (cvLoopExecutor == null) // cv loop is not running
+				return;
+
+			Loggers.getDebugLogger().log(Level.INFO, "Stopping CV Loop...");
+
 			cvLoopExecutor.shutdownNow();
 			if (close_cam)
 				SWMain.getCVUtils().close();
+			cvLoopExecutor = null;
 		}
-		cvLoopExecutor = null;
 	}
 
 	/**
 	 * Callback invoked when no face was detected for a long time
 	 */
-	private static void onUserGoneAway()
+	private static void onUserHasGoneAway()
 	{
-		Loggers.getDebugLogger().log(Level.INFO, "User is gone");
 		stopCVLoop();
 		SWMain.getCVUtils().close();
+		// TODO show notification
+		System.out.println("User has gone");
 		// TODO: restart the CV loop when the user comes back and presses continue
+	}
+
+	/**
+	 * Callback invoked when multiple faces were detected for a long time
+	 */
+	private static void onMultipleFacesDetected()
+	{
+		// TODO show notification
 	}
 
 	/**
 	 * Callback invoked when a face was detected and the posture state of the user has being obtained and stored
 	 * in the given arg
 	 *
-	 * @param postureState the computed user posture state
+	 * @param status the computed user posture state
 	 */
-	private static void processUserPostureState(PostureState postureState)
+	private static void processUserPostureState(PostureStatus status)
 	{
-		if (postureState.isPostureOk()) {
+		if (status.isPostureOk()) {
+			// TODO remove notifications
 			System.out.println("Remove notifications");
 			return;
 		}
 
-		if (postureState.getDistance() > CVUtils.SAFE_DISTANCE_CM)
-			Loggers.getDebugLogger().log(Level.INFO, "User is NOT at safe distance " + postureState.getDistance());
+		double distance = status.getDistance();
+		if (distance > CVUtils.SAFE_DISTANCE_CM && distance != -1)
+			// TODO show notification
+			System.out.println("User is NOT at safe distance " + distance);
 		else
-			Loggers.getDebugLogger().log(Level.INFO, "User is at safe distance " + postureState.getDistance());
+			// TODO remove this
+			System.out.println("User is at safe distance " + distance);
 
-		if (postureState.isToTheRight() || postureState.isToTheLeft() || postureState.isToTheTop() || postureState.isToTheBottom())
-			Loggers.getDebugLogger().log(Level.INFO, "User is not in the center of the screen");
+		if (status.isToTheRight() || status.isToTheLeft() || status.isToTheTop() || status.isToTheBottom())
+			// TODO show notification
+			System.out.println("User is not in the center of the screen");
 	}
 
 	/**
 	 * @return true if the loop is NOT running, false otherwise
 	 */
-	synchronized public static boolean isCVLoopStopped()
+	public static boolean isCVLoopStopped()
 	{
-		return cvLoopExecutor == null || cvLoopExecutor.isShutdown();
+		synchronized (cvLoopExecutorLock) {
+			return cvLoopExecutor == null || cvLoopExecutor.isShutdown();
+		}
 	}
 }

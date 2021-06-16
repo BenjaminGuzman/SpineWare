@@ -60,7 +60,7 @@ public class ActiveHoursHooksConfig
 	 * <p>
 	 * In other words, this method will stop the audio and/or the command execution (if exists)
 	 */
-	synchronized public void shutdown()
+	public void shutdown()
 	{
 		if (executor != null)
 			this.executor.stop();
@@ -69,7 +69,7 @@ public class ActiveHoursHooksConfig
 	/**
 	 * Use this method to start the hooks associated to the break starting up
 	 */
-	synchronized public void onStartBreakHooks()
+	public void onStartBreakHooks()
 	{
 		ensureExecutorExists();
 		executor.stop();
@@ -80,7 +80,7 @@ public class ActiveHoursHooksConfig
 	/**
 	 * Use this method to stop the hooks associated to the break ending
 	 */
-	synchronized public void onEndBreakHooks()
+	public void onEndBreakHooks()
 	{
 		ensureExecutorExists();
 		executor.stop();
@@ -91,7 +91,7 @@ public class ActiveHoursHooksConfig
 	/**
 	 * Use this method to start the hooks associated to the notification showing up
 	 */
-	synchronized public void onStartNotificationHooks()
+	public void onStartNotificationHooks()
 	{
 		ensureExecutorExists();
 		executor.stop();
@@ -102,7 +102,7 @@ public class ActiveHoursHooksConfig
 	/**
 	 * Use this method to end the hooks associated to the notification disposing/closing
 	 */
-	synchronized public void onEndNotificationHooks()
+	public void onEndNotificationHooks()
 	{
 		ensureExecutorExists();
 		executor.stop();

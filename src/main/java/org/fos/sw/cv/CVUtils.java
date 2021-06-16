@@ -261,7 +261,7 @@ public class CVUtils implements AutoCloseable
 	 * Tries to open the capture device at idx 0
 	 * (if just 1 camera is connected it will open it)
 	 * This method is synchronized (the code in it) to avoid problems if 2 threads try to open the camera
-	 * This method will also check if the cam is already open, if so it will not try to open it
+	 * This method will also check if the cam is already open, in that case, this method will not try to open it
 	 *
 	 * @return true if the capturing device was successfully opened
 	 */

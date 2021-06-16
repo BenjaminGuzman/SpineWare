@@ -20,13 +20,17 @@ package org.fos.sw.hooks;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,6 +46,7 @@ import org.fos.sw.utils.AudioPlayer;
 import org.fos.sw.utils.CommandExecutor;
 import org.fos.sw.utils.DaemonAudioThreadFactory;
 import org.fos.sw.utils.DaemonThreadFactory;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class HooksExecutor
@@ -53,17 +58,18 @@ public class HooksExecutor
 	private CommandExecutor cmdExecutor;
 
 	/**
-	 * Thread used to start playing audio and not avoid blocking
-	 * This way audio and the given command can be executed in parallel
+	 * Thread used to start playing audio and avoid blocking
+	 * Thanks to this, the audio and the given command can be executed in parallel
 	 */
 	private final ExecutorService audioStartThreadExecutor;
+
 	/**
-	 * Thread used to actually play audio
+	 * Thread used to play audio
 	 */
 	private final ExecutorService audioThreadExecutor;
 	private List<String> supportedAudioExtensions;
-	private volatile Future<?> audioPlayTask;  // future used to play audio in parallel
-	private volatile Future<?> audioStartTask; // future used to start audio in parallel to command execution
+	private Future<?> audioPlayTask;  // future used to play audio in parallel
+	private Future<?> audioStartTask; // future used to start audio in parallel
 	private boolean wait_termination;
 
 	public HooksExecutor()
@@ -78,16 +84,17 @@ public class HooksExecutor
 		this.config = config;
 	}
 
-	synchronized public void setConfig(@Nullable HooksConfig config)
+	public void setConfig(@Nullable HooksConfig config)
 	{
 		this.config = config;
 	}
 
 	/**
-	 * @param wait if true, when {@link #runStart()} or {@link #runEnd()} is executed, the current thread will be
+	 * @param wait if true, when {@link #runStart()} or {@link #runEnd()} are executed, the current thread will be
 	 *             blocked until the running hooks are terminated or interrupted
+	 *             Obviously you'll need to set this value prior calling {@link #runStart()} or {@link #runEnd()}
 	 */
-	synchronized public void setWaitTermination(boolean wait)
+	public void setWaitTermination(boolean wait)
 	{
 		this.wait_termination = wait;
 	}
@@ -95,7 +102,7 @@ public class HooksExecutor
 	/**
 	 * Runs the hooks configured to run on start
 	 */
-	synchronized public void runStart()
+	public void runStart()
 	{
 		if (config != null && config.isStartEnabled())
 			runHooks(config.getOnStartAudioStr(), config.getOnStartCmdStr());
@@ -104,7 +111,7 @@ public class HooksExecutor
 	/**
 	 * Runs the hooks configured to run on termination
 	 */
-	synchronized public void runEnd()
+	public void runEnd()
 	{
 		if (config != null && config.isEndEnabled())
 			runHooks(config.getOnEndAudioStr(), config.getOnEndCmdStr());
@@ -116,15 +123,14 @@ public class HooksExecutor
 	 * @param audioPath the audio path for the file to be played
 	 * @param cmd       the command to be executed
 	 */
-	synchronized public void runHooks(String audioPath, String cmd)
+	private void runHooks(@Nullable String audioPath, @Nullable String cmd)
 	{
-		this.stop(); // stop everything currently running
+		stop(); // stop everything currently running
 		if (Thread.currentThread().isInterrupted())
 			return;
 
 		if (cmd != null) {
 			this.cmdExecutor = new CommandExecutor(cmd, this::onCMDError);
-			this.cmdExecutor.setOnError(System.err::println);
 			this.cmdExecutor.start();
 		}
 
@@ -156,7 +162,7 @@ public class HooksExecutor
 	 *
 	 * @param audioPath the audio path or directory
 	 */
-	private void playAudio(String audioPath)
+	private void playAudio(@NotNull String audioPath)
 	{
 		if (this.audioPlayer == null) {
 			this.audioPlayer = new AudioPlayer(this::onAudioError);
@@ -198,15 +204,7 @@ public class HooksExecutor
 				HooksConfigPanel.getSupportedAudioFileExtensions()
 			);
 
-		File[] supportedAudioFiles = audioFile.listFiles((dir, name) -> {
-			int dot_pos;
-			if ((dot_pos = name.lastIndexOf('.')) == -1)
-				return false;
-
-			// filter by file extension
-			String extension = name.substring(dot_pos + 1).toLowerCase().trim();
-			return this.supportedAudioExtensions.contains(extension);
-		});
+		File[] supportedAudioFiles = audioFile.listFiles(this::isAudioFileSupported);
 
 		if (supportedAudioFiles == null || supportedAudioFiles.length == 0) {
 			SWMain.showErrorAlert(
@@ -218,19 +216,27 @@ public class HooksExecutor
 			return;
 		}
 
-		// shuffle the files to reproduce them in a random order
+		// shuffle the files to reproduce them in random order
 		List<File> tmp = Arrays.asList(supportedAudioFiles);
 		Collections.shuffle(tmp);
 
-		Deque<File> audioFiles = new LinkedList<>(tmp);
+		Deque<File> audioFiles = new ArrayDeque<>(tmp);
 
+		// 2 parties should call await()
+		// 1st party: this thread
+		// 2nd party: the thread playing audio when the audio terminates
+		CyclicBarrier barrier = new CyclicBarrier(2);
+		Runnable barrierAwait = () -> {
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				this.audioPlayTask.cancel(true);
+			}
+		};
 		File file;
-		while (!this.audioStartTask.isCancelled()) {
+		while (!this.audioStartTask.isCancelled() && !Thread.currentThread().isInterrupted()) {
 			// select a random file from the deque
 			file = audioFiles.pop();
-
-			// TODO: find a more efficient way of handling concurrency
-			CountDownLatch latch = new CountDownLatch(1);
 
 			try {
 				this.audioPlayer.loadAudio(file.getAbsolutePath());
@@ -241,20 +247,44 @@ public class HooksExecutor
 					e
 				);
 			}
-			this.audioPlayer.onAudioEnd(latch::countDown);
-
 			this.audioPlayTask = this.audioThreadExecutor.submit(this.audioPlayer);
 
-			// wait till the audio has been played entirely
-			try {
-				latch.await();
-			} catch (InterruptedException e) {
-				this.audioPlayTask.cancel(true);
-				return;
-			}
+			// second party await() call
+			this.audioPlayer.onAudioEnd(barrierAwait);
+
+			// first party await() call
+			barrierAwait.run();
+
+			// at this point we know the audio has finished playing
+			// because both parties called await()
+			// reset the barrier for the next loop cycle
+			barrier.reset();
 
 			// return the file to the deque so it can be played again
 			audioFiles.addLast(file);
+		}
+	}
+
+	private boolean isAudioFileSupported(File dir, String fileName)
+	{
+		int dot_pos;
+		if ((dot_pos = fileName.lastIndexOf('.')) == -1)
+			return false;
+
+		// filter by file extension
+		String extension = fileName.substring(dot_pos + 1).toLowerCase().trim();
+		try {
+			Path filePath = Paths.get(dir.getAbsolutePath(), fileName);
+
+			// ensure it has a valid extension
+			return this.supportedAudioExtensions.contains(extension)
+				// ensure it is readable
+				&& Files.isReadable(filePath)
+				// ensure it is not a directory (a directory fileName music.mp3 is valid)
+				// if it is a symlink, it will be followed
+				&& Files.isRegularFile(filePath);
+		} catch (SecurityException e) {
+			return false;
 		}
 	}
 

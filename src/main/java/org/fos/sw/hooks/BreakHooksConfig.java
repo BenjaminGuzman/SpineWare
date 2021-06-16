@@ -30,24 +30,17 @@ public class BreakHooksConfig
 {
 	@NotNull
 	private final SingleBreakHooksConfig notificationHooksConf;
-	@Nullable
-	private SingleBreakHooksConfig breakHooksConf; // can be null if the break type is DAY_BREAK
 
-	private HooksExecutor executor;
+	@Nullable
+	private final SingleBreakHooksConfig breakHooksConf; // can be null if the break type is DAY_BREAK
+
+	private final HooksExecutor executor;
 
 	public BreakHooksConfig(@NotNull SingleBreakHooksConfig notificationHooksConf, @Nullable SingleBreakHooksConfig breakHooksConf)
 	{
 		this.notificationHooksConf = notificationHooksConf;
 		this.breakHooksConf = breakHooksConf;
-	}
-
-	public void updateAll(SingleBreakHooksConfig notificationHooksConf, SingleBreakHooksConfig breakHooksConf)
-	{
-		this.notificationHooksConf.updateAll(notificationHooksConf);
-		if (this.breakHooksConf != null)
-			this.breakHooksConf.updateAll(breakHooksConf);
-		else
-			this.breakHooksConf = breakHooksConf;
+		this.executor = new HooksExecutor();
 	}
 
 	public @NotNull SingleBreakHooksConfig getNotificationHooksConf()
@@ -67,8 +60,7 @@ public class BreakHooksConfig
 	 */
 	synchronized public void shutdown()
 	{
-		if (executor != null)
-			this.executor.stop();
+		executor.stop();
 	}
 
 	/**
@@ -76,7 +68,6 @@ public class BreakHooksConfig
 	 */
 	synchronized public void onStartBreakHooks()
 	{
-		ensureExecutorExists();
 		executor.stop();
 		executor.setConfig(breakHooksConf);
 		executor.runStart();
@@ -87,7 +78,6 @@ public class BreakHooksConfig
 	 */
 	synchronized public void onEndBreakHooks()
 	{
-		ensureExecutorExists();
 		executor.stop();
 		executor.setConfig(breakHooksConf);
 		executor.runEnd();
@@ -98,7 +88,6 @@ public class BreakHooksConfig
 	 */
 	synchronized public void onStartNotificationHooks()
 	{
-		ensureExecutorExists();
 		executor.stop();
 		executor.setConfig(notificationHooksConf);
 		executor.runStart();
@@ -109,15 +98,8 @@ public class BreakHooksConfig
 	 */
 	synchronized public void onEndNotificationHooks()
 	{
-		ensureExecutorExists();
 		executor.stop();
 		executor.setConfig(notificationHooksConf);
 		executor.runEnd();
-	}
-
-	private void ensureExecutorExists()
-	{
-		if (executor == null)
-			executor = new HooksExecutor();
 	}
 }

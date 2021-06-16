@@ -25,9 +25,9 @@ package org.fos.sw.cv;
  * 2.- Margins
  * 3.- Ratio between the face and the screen size
  */
-public class PostureState
+public class PostureStatus
 {
-	private double distance;
+	private double distance = -1;
 	private boolean to_the_left;
 	private boolean to_the_right;
 	private boolean to_the_top;
@@ -52,6 +52,10 @@ public class PostureState
 		this.to_the_bottom = to_the_bottom;
 	}
 
+	/**
+	 * @return the distance. It returns -1 if {@link #setDistance(double)} has not been called yet. Probably
+	 * because the camera is not calibrated.
+	 */
 	public double getDistance()
 	{
 		return distance;
