@@ -60,11 +60,13 @@ public class MainTimerLoop implements Runnable
 	 */
 	@NotNull
 	private final ConcurrentHashMap<BreakType, BreakToDo> breaksToDoList;
+
 	/**
 	 * Factory used to create daemon threads
 	 */
 	@NotNull
 	private final DaemonThreadFactory threadFactory;
+
 	/**
 	 * Holds a list of all the To Do's that should be executed at a specific time
 	 * <p>
@@ -72,15 +74,18 @@ public class MainTimerLoop implements Runnable
 	 */
 	@NotNull
 	private final List<ExecuteAtToDo> executeAtToDoList;
+
 	/**
 	 * The thread of the executing to do break (if exists)
 	 */
 	private volatile Thread breakThread;
+
 	/**
 	 * The thread that handles the execution of the events when the user is working not during active hours
 	 */
 	private volatile Thread executeAtToDoThread;
 	private volatile Thread activeHoursThread;
+
 	/**
 	 * The type of the break corresponding to the break executing in the thread {@link #breakThread}
 	 */
@@ -322,7 +327,7 @@ public class MainTimerLoop implements Runnable
 			breaksToDoList.get(breakType).reloadTimes();
 	}
 
-	synchronized public void setActiveHours(@NotNull ActiveHours activeHours)
+	public void setActiveHours(@NotNull ActiveHours activeHours)
 	{
 		shutdownThread(activeHoursThread);
 		activeHoursToDo = new ActiveHoursToDo(activeHours);

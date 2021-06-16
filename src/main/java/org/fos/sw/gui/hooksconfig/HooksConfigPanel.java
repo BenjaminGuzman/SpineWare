@@ -86,9 +86,10 @@ public class HooksConfigPanel extends JPanel
 	public static String[] getSupportedAudioFileExtensions()
 	{
 		Set<String> supportedExtensions = Arrays.stream(AudioSystem.getAudioFileTypes())
-			.map(AudioFileFormat.Type::getExtension)
-			.collect(Collectors.toSet());
+		                                        .map(AudioFileFormat.Type::getExtension)
+		                                        .collect(Collectors.toSet());
 
+		// jlayer dependency allow us to reproduce mp3 files
 		supportedExtensions.add("mp3");
 
 		return supportedExtensions.toArray(new String[0]);

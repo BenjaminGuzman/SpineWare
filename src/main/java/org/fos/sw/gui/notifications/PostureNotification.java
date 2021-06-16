@@ -29,6 +29,7 @@ public class PostureNotification extends AbstractNotification
 {
 	public PostureNotification()
 	{
+		// TODO finish writing this constructor
 		super(4_000, NotificationLocation.BOTTOM_RIGHT);
 
 		initComponents();

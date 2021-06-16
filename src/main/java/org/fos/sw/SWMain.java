@@ -51,6 +51,7 @@ public class SWMain
 {
 	public static ResourceBundle messagesBundle;
 	private static CVUtils cvUtils;
+	private static final Object cvUtilsLock = new Object();
 	private static Image swIcon;
 	private static final String OS = System.getProperty("os.name").toLowerCase();
 	public static boolean IS_WINDOWS = OS.contains("win");
@@ -227,12 +228,16 @@ public class SWMain
 	 *
 	 * @return the loaded icon, if it couldn't be loaded, this method will return null
 	 */
-	synchronized public static Image getSWIcon()
+	public static Image getSWIcon()
 	{
 		if (SWMain.swIcon != null)
 			return SWMain.swIcon;
 
 		try (InputStream swIS = SWMain.getFileAsStream("/resources/media/SW_white.min.png")) {
+			// this may require synchronization
+			// for now lets just use the ostrich technique: put your head in the sand
+			// and let's hope nobody calls this method concurrently when the icon has not been loaded
+			// the probability of that is very low actually, so it is ok not to synchronize
 			return (SWMain.swIcon = ImageIO.read(swIS));
 		} catch (IOException | IllegalArgumentException e) {
 			Loggers.getErrorLogger().log(
@@ -244,7 +249,7 @@ public class SWMain
 		return null;
 	}
 
-	synchronized public static void changeMessagesBundle(final Locale locale)
+	public static void changeMessagesBundle(final Locale locale)
 	{
 		ResourceBundle newBundle;
 
@@ -261,22 +266,28 @@ public class SWMain
 			newBundle = ResourceBundle.getBundle("resources.bundles.messages", Locale.ENGLISH);
 		}
 
+		// this may require synchronization
+		// for now lets just use the ostrich technique: put your head in the sand
+		// and let's hope nobody calls this method concurrently
+		// the probability of that is very low actually, so it is ok not to synchronize
 		SWMain.messagesBundle = newBundle;
 	}
 
-	synchronized public static CVUtils getCVUtils()
+	public static CVUtils getCVUtils()
 	{
-		if (cvUtils == null)
-			try {
-				cvUtils = new CVUtils();
-			} catch (InstanceAlreadyExistsException e) {
-				Loggers.getErrorLogger().log(Level.WARNING, "Error", e);
-			}
+		synchronized (cvUtilsLock) {
+			if (cvUtils == null)
+				try {
+					cvUtils = new CVUtils();
+				} catch (InstanceAlreadyExistsException e) {
+					Loggers.getErrorLogger().log(Level.WARNING, "Error", e);
+				}
 
-		if (!cvUtils.getCamCapture().isOpened())
-			cvUtils.open();
+			if (!cvUtils.getCamCapture().isOpened())
+				cvUtils.open();
 
-		return cvUtils;
+			return cvUtils;
+		}
 	}
 
 	/**

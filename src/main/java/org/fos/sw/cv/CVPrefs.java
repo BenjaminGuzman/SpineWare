@@ -18,6 +18,8 @@
 
 package org.fos.sw.cv;
 
+import org.fos.sw.core.NotificationLocation;
+
 /**
  * Wrapper class containing all the cv configuration and preferences for the user
  */
@@ -27,6 +29,7 @@ public class CVPrefs
 	public final double margin_x;
 	public final double margin_y;
 	public final boolean is_enabled;
+	public final NotificationLocation notifLocation;
 
 	/**
 	 * @param margin_x       the margin x, this value ideally goes from 0.1 to 0.4 if it is 0.1 then the user can
@@ -39,12 +42,19 @@ public class CVPrefs
 	 *                       length used to approximate the distance to the camera
 	 * @param is_enabled     indicates if the CV feature is enabled or not
 	 */
-	public CVPrefs(double margin_x, double margin_y, double ideal_f_length, boolean is_enabled)
+	public CVPrefs(
+		double margin_x,
+		double margin_y,
+		double ideal_f_length,
+		boolean is_enabled,
+		NotificationLocation notifLocation
+	)
 	{
 		this.margin_x = margin_x;
 		this.margin_y = margin_y;
 		this.ideal_f_length = ideal_f_length;
 		this.is_enabled = is_enabled;
+		this.notifLocation = notifLocation;
 	}
 
 	@Override

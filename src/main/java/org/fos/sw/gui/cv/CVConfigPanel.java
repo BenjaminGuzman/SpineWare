@@ -162,7 +162,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	 *
 	 * @param percentage the percentage of the X margin
 	 */
-	synchronized private void onMarginXSet(int percentage)
+	private void onMarginXSet(int percentage)
 	{
 		this.margin_x = percentage <= 0 ? 10 : percentage;
 		this.computeMargins();
@@ -173,7 +173,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	 *
 	 * @param percentage the percentage of the Y margin
 	 */
-	synchronized private void onMarginYSet(int percentage)
+	private void onMarginYSet(int percentage)
 	{
 		this.margin_y = percentage <= 0 ? 10 : percentage;
 		this.computeMargins();
@@ -294,9 +294,9 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	}
 
 	/**
-	 * Invoked when the ideal focal length is changed
+	 * Invoked when the ideal focal length has changed
 	 */
-	synchronized public void setFocalLength(double new_focal_length)
+	public void setFocalLength(double new_focal_length)
 	{
 		Loggers.getDebugLogger().log(Level.INFO, "The new focal length is: " + new_focal_length);
 		this.ideal_focal_length = new_focal_length;
