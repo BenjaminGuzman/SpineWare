@@ -51,7 +51,7 @@ public abstract class ToDo implements Runnable, Comparable<ToDo>
 	 *
 	 * @param timeoutTime The timeout configuration used to set the {@link #next_execution_at} value
 	 */
-	synchronized protected void updateExecutionTimes(@NotNull WallClock timeoutTime)
+	protected void updateExecutionTimes(@NotNull WallClock timeoutTime)
 	{
 		last_execution_at = System.currentTimeMillis() / 1_000;
 		next_execution_at = last_execution_at + timeoutTime.getHMSAsSeconds();
@@ -62,7 +62,7 @@ public abstract class ToDo implements Runnable, Comparable<ToDo>
 	 *
 	 * @param postponed_seconds the number of seconds to postpone the to do
 	 */
-	synchronized public void postponeExecution(int postponed_seconds)
+	public void postponeExecution(int postponed_seconds)
 	{
 		last_execution_at += postponed_seconds;
 		next_execution_at += postponed_seconds;
@@ -94,7 +94,7 @@ public abstract class ToDo implements Runnable, Comparable<ToDo>
 	 *
 	 * @param cancelled true if the to do should be cancelled
 	 */
-	synchronized public void setCancelled(boolean cancelled)
+	public void setCancelled(boolean cancelled)
 	{
 		this.is_cancelled = cancelled;
 	}
@@ -134,6 +134,4 @@ public abstract class ToDo implements Runnable, Comparable<ToDo>
 				: diff == 0 ? 0 : -1;
 		}
 	}
-
-	public abstract void run();
 }

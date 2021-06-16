@@ -31,26 +31,42 @@ import org.opencv.core.Rect;
 public class CVLoop implements Runnable
 {
 	public static double frame_width = 720, frame_height = 460;
+
 	/**
 	 * The number of seconds to wait before the {@link #run()} is invoked again
 	 */
 	public static final int UPDATE_FREQUENCY_S = 2;
+
 	/**
 	 * The hook {@link #onSeveralNoFaceDetected} will be invoked after this number of tries
 	 */
 	private static final int EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES = 10;
+
+	/**
+	 * The hook {@link #onMultipleFacesDetected} will be invoked after this number of tries
+	 */
+	private static final int EXEC_HOOK_MULTIPLE_FACES_DETECTED_AFTER_N_TRIES = 5;
+
 	/**
 	 * The hook {@link #onUserPostureStateComputed} will be invoked after this number of iterations (invocations
 	 * to {@link #run()})
 	 */
 	private static final int EXEC_POSTURE_UPDATED_AFTER_N_ITERATIONS = 3;
+
 	/**
-	 * Counter of the number of times a face was not detected while performing the algorithm
-	 * Note: this variable does not require synchronization because it SHOULD be used inside {@link #run()}
+	 * Counter for the number of times a face was not detected while performing the algorithm
+	 * Note: this variable does not require synchronization because it SHOULD only be used inside {@link #run()}
 	 */
 	private static int NO_FACE_DETECTED_TIMES = 0;
+
 	/**
-	 * Counter of the number of iterations occurred since the last call to {@link #onUserPostureStateComputed}
+	 * Counter for the number of times multiple faces were detected while executing the loop
+	 * Note: this variable does not require synchronization because it SHOULD only be used inside {@link #run()}
+	 */
+	private static int MULTIPLE_FACES_DETECTED_TIMES = 0;
+
+	/**
+	 * Counter for the number of iterations occurred since the last call to {@link #onUserPostureStateComputed}
 	 * <p>
 	 * {@link #onUserPostureStateComputed} will be invoked whenever the users posture is ok, disregarding this value
 	 * <p>
@@ -59,37 +75,57 @@ public class CVLoop implements Runnable
 	private static int POSTURE_UPDATED_ITERATIONS = 0;
 
 	@NotNull
-	private final Consumer<PostureState> onUserPostureStateComputed;
+	private final Consumer<PostureStatus> onUserPostureStateComputed;
+
 	/**
 	 * A reference to an object holding the user posture state
 	 * It is preferred to keep a single object rather than creating a new one on each call to {@link #run()}
 	 */
-	private final PostureState postureStateRef;
+	private final PostureStatus postureStatus;
+
 	/**
 	 * Runnable to be invoked when {@link #NO_FACE_DETECTED_TIMES} is equal to
 	 * {@link #EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES}
 	 */
 	@Nullable
 	private Runnable onSeveralNoFaceDetected;
+
+	/**
+	 * Runnable to be invoked when {@link #MULTIPLE_FACES_DETECTED_TIMES} is equal to
+	 * {@link #EXEC_HOOK_MULTIPLE_FACES_DETECTED_AFTER_N_TRIES}
+	 */
+	@Nullable
+	private Runnable onMultipleFacesDetected;
+
 	private CVPrefs cvPrefs;
 	private int min_acceptable_x, max_acceptable_x, min_acceptable_y, max_acceptable_y;
 
-	public CVLoop(@NotNull Consumer<PostureState> onUserPostureStateComputed)
+	public CVLoop(@NotNull Consumer<PostureStatus> onUserPostureStateComputed)
 	{
-		postureStateRef = new PostureState();
+		postureStatus = new PostureStatus();
 		this.onUserPostureStateComputed = onUserPostureStateComputed;
 	}
 
 	public CVLoop(
-		@Nullable Runnable onSeveralNoFaceDetected,
-		@NotNull Consumer<PostureState> onUserPostureStateComputed
+		@NotNull Consumer<PostureStatus> onUserPostureStateComputed,
+		@Nullable Runnable onSeveralNoFaceDetected
 	)
 	{
 		this(onUserPostureStateComputed);
 		this.onSeveralNoFaceDetected = onSeveralNoFaceDetected;
 	}
 
-	synchronized public void setCVPrefs(CVPrefs cvPrefs)
+	public CVLoop(
+		@NotNull Consumer<PostureStatus> onUserPostureStateComputed,
+		@Nullable Runnable onSeveralNoFaceDetected,
+		@Nullable Runnable onMultipleFacesDetected
+	)
+	{
+		this(onUserPostureStateComputed, onSeveralNoFaceDetected);
+		this.onMultipleFacesDetected = onMultipleFacesDetected;
+	}
+
+	public void setCVPrefs(CVPrefs cvPrefs)
 	{
 		this.cvPrefs = cvPrefs;
 		this.recomputeMarginThresholds();
@@ -106,17 +142,14 @@ public class CVLoop implements Runnable
 	@Override
 	public void run()
 	{
-		if (Thread.currentThread().isInterrupted())
-			return;
-
 		CVUtils cvUtils = SWMain.getCVUtils();
 		Mat frame = cvUtils.captureFrame();
 
-		// try 50 times to capture a frame, if it succeeds stop trying
+		// try 50 times to capture a frame, if it succeeds stop trying and start checking posture
 		int i = 50;
 		while ((frame == null || frame.empty()) && i > 0 && !Thread.currentThread().isInterrupted()) {
 			frame = cvUtils.captureFrame();
-			++i;
+			--i;
 		}
 
 		if (frame == null || frame.empty()) {
@@ -144,19 +177,26 @@ public class CVLoop implements Runnable
 		}
 
 		// show error message if no face was detected or more than 1 face was detected
-		if (detectedFaces.size() > 1)
-			Loggers.getDebugLogger().log(Level.INFO, "More than one face detected");
+		if (detectedFaces.size() > 1) {
+			++MULTIPLE_FACES_DETECTED_TIMES;
+			if (MULTIPLE_FACES_DETECTED_TIMES >= EXEC_HOOK_MULTIPLE_FACES_DETECTED_AFTER_N_TRIES) {
+				MULTIPLE_FACES_DETECTED_TIMES = 0;
+				if (this.onMultipleFacesDetected != null)
+					this.onMultipleFacesDetected.run();
+			}
+			return; // stop processing
+		}
 
 		Rect faceRect = detectedFaces.get(0);
 
 		// 1st checker: distance
 		if (cvPrefs.ideal_f_length != CVUtils.INVALID_IDEAL_FOCAL_LENGTH)
-			this.postureStateRef.setDistance(
+			this.postureStatus.setDistance(
 				cvUtils.computeDistance(cvPrefs.ideal_f_length, faceRect.height)
 			);
 
 		// 2nd checker: margins
-		this.postureStateRef.updateMargins(
+		this.postureStatus.updateMargins(
 			faceRect.x < min_acceptable_x,
 			faceRect.x + faceRect.width > max_acceptable_x,
 			faceRect.y < min_acceptable_y,
@@ -165,10 +205,12 @@ public class CVLoop implements Runnable
 
 		++POSTURE_UPDATED_ITERATIONS;
 		if (POSTURE_UPDATED_ITERATIONS >= EXEC_POSTURE_UPDATED_AFTER_N_ITERATIONS) {
-			this.onUserPostureStateComputed.accept(this.postureStateRef);
+			this.onUserPostureStateComputed.accept(this.postureStatus);
 			POSTURE_UPDATED_ITERATIONS = 0;
-		} else if (postureStateRef.isPostureOk())
-			this.onUserPostureStateComputed.accept(this.postureStateRef);
+		} else if (postureStatus.isPostureOk()) {
+			this.onUserPostureStateComputed.accept(this.postureStatus);
+			POSTURE_UPDATED_ITERATIONS = 0;
+		}
 
 		// 3rd checker ratio of the face with respect to the screen size
 		// TODO: add the 3rd checker

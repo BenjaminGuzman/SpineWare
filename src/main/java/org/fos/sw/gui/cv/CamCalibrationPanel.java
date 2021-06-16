@@ -51,11 +51,13 @@ import org.opencv.core.Mat;
 public class CamCalibrationPanel extends JPanel implements Initializable
 {
 	private static final String DISTANCE_UNITS = "cm";
+
 	/**
 	 * Callback to execute when calibration is being performed
 	 */
 	@NotNull
 	private final Runnable stopMirror;
+
 	/**
 	 * Callback to execute when calibration is done
 	 */

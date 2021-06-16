@@ -33,6 +33,7 @@ import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
+import org.jetbrains.annotations.NotNull;
 import static javax.sound.sampled.LineEvent.Type.STOP;
 
 public class AudioPlayer implements Runnable
@@ -40,6 +41,7 @@ public class AudioPlayer implements Runnable
 	private Clip audioClip;
 	private Player mp3Player = null;
 	private Consumer<Exception> onError;
+
 	/**
 	 * Executed when an audio stops playing
 	 */
@@ -79,7 +81,8 @@ public class AudioPlayer implements Runnable
 	 * @param audioFileAbsPath the absolute path for the audio file to be played
 	 * @throws NullPointerException if the audio clip has not been loaded
 	 */
-	public void loadAudio(String audioFileAbsPath) throws UnsupportedAudioFileException, LineUnavailableException, IOException, JavaLayerException
+	public void loadAudio(@NotNull String audioFileAbsPath) throws UnsupportedAudioFileException,
+		LineUnavailableException, IOException, JavaLayerException
 	{
 		this.audioClip.removeLineListener(this::lineListener);
 		this.audioClip.close();
