@@ -160,10 +160,8 @@ public class HooksExecutor
 	 */
 	private void playAudio(@NotNull String audioPath)
 	{
-		if (this.audioPlayer == null) {
+		if (this.audioPlayer == null)
 			this.audioPlayer = new AudioPlayer(this::onAudioError);
-			this.audioPlayer.init();
-		}
 
 		File audioFile = new File(audioPath);
 		try {
