@@ -300,10 +300,11 @@ public class TakeABreakNotification extends AbstractNotification
 	}
 
 	/**
-	 * Disposes the jdialog but executes no hooks (e. g. {@link #onDisposed})
+	 * Disposes the jdialog but does not executes hooks (e. g. {@link #onDisposed})
 	 */
 	public void disposeNoHooks()
 	{
+		assert SwingUtilities.isEventDispatchThread();
 		super.dispose();
 
 		if (this.countDownTimer != null)

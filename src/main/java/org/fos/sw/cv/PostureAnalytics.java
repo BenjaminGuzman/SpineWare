@@ -25,7 +25,7 @@ package org.fos.sw.cv;
  * 2.- Margins
  * 3.- Ratio between the face and the screen size
  */
-public class PostureStatus
+public class PostureAnalytics
 {
 	private double distance = -1;
 	private boolean to_the_left;
@@ -88,7 +88,7 @@ public class PostureStatus
 
 	public boolean isPostureOk()
 	{
-		return distance <= CVUtils.SAFE_DISTANCE_CM
+		return distance >= CVUtils.SAFE_DISTANCE_CM
 			&& !to_the_left
 			&& !to_the_right
 			&& !to_the_top

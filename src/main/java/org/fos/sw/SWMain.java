@@ -119,10 +119,15 @@ public class SWMain
 		// but still it is good to have it
 		Runtime.getRuntime().addShutdownHook(new Thread(SWMain::exit));
 
+		SwingUtilities.invokeLater(() -> mainFrame = new MainFrame());
+
 		try {
-			Loggers.init();
 			TimersManager.init();
+			Loggers.init();
 			CVManager.init();
+
+			// start the timers
+			TimersManager.startMainLoop();
 		} catch (TooManyListenersException e) {
 			Loggers.getErrorLogger().log(
 				Level.SEVERE,
@@ -136,8 +141,6 @@ public class SWMain
 				e
 			);
 		}
-
-		SwingUtilities.invokeLater(() -> mainFrame = new MainFrame());
 	}
 
 	/**
@@ -318,13 +321,14 @@ public class SWMain
 		if (mainFrame != null)
 			mainFrame.dispose(); // close the main JFrame
 		TimersManager.shutdownAllThreads(); // shutdown all threads
-		TimersManager.killAllTimers(); // stop all timers
+		TimersManager.stopMainLoop(); // stop all timers
 		CVManager.stopCVLoop();
 		if (cvUtils != null)
 			cvUtils.close(); // close the web cam
 
-		//System.exit(0); // this is not needed, when closing all windows and killing all timers, the JVM
-		// should exit gracefully
+		//System.exit(0); // this is not needed, when closing all windows and stopping all threads, the JVM
+		// should exit gracefully. Not calling System.exit is a way of verifying each thread is closing
+		// in time and correctly. If not, the application will keep running
 	}
 
 	/**

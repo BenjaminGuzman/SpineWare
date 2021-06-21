@@ -27,7 +27,7 @@ import javax.swing.SwingUtilities;
 import org.fos.sw.SWMain;
 import org.fos.sw.gui.notifications.CountDownDialog;
 import org.fos.sw.gui.notifications.TakeABreakNotification;
-import org.fos.sw.hooks.BreakHooksConfig;
+import org.fos.sw.hooks.BreakHooks;
 import org.fos.sw.prefs.NotificationPrefsIO;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
@@ -111,9 +111,6 @@ public class BreakToDo extends ToDo
 		if (!breakConfig.isEnabled())
 			throw new RuntimeException("The run method was called inside a disabled BreakToDo object");
 
-		if (Thread.currentThread().isInterrupted())
-			return;
-
 		postponeTime = breakConfig.getPostponeWallClock();
 		BreakDecision breakDecision = showTakeBreakNotification(); // this is a blocking call
 		if (breakDecision == null) {
@@ -129,8 +126,6 @@ public class BreakToDo extends ToDo
 			return;
 		}
 
-		if (Thread.currentThread().isInterrupted())
-			return;
 		showBreakCountDown(); // this is a blocking call
 		updateExecutionTimes(breakConfig.getWorkWallClock());
 	}
@@ -168,7 +163,7 @@ public class BreakToDo extends ToDo
 			return BreakDecision.TAKE_BREAK;
 		}
 
-		BreakHooksConfig hooksConfig = breakConfig.getHooksConfig();
+		BreakHooks hooksConfig = breakConfig.getHooksConfig();
 
 		CountDownLatch notificationCountDownLatch = new CountDownLatch(1);
 		AtomicReference<TakeABreakNotification> notificationRef = new AtomicReference<>();
@@ -189,11 +184,8 @@ public class BreakToDo extends ToDo
 			notificationCountDownLatch.await(); // wait till notification is dismissed
 		} catch (InterruptedException e) {
 			if (notificationRef.get() != null)
-				notificationRef.get().disposeNoHooks();
+				SwingUtilities.invokeLater(() -> notificationRef.get().disposeNoHooks());
 			return null;
-		} finally { // shutdown the hooks
-			if (hooksConfig != null)
-				hooksConfig.shutdown();
 		}
 
 		if (notificationRef.get() != null) {
@@ -222,7 +214,7 @@ public class BreakToDo extends ToDo
 	 */
 	private void showBreakCountDown()
 	{
-		BreakHooksConfig hooksConfig = this.breakConfig.getHooksConfig();
+		BreakHooks hooksConfig = this.breakConfig.getHooksConfig();
 
 		CountDownLatch breakCountDownLatch = new CountDownLatch(1);
 		AtomicReference<CountDownDialog> breakCountDownRef = new AtomicReference<>();
@@ -240,10 +232,7 @@ public class BreakToDo extends ToDo
 			breakCountDownLatch.await();
 		} catch (InterruptedException e) {
 			if (breakCountDownRef.get() != null)
-				breakCountDownRef.get().disposeNoHooks();
-		} finally { // shutdown the hooks
-			if (hooksConfig != null)
-				hooksConfig.shutdown();
+				SwingUtilities.invokeLater(() -> breakCountDownRef.get().disposeNoHooks());
 		}
 	}
 

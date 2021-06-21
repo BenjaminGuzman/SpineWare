@@ -18,6 +18,7 @@
 
 package org.fos.sw.hooks;
 
+import org.fos.sw.core.Loggers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
  * <p>
  * One for the notification hooks, and another for the break hooks
  */
-public class BreakHooksConfig
+public class BreakHooks
 {
 	@NotNull
 	private final SingleBreakHooksConfig notificationHooksConf;
@@ -36,7 +37,7 @@ public class BreakHooksConfig
 
 	private final HooksExecutor executor;
 
-	public BreakHooksConfig(@NotNull SingleBreakHooksConfig notificationHooksConf, @Nullable SingleBreakHooksConfig breakHooksConf)
+	public BreakHooks(@NotNull SingleBreakHooksConfig notificationHooksConf, @Nullable SingleBreakHooksConfig breakHooksConf)
 	{
 		this.notificationHooksConf = notificationHooksConf;
 		this.breakHooksConf = breakHooksConf;
@@ -66,40 +67,56 @@ public class BreakHooksConfig
 	/**
 	 * Use this method to start the hooks associated to the break starting up
 	 */
-	synchronized public void onStartBreakHooks()
+	public void onStartBreakHooks()
 	{
-		executor.stop();
-		executor.setConfig(breakHooksConf);
-		executor.runStart();
+		Loggers.getDebugLogger().entering(this.getClass().getName(), "onStartBreakHooks");
+		synchronized (executor) {
+			executor.stop();
+			executor.setConfig(breakHooksConf);
+			executor.runStart();
+		}
+		Loggers.getDebugLogger().exiting(this.getClass().getName(), "onStartBreakHooks");
 	}
 
 	/**
 	 * Use this method to stop the hooks associated to the break ending
 	 */
-	synchronized public void onEndBreakHooks()
+	public void onEndBreakHooks()
 	{
-		executor.stop();
-		executor.setConfig(breakHooksConf);
-		executor.runEnd();
+		Loggers.getDebugLogger().entering(this.getClass().getName(), "onEndBreakHooks");
+		synchronized (executor) {
+			executor.stop();
+			executor.setConfig(breakHooksConf);
+			executor.runEnd();
+		}
+		Loggers.getDebugLogger().exiting(this.getClass().getName(), "onEndBreakHooks");
 	}
 
 	/**
 	 * Use this method to start the hooks associated to the notification showing up
 	 */
-	synchronized public void onStartNotificationHooks()
+	public void onStartNotificationHooks()
 	{
-		executor.stop();
-		executor.setConfig(notificationHooksConf);
-		executor.runStart();
+		Loggers.getDebugLogger().entering(this.getClass().getName(), "onStartNotificationHooks");
+		synchronized (executor) {
+			executor.stop();
+			executor.setConfig(notificationHooksConf);
+			executor.runStart();
+		}
+		Loggers.getDebugLogger().exiting(this.getClass().getName(), "onStartNotificationHooks");
 	}
 
 	/**
 	 * Use this method to end the hooks associated to the notification disposing/closing
 	 */
-	synchronized public void onEndNotificationHooks()
+	public void onEndNotificationHooks()
 	{
-		executor.stop();
-		executor.setConfig(notificationHooksConf);
-		executor.runEnd();
+		Loggers.getDebugLogger().entering(this.getClass().getName(), "onEndNotificationHooks");
+		synchronized (executor) {
+			executor.stop();
+			executor.setConfig(notificationHooksConf);
+			executor.runEnd();
+		}
+		Loggers.getDebugLogger().exiting(this.getClass().getName(), "onEndNotificationHooks");
 	}
 }

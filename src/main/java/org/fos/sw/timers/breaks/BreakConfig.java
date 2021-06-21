@@ -20,7 +20,7 @@ package org.fos.sw.timers.breaks;
 
 import java.util.Objects;
 import java.util.Optional;
-import org.fos.sw.hooks.BreakHooksConfig;
+import org.fos.sw.hooks.BreakHooks;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +37,7 @@ public class BreakConfig
 	private BreakType breakType;
 
 	@Nullable
-	private BreakHooksConfig hooksConfig;
+	private BreakHooks hooksConfig;
 
 	@NotNull
 	private WallClock workWallClock;
@@ -56,7 +56,7 @@ public class BreakConfig
 		final @Nullable WallClock breakWallClock,
 		final @NotNull WallClock postponeWallClock,
 		final @NotNull BreakType breakType,
-		final @Nullable BreakHooksConfig hooksConfig,
+		final @Nullable BreakHooks hooksConfig,
 		final boolean is_enabled
 	)
 	{
@@ -138,7 +138,7 @@ public class BreakConfig
 		this.hooksConfig = newConfig.getHooksConfig();
 	}
 
-	public @Nullable BreakHooksConfig getHooksConfig()
+	public @Nullable BreakHooks getHooksConfig()
 	{
 		return this.hooksConfig;
 	}
@@ -166,7 +166,7 @@ public class BreakConfig
 		private BreakType breakType;
 		private boolean is_enabled = true;
 
-		private BreakHooksConfig hooksConfig;
+		private BreakHooks hooksConfig;
 
 		public Builder workTimerSettings(WallClock workWallClock)
 		{
@@ -198,7 +198,7 @@ public class BreakConfig
 			return this;
 		}
 
-		public Builder hooksConfig(BreakHooksConfig hooksConfig)
+		public Builder hooksConfig(BreakHooks hooksConfig)
 		{
 			this.hooksConfig = hooksConfig;
 			return this;
