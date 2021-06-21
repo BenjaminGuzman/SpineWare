@@ -21,15 +21,23 @@ import java.io.File;
 import java.io.IOException;
 import java.util.TooManyListenersException;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Loggers
 {
 	public static final String ERROR_LOGGER_NAME = "Error logger";
 	public static final String DEBUG_LOGGER_NAME = "Debug logger";
-	// logger used to log errors, such as exceptions, the logger will also write the output to a file
+
+	/**
+	 * Logger used to log errors, such as exceptions, the logger will also write the output to a file
+	 */
 	private static final Logger errorLogger = Logger.getLogger(Loggers.ERROR_LOGGER_NAME);
-	// logger used to log messages for debugging purposes, the logger will write to STDOUT
+
+	/**
+	 * Logger used to log messages for debugging purposes, the logger will write to STDOUT
+	 */
 	private static final Logger debugLogger = Logger.getLogger(Loggers.DEBUG_LOGGER_NAME);
 
 	private Loggers()
@@ -39,7 +47,7 @@ public class Loggers
 
 	/**
 	 * @return the logger that should be used to log debug messages
-	 * This log is meant to be used application-wide so no other class have to deal will any other logger
+	 * This logger is meant to be used application-wide so no other class have to deal will any other logger
 	 */
 	public static Logger getDebugLogger()
 	{
@@ -48,7 +56,7 @@ public class Loggers
 
 	/**
 	 * @return the logger that should be used to log errors or warnings
-	 * This log is meant to be used application-wide so no other class have to deal will any other logger
+	 * This logger is meant to be used application-wide so no other class have to deal will any other logger
 	 */
 	public static Logger getErrorLogger()
 	{
@@ -64,8 +72,18 @@ public class Loggers
 			throw new TooManyListenersException(
 				"The logger "
 					+ Loggers.getErrorLogger().getName()
-					+ " has too many listeners, probably the init() method invoked twice?"
+					+ " has too many handlers, probably the init() method invoked twice?"
 			);
+
+		Level loggingLevel = Level.INFO;
+
+		Logger rootLogger = Logger.getLogger("");
+		for (Handler handler : rootLogger.getHandlers())
+			handler.setLevel(loggingLevel);
+
+		debugLogger.setLevel(loggingLevel);
+		for (Handler h : debugLogger.getHandlers())
+			h.setLevel(loggingLevel);
 
 		try {
 			// get the OS tmp directory

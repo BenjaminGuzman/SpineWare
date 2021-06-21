@@ -47,7 +47,9 @@ public abstract class ToDo implements Runnable, Comparable<ToDo>
 	protected boolean is_cancelled;
 
 	/**
-	 * Updates the execution times in the class
+	 * Updates the execution times in the class.
+	 * Execution times refers to the time a next execution should happen
+	 * and the time the last execution happened
 	 *
 	 * @param timeoutTime The timeout configuration used to set the {@link #next_execution_at} value
 	 */

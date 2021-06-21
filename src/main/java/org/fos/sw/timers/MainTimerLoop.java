@@ -44,8 +44,8 @@ public class MainTimerLoop implements Runnable
 	/**
 	 * Flag to tell if the {@link #run()} should be stopped or not
 	 * <p>
-	 * It is an {@link AtomicBoolean} to avoid concurrency problems while reding in the {@link #run()} method
-	 * from one thread, and updating its value on another thread
+	 * It is an {@link AtomicBoolean} to avoid concurrency problems while reading in the {@link #run()} method
+	 * from one thread, and updating its value in another thread
 	 */
 	private final AtomicBoolean stopped;
 
@@ -83,8 +83,8 @@ public class MainTimerLoop implements Runnable
 	/**
 	 * The thread that handles the execution of the events when the user is working not during active hours
 	 */
-	private volatile Thread executeAtToDoThread;
 	private volatile Thread activeHoursThread;
+	private volatile Thread executeAtToDoThread;
 
 	/**
 	 * The type of the break corresponding to the break executing in the thread {@link #breakThread}
@@ -250,25 +250,21 @@ public class MainTimerLoop implements Runnable
 			return;
 
 		int curr_time_s = WallClock.localNow().getHMSAsSeconds();
-		if (activeHours.isAfterEnd(curr_time_s)) {
-			activeHoursToDo.setNotificationLocation(
-				NotificationPrefsIO.getNotificationPrefLocation(
-					NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
-				)
-			);
-			activeHoursThread = threadFactory.newThread(activeHoursToDo::executeAfterEndHooks);
-			activeHoursThread.start();
-			activeHours.setEnabled(false); // don't show the notification again
-		} else if (activeHours.isBeforeStart(curr_time_s)) {
-			activeHoursToDo.setNotificationLocation(
-				NotificationPrefsIO.getNotificationPrefLocation(
-					NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
-				)
-			);
-			activeHoursThread = threadFactory.newThread(activeHoursToDo::executeBeforeStartHooks);
-			activeHoursThread.start();
-			activeHours.setEnabled(false); // don't show the notification again
-		}
+		boolean is_after_end = activeHours.isAfterEnd(curr_time_s);
+		boolean is_before_start = activeHours.isBeforeStart(curr_time_s);
+		if (!is_after_end && !is_before_start)
+			return;
+
+		activeHoursToDo.setNotificationLocation(
+			NotificationPrefsIO.getNotificationPrefLocation(
+				NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
+			)
+		);
+		activeHoursThread = is_after_end
+			? threadFactory.newThread(activeHoursToDo::executeAfterEndHooks)
+			: threadFactory.newThread(activeHoursToDo::executeBeforeStartHooks);
+		activeHoursThread.start();
+		activeHours.setEnabled(false); // don't show the notification again
 	}
 
 	/**

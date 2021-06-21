@@ -126,8 +126,6 @@ public class HooksExecutor
 	private void runHooks(@Nullable String audioPath, @Nullable String cmd)
 	{
 		stop(); // stop everything currently running
-		if (Thread.currentThread().isInterrupted())
-			return;
 
 		if (cmd != null) {
 			this.cmdExecutor = new CommandExecutor(cmd, this::onCMDError);
@@ -136,9 +134,7 @@ public class HooksExecutor
 
 		// execute in other thread to avoid blocking the current thread
 		if (audioPath != null)
-			this.audioStartTask = this.audioStartThreadExecutor.submit(
-				() -> this.playAudio(audioPath)
-			);
+			this.audioStartTask = this.audioStartThreadExecutor.submit(() -> this.playAudio(audioPath));
 
 		if (wait_termination) {
 			try {
@@ -166,13 +162,7 @@ public class HooksExecutor
 	{
 		if (this.audioPlayer == null) {
 			this.audioPlayer = new AudioPlayer(this::onAudioError);
-			if (!this.audioPlayer.init()) {
-				Loggers.getErrorLogger().log(
-					Level.WARNING,
-					"Your system probably can't play audio"
-				);
-				return;
-			}
+			this.audioPlayer.init();
 		}
 
 		File audioFile = new File(audioPath);
@@ -226,13 +216,6 @@ public class HooksExecutor
 		// 1st party: this thread
 		// 2nd party: the thread playing audio when the audio terminates
 		CyclicBarrier barrier = new CyclicBarrier(2);
-		Runnable barrierAwait = () -> {
-			try {
-				barrier.await();
-			} catch (InterruptedException | BrokenBarrierException e) {
-				this.audioPlayTask.cancel(true);
-			}
-		};
 		File file;
 		while (!this.audioStartTask.isCancelled() && !Thread.currentThread().isInterrupted()) {
 			// select a random file from the deque
@@ -250,10 +233,24 @@ public class HooksExecutor
 			this.audioPlayTask = this.audioThreadExecutor.submit(this.audioPlayer);
 
 			// second party await() call
-			this.audioPlayer.onAudioEnd(barrierAwait);
+			this.audioPlayer.onAudioEnd(() -> {
+				try {
+					barrier.await();
+				} catch (InterruptedException | BrokenBarrierException e) {
+					// this is probably not needed because if the thread is interrupted
+					// the first party (the code below) will be the first catching the exception
+					this.audioPlayTask.cancel(true);
+				}
+			});
 
 			// first party await() call
-			barrierAwait.run();
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				this.audioPlayer.shutdown();
+				this.audioPlayTask.cancel(true);
+				return;
+			}
 
 			// at this point we know the audio has finished playing
 			// because both parties called await()
@@ -295,14 +292,16 @@ public class HooksExecutor
 	 */
 	public void stop()
 	{
+		Loggers.getDebugLogger().entering(this.getClass().getName(), "stop");
+		if (audioPlayTask != null)
+			audioPlayTask.cancel(true);
+		if (audioStartTask != null)
+			audioStartTask.cancel(true);
 		if (audioPlayer != null)
 			audioPlayer.shutdown();
 		if (cmdExecutor != null)
 			cmdExecutor.interrupt();
-		if (audioStartTask != null)
-			audioStartTask.cancel(true);
-		if (audioPlayTask != null)
-			audioPlayTask.cancel(true);
+		Loggers.getDebugLogger().exiting(this.getClass().getName(), "stop");
 	}
 
 	public void onAudioError(Exception e)

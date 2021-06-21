@@ -42,16 +42,22 @@ import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
 import org.fos.sw.core.NotificationLocation;
 import org.fos.sw.gui.Initializable;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractNotification extends JDialog implements Initializable
 {
 	protected static ImageIcon swIcon; // static to avoid reading the image each time the notification is shown
 	private final int dispose_timeout_ms;
+
+	@NotNull
+	protected final JLabel swIconLabel; // icon that contains the SW image
+	@NotNull
+	protected final JButton closeBtn; // button to close the notification
+	@NotNull
+	protected final JPanel mainPanel; // panel that will contain everything in the JDialog
+	@NotNull
 	private final NotificationLocation notificationLocation;
-	protected JLabel swIconLabel; // icon that contains the SW image
-	protected JButton closeBtn; // button to close the notification
-	protected JPanel mainPanel; // panel that will contain everything in the JDialog
 
 	/**
 	 * runnable to execute when the notification is shown
@@ -86,10 +92,10 @@ public abstract class AbstractNotification extends JDialog implements Initializa
 	 * this will also load the SW icon
 	 *
 	 * @param dispose_timeout_ms   number of milliseconds to wait before the dialog is automatically disposed
-	 *                             if this is less than or equal to 0, the notification will be never dismissed
+	 *                             if this is less than or equal to 0, the notification will be never disposed
 	 * @param notificationLocation this tells where to put the notification, check this class static constants for details
 	 */
-	public AbstractNotification(int dispose_timeout_ms, NotificationLocation notificationLocation)
+	public AbstractNotification(int dispose_timeout_ms, @NotNull NotificationLocation notificationLocation)
 	{
 		super((Window) null); // pass null to create an unowned JDialog
 		assert SwingUtilities.isEventDispatchThread();
@@ -115,6 +121,15 @@ public abstract class AbstractNotification extends JDialog implements Initializa
 		this.closeBtn.setContentAreaFilled(false);
 		this.closeBtn.setFocusPainted(false);
 		this.closeBtn.setOpaque(false);
+
+		// configure the JDialog
+		this.setContentPane(this.mainPanel);
+		this.setUndecorated(true);
+		this.setResizable(false);
+		this.setType(Type.POPUP);
+		this.setAlwaysOnTop(true);
+		this.setAutoRequestFocus(false); // if you're working, this alert should not make you loose your focus in whatever you're doing
+		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE); // even though this is not likely to happen, is a good practice to have it
 	}
 
 	/**
@@ -128,16 +143,10 @@ public abstract class AbstractNotification extends JDialog implements Initializa
 	 */
 	protected void showJDialog()
 	{
+		assert SwingUtilities.isEventDispatchThread();
 		if (onShown != null)
 			onShown.run();
 
-		this.setContentPane(this.mainPanel);
-		this.setUndecorated(true);
-		this.setResizable(false);
-		this.setType(Type.POPUP);
-		this.setAlwaysOnTop(true);
-		this.setAutoRequestFocus(false); // if you're working, this alert should not make you loose your focus in whatever you're doing
-		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE); // even though this is not likely to happen, is a good practice to have it
 		this.pack();
 
 		Point notificationLocation = this.getNotificationPointLocation();
@@ -206,21 +215,21 @@ public abstract class AbstractNotification extends JDialog implements Initializa
 	}
 
 
-	public AbstractNotification setOnShown(Runnable onShown)
+	public AbstractNotification setOnShown(@Nullable Runnable onShown)
 	{
 		this.onShown = onShown;
 		return this;
 	}
 
-	public AbstractNotification setOnDisposed(Runnable onDisposed)
+	public void setOnDisposed(@Nullable Runnable onDisposed)
 	{
 		this.onDisposed = onDisposed;
-		return this;
 	}
 
 	@Override
 	public void dispose()
 	{
+		assert SwingUtilities.isEventDispatchThread();
 		super.dispose();
 		if (this.timeoutTimer != null)
 			this.timeoutTimer.stop();

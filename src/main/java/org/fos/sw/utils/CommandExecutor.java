@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -95,6 +97,7 @@ public class CommandExecutor extends Thread
 	@Override
 	public void interrupt()
 	{
+		super.interrupt();
 		if (this.process != null)
 			this.process.destroy();
 	}
@@ -130,7 +133,9 @@ public class CommandExecutor extends Thread
 				new Pipe.Builder(
 					this.process.getInputStream(),
 					new FileOutputStream(hookSTDOUT, true)
-				).prependStr("---BEGIN STDOUT for: " + this.cmd + "---\n")
+				).prependStr("---BEGIN STDOUT @ "
+					+ LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+					+ " for: " + this.cmd + "---\n")
 				 .appendStr("---END STDOUT for: " + this.cmd + "---\n\n")
 			);
 

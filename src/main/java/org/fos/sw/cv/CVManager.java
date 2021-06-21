@@ -18,13 +18,15 @@
 
 package org.fos.sw.cv;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import javax.swing.SwingUtilities;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
-import org.fos.sw.core.NotificationLocation;
+import org.fos.sw.gui.notifications.PostureNotification;
 import org.fos.sw.utils.DaemonThreadFactory;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,21 +37,18 @@ public class CVManager
 	 * atomicity is not needed here (or at least it'd be an overkill)
 	 */
 	private static volatile boolean instantiated;
-
-	private static final Object cvLoopExecutorLock = new Object();
-
-	private static CVLoop cvLoop;
 	private static ScheduledExecutorService cvLoopExecutor;
+
+	private static final Object notificationLock = new Object();
 	/**
-	 * Volatile here is required because the value will be set from the thread calling {@link #startCVLoop()}
-	 * while it will be retrieved/read from the CV-thread in functions like {@link #onUserHasGoneAway()}.
-	 * <p>
-	 * Mutex is not required because the probability of setting the value concurrently and having inconsistent
-	 * state is very very low. It is almost guaranteed that {@link #startCVLoop()} (the only method that writes
-	 * this value) will be called before calling methods like {@link #onUserHasGoneAway()} (the only methods that
-	 * read this value)
+	 * Notification currently showing or shown to the user.
 	 */
-	private static volatile NotificationLocation notifLocation;
+	private static PostureNotification postureNotification;
+	private static final CVLoop cvLoop = new CVLoop(
+		CVManager::processUserPostureState,
+		CVManager::onUserHasGoneAway,
+		CVManager::onMultipleFacesDetected
+	);
 
 	private CVManager()
 	{
@@ -62,11 +61,6 @@ public class CVManager
 			throw new RuntimeException("Don't invoke init() method more than once");
 
 		instantiated = true;
-		cvLoop = new CVLoop(
-			CVManager::processUserPostureState,
-			CVManager::onUserHasGoneAway,
-			CVManager::onMultipleFacesDetected
-		);
 		startCVLoop();
 	}
 
@@ -104,9 +98,8 @@ public class CVManager
 			return;
 
 		Loggers.getDebugLogger().log(Level.INFO, "Starting CV Loop...");
-		notifLocation = cvPrefs.notifLocation;
 
-		synchronized (cvLoopExecutorLock) {
+		synchronized (cvLoop) {
 			// if the CV loop is already running, do nothing
 			if (cvLoopExecutor != null && !cvLoopExecutor.isShutdown())
 				return;
@@ -129,16 +122,45 @@ public class CVManager
 			cvLoopExecutor.scheduleAtFixedRate(
 				cvLoop,
 				0,
-				CVLoop.UPDATE_FREQUENCY_S,
-				TimeUnit.SECONDS
+				cvPrefs.refresh_rate,
+				TimeUnit.MILLISECONDS
 			);
+			Loggers.getDebugLogger().log(
+				Level.INFO,
+				"CV loop started. Executing every " + cvPrefs.refresh_rate + "ms."
+			);
+
+			synchronized (notificationLock) {
+				if (postureNotification != null) {
+					postureNotification.setOnDisposed(null); // clear any custom callback. A
+					// this point we don't care about it, we just want to cancel any showing
+					// notification
+
+					if (!SwingUtilities.isEventDispatchThread())
+						try {
+							SwingUtilities.invokeAndWait(postureNotification::dispose);
+						} catch (InterruptedException | InvocationTargetException e) {
+							Loggers.getErrorLogger().log(
+								Level.SEVERE,
+								"Error while disposing cv notification",
+								e
+							);
+						}
+					else
+						postureNotification.dispose();
+				}
+
+
+				postureNotification = new PostureNotification(cvPrefs.notifLocation);
+			}
 		}
 	}
 
 	/**
 	 * Stops the CV Loop (if running)
-	 * If you need to "restart" the loop, just call {@link #startCVLoop()}
-	 * This method will also close the camera, if you don't want this use {@link #stopCVLoop(boolean)}
+	 * If you need to "restart" the loop, just call {@link #startCVLoop()} after calling this method
+	 * This method will also close the camera, if you don't want that use {@link #stopCVLoop(boolean)}
+	 * This method will also close the notification (if any), if you don't want that use {@link #stopCVLoop(boolean, boolean)}
 	 *
 	 * @see #stopCVLoop(boolean)
 	 */
@@ -149,23 +171,43 @@ public class CVManager
 
 	/**
 	 * Stops the CV Loop (if running)
-	 * If you need to "restart" the loop, just call {@link #startCVLoop()}
+	 * If you need to "restart" the loop, just call {@link #startCVLoop()} after calling this method
+	 * This method will also dispose the notification (if it is showing), if you don't want this use {@link #stopCVLoop(boolean, boolean)}
 	 *
 	 * @param close_cam if true the cam will be closed
 	 */
 	public static void stopCVLoop(boolean close_cam)
 	{
-		synchronized (cvLoopExecutorLock) {
+		stopCVLoop(close_cam, true);
+	}
+
+	/**
+	 * Stops the CV loop (if running)
+	 * If you need to "restart" the loop, just call {@link #startCVLoop()} after calling this method
+	 *
+	 * @param close_cam            if true the cam will be closed
+	 * @param dispose_notification if true, the notification will be disposed
+	 */
+	public static void stopCVLoop(boolean close_cam, boolean dispose_notification)
+	{
+		Loggers.getDebugLogger().entering(CVManager.class.getName(), "stopCVLoop");
+
+		synchronized (cvLoop) {
+			if (dispose_notification && postureNotification != null)
+				// don't synchronize inside swing thread
+				// 🤞 nobody access the notification exactly when it is being disposed
+				SwingUtilities.invokeLater(postureNotification::dispose);
+
 			if (cvLoopExecutor == null) // cv loop is not running
 				return;
 
-			Loggers.getDebugLogger().log(Level.INFO, "Stopping CV Loop...");
-
-			cvLoopExecutor.shutdownNow();
 			if (close_cam)
 				SWMain.getCVUtils().close();
+			cvLoopExecutor.shutdownNow();
 			cvLoopExecutor = null;
 		}
+
+		Loggers.getDebugLogger().exiting(CVManager.class.getName(), "stopCVLoop");
 	}
 
 	/**
@@ -173,11 +215,22 @@ public class CVManager
 	 */
 	private static void onUserHasGoneAway()
 	{
-		stopCVLoop();
-		SWMain.getCVUtils().close();
-		// TODO show notification
-		System.out.println("User has gone");
-		// TODO: restart the CV loop when the user comes back and presses continue
+		// stop the loop but don't dispose the notification as it will be shown later (see below)
+		stopCVLoop(true, false);
+
+		synchronized (notificationLock) {
+			postureNotification.setPostureStatus(PostureStatus.USER_IS_AWAY);
+			postureNotification.setOnDisposed(() -> {
+				// user has come back
+				startCVLoop();
+				if (postureNotification != null)
+					postureNotification.setOnDisposed(null);
+			});
+
+			// don't synchronize inside swing thread
+			// 🤞 nobody access the notification exactly when it is being showed
+			SwingUtilities.invokeLater(postureNotification::showNotification);
+		}
 	}
 
 	/**
@@ -185,7 +238,12 @@ public class CVManager
 	 */
 	private static void onMultipleFacesDetected()
 	{
-		// TODO show notification
+		synchronized (notificationLock) {
+			postureNotification.setPostureStatus(PostureStatus.MULTIPLE_FACES);
+			// don't synchronize inside swing thread
+			// 🤞 nobody access the notification exactly when it is being showed
+			SwingUtilities.invokeLater(postureNotification::showNotification);
+		}
 	}
 
 	/**
@@ -194,34 +252,50 @@ public class CVManager
 	 *
 	 * @param status the computed user posture state
 	 */
-	private static void processUserPostureState(PostureStatus status)
+	private static void processUserPostureState(PostureAnalytics status)
 	{
 		if (status.isPostureOk()) {
-			// TODO remove notifications
-			System.out.println("Remove notifications");
+			// don't synchronize inside swing thread
+			// 🤞 nobody access the notification exactly when it is being disposed
+			SwingUtilities.invokeLater(postureNotification::dispose);
 			return;
 		}
 
 		double distance = status.getDistance();
-		if (distance > CVUtils.SAFE_DISTANCE_CM && distance != -1)
-			// TODO show notification
-			System.out.println("User is NOT at safe distance " + distance);
-		else
-			// TODO remove this
-			System.out.println("User is at safe distance " + distance);
+		synchronized (notificationLock) {
+			if (distance < CVUtils.SAFE_DISTANCE_CM && distance != -1) {
+				postureNotification.setDistanceToCam(distance);
+				postureNotification.setPostureStatus(PostureStatus.TOO_CLOSE);
+			} else if (status.isToTheRight() || status.isToTheLeft() || status.isToTheTop() || status.isToTheBottom())
+				postureNotification.setPostureStatus(PostureStatus.NOT_IN_CENTER);
 
-		if (status.isToTheRight() || status.isToTheLeft() || status.isToTheTop() || status.isToTheBottom())
-			// TODO show notification
-			System.out.println("User is not in the center of the screen");
+			// don't synchronize inside swing thread
+			// 🤞 nobody access the notification exactly when it is being showed
+			SwingUtilities.invokeLater(postureNotification::showNotification);
+		}
 	}
 
 	/**
+	 * Same as {@link #isCVLoopStopped()} but without synchronization.
+	 * It is actually safe to call this method if you've already acquired the lock on {@link #cvLoop}
+	 *
+	 * @return true if the loop is not running, false otherwise
+	 */
+	private static boolean isCVLoopStoppedUnsafe()
+	{
+		return cvLoopExecutor == null || cvLoopExecutor.isShutdown();
+	}
+
+	/**
+	 * Warning: If you have already acquired the lock and call this method a deadlock may be produced
+	 * because this method also acquires the lock
+	 *
 	 * @return true if the loop is NOT running, false otherwise
 	 */
 	public static boolean isCVLoopStopped()
 	{
-		synchronized (cvLoopExecutorLock) {
-			return cvLoopExecutor == null || cvLoopExecutor.isShutdown();
+		synchronized (cvLoop) {
+			return isCVLoopStoppedUnsafe();
 		}
 	}
 }

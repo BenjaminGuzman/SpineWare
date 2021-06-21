@@ -21,7 +21,23 @@ package org.fos.sw.gui;
 public interface Hideable
 {
 	/**
-	 * Method to be invoked when the section is shown
+	 * Method to be invoked if the section will not be visible anymore
+	 * Use this method to free any resources the panel required during its lifetime.
+	 * Be aware its counterpart {@link Showable#onShown()} may be invoked again
+	 *
+	 * @see #onDispose()
 	 */
 	void onHide();
+
+	/**
+	 * Method to be invoked when the container is being disposed
+	 * Difference with {@link #onHide()} is that this method should free resources as if it is never going to be
+	 * shown again. That is {@link Showable#onShown()} will be never be invoked after this call
+	 *
+	 * @see #onHide()
+	 */
+	default void onDispose()
+	{
+		onHide();
+	}
 }

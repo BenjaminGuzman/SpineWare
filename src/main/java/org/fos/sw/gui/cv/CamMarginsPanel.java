@@ -34,21 +34,21 @@ import org.jetbrains.annotations.NotNull;
 public class CamMarginsPanel extends JPanel implements Initializable
 {
 	@NotNull
-	private final Consumer<Integer> onMarginXSet;
+	private final Consumer<Integer> onSetMarginX;
 
 	@NotNull
-	private final Consumer<Integer> onMarginYSet;
+	private final Consumer<Integer> onSetMarginY;
 
 	private final JSlider marginXSlider;
 	private final JSlider marginYSlider;
 
 	public CamMarginsPanel(
-		@NotNull final Consumer<Integer> onMarginXSet,
-		@NotNull final Consumer<Integer> onMarginYSet
+		@NotNull final Consumer<Integer> onSetMarginX,
+		@NotNull final Consumer<Integer> onSetMarginY
 	)
 	{
-		this.onMarginXSet = onMarginXSet;
-		this.onMarginYSet = onMarginYSet;
+		this.onSetMarginX = onSetMarginX;
+		this.onSetMarginY = onSetMarginY;
 
 		this.marginXSlider = new JSlider(10, 40);
 		this.marginYSlider = new JSlider(10, 40);
@@ -78,19 +78,19 @@ public class CamMarginsPanel extends JPanel implements Initializable
 		this.add(descLabel, gbc);
 
 		++gbc.gridy;
-		this.add(this.createMarginSlider(true), gbc);
+		this.add(this.createMarginSliderPanel(true), gbc);
 
 		++gbc.gridy;
-		this.add(this.createMarginSlider(false), gbc);
+		this.add(this.createMarginSliderPanel(false), gbc);
 	}
 
 	/**
-	 * Creates a panel with the given label and a slider
+	 * Creates a panel with an slider (and label) inside
 	 *
 	 * @param is_X if true, slider will be configured to set X values
 	 * @return the panel containing the label and the slider
 	 */
-	private JPanel createMarginSlider(boolean is_X)
+	private JPanel createMarginSliderPanel(boolean is_X)
 	{
 		JPanel panel = new JPanel();
 		JSlider slider = is_X ? this.marginXSlider : this.marginYSlider;
@@ -105,9 +105,9 @@ public class CamMarginsPanel extends JPanel implements Initializable
 		slider.addChangeListener(e -> {
 			int selected_margin_percentage = slider.getValue();
 			if (is_X)
-				this.onMarginXSet.accept(selected_margin_percentage);
+				this.onSetMarginX.accept(selected_margin_percentage);
 			else
-				this.onMarginYSet.accept(selected_margin_percentage);
+				this.onSetMarginY.accept(selected_margin_percentage);
 
 			// improve performance with this if, dont save values on each change, just when the user has
 			// set a value
