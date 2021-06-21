@@ -23,9 +23,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.Control;
+import javax.sound.sampled.Line;
 import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.SwingUtilities;
@@ -43,14 +48,18 @@ import static javax.sound.sampled.LineEvent.Type.STOP;
 public class AudioPlayer implements Runnable
 {
 	private final Object mp3Lock = new Object();
+	/**
+	 * Java audio clip to play audio
+	 * This is a "final" field because it is set within the constructor
+	 */
+	private final Clip audioClip;
 	private Player mp3Player = null;
 	private Consumer<Exception> onError;
 	/**
-	 * Java audio clip to play audio
-	 * This is a "final" field because it is set within the {@link #init()} method and nowhere else, and objects
-	 * from this class should always call the {@link #init()} method before calling any other method
+	 * Indicates if the system can play audio.
+	 * This is false if {@link AudioSystem#getClip()} failed, indicating the system cannot play audio
 	 */
-	private Clip audioClip;
+	private boolean can_play_audio = false;
 
 	/**
 	 * Executed when an audio stops playing
@@ -60,6 +69,36 @@ public class AudioPlayer implements Runnable
 	public AudioPlayer()
 	{
 		super();
+		Clip audioClip;
+
+		// initialize the audio clip
+		try {
+			audioClip = AudioSystem.getClip();
+			this.can_play_audio = true;
+		} catch (LineUnavailableException | SecurityException e) {
+			Loggers.getErrorLogger().log(
+				Level.WARNING,
+				"Couldn't get system clip to play audio",
+				e
+			);
+			SwingUtilities.invokeLater(
+				() -> this.showErrorAlert(SWMain.messagesBundle.getString("system_cannot_play_audio"))
+			);
+			audioClip = new DummyClip(); // create a dummy clip just to not have null and provoke a
+			// null pointer exception when acquiring the lock on this object
+		} catch (IllegalArgumentException e) {
+			Loggers.getErrorLogger().log(
+				Level.WARNING,
+				"Your system does not have support for playing audio files",
+				e
+			);
+			SwingUtilities.invokeLater(
+				() -> this.showErrorAlert(SWMain.messagesBundle.getString("system_cannot_play_audio"))
+			);
+			audioClip = new DummyClip(); // create a dummy clip just to not have null and provoke a
+			// null pointer exception when acquiring the lock on this object
+		}
+		this.audioClip = audioClip;
 	}
 
 	public AudioPlayer(Consumer<Exception> onError)
@@ -94,6 +133,9 @@ public class AudioPlayer implements Runnable
 	public void loadAudio(@NotNull String audioFileAbsPath) throws UnsupportedAudioFileException,
 		LineUnavailableException, IOException, JavaLayerException
 	{
+		if (!can_play_audio)
+			return;
+
 		synchronized (this.audioClip) {
 			this.audioClip.removeLineListener(this::lineListener);
 			this.audioClip.close();
@@ -133,6 +175,9 @@ public class AudioPlayer implements Runnable
 	 */
 	public void stopAudio()
 	{
+		if (!can_play_audio)
+			return;
+
 		synchronized (this.audioClip) {
 			this.audioClip.stop();
 		}
@@ -149,6 +194,10 @@ public class AudioPlayer implements Runnable
 	public void shutdown()
 	{
 		Loggers.getDebugLogger().entering(this.getClass().getName(), "shutdown");
+
+		if (!can_play_audio)
+			return;
+
 		synchronized (this.audioClip) {
 			this.audioClip.removeLineListener(this::lineListener);
 			this.audioClip.flush();
@@ -169,7 +218,7 @@ public class AudioPlayer implements Runnable
 	/**
 	 * Invoked when {@link Thread#start()} is invoked
 	 * <p>
-	 * This will start playing audio, therefore, be sure to call {@link #init()}, {@link #loadAudio(String)}
+	 * This will start playing audio, therefore, be sure to call {@link #loadAudio(String)}
 	 * before calling {@link Thread#start()}
 	 */
 	@Override
@@ -194,50 +243,11 @@ public class AudioPlayer implements Runnable
 	}
 
 	/**
-	 * Gets the clip to reproduce audio files
-	 * This method should be called before playing audio and using the this.soundClip object
-	 * to ensure it isn't null
-	 * If the sound clip couldn't be loaded, a warning message will be logged
-	 *
-	 * @return true if the soundClip could be loaded, false otherwise
-	 */
-	public boolean init()
-	{
-		if (this.audioClip != null)
-			return true;
-
-		try {
-			this.audioClip = AudioSystem.getClip();
-		} catch (LineUnavailableException | SecurityException e) {
-			Loggers.getErrorLogger().log(
-				Level.WARNING,
-				"Couldn't get system clip to play audio",
-				e
-			);
-			SwingUtilities.invokeLater(
-				() -> this.showErrorAlert(SWMain.messagesBundle.getString("system_cannot_play_audio"))
-			);
-			return false;
-		} catch (IllegalArgumentException e) {
-			Loggers.getErrorLogger().log(
-				Level.WARNING,
-				"Your system does not have support for playing audio files",
-				e
-			);
-			SwingUtilities.invokeLater(
-				() -> this.showErrorAlert(SWMain.messagesBundle.getString("system_cannot_play_audio"))
-			);
-			return false;
-		}
-		return true;
-	}
-
-	/**
 	 * @return true if the audio is currently being played
 	 */
 	public boolean isPlaying()
 	{
-		return this.mp3Player != null || this.audioClip.isRunning();
+		return can_play_audio && (this.mp3Player != null || this.audioClip.isRunning());
 	}
 
 	/**
@@ -255,7 +265,7 @@ public class AudioPlayer implements Runnable
 
 	/**
 	 * Shows an error alert using a JOptionPane as in {@link SWMain#showErrorAlert(String, String)}
-	 *
+	 * <p>
 	 * Title for the message will be the message property "error_while_playing_audio"
 	 *
 	 * @param message the message for the JOptionPane
@@ -263,5 +273,178 @@ public class AudioPlayer implements Runnable
 	private void showErrorAlert(String message)
 	{
 		SWMain.showErrorAlert(message, SWMain.messagesBundle.getString("error_while_playing_audio"));
+	}
+
+	/**
+	 * Dummy class with no functionality
+	 * Use it if the system clip could not be obtained but still you need a {@link Clip} object
+	 */
+	public static class DummyClip implements Clip
+	{
+		@Override
+		public void open(AudioFormat format, byte[] data, int offset, int bufferSize) throws LineUnavailableException
+		{
+		}
+
+		@Override
+		public void open(AudioInputStream stream) throws LineUnavailableException, IOException
+		{
+		}
+
+		@Override
+		public int getFrameLength()
+		{
+			return 0;
+		}
+
+		@Override
+		public long getMicrosecondLength()
+		{
+			return 0;
+		}
+
+		@Override
+		public void setLoopPoints(int start, int end)
+		{
+		}
+
+		@Override
+		public void loop(int count)
+		{
+		}
+
+		@Override
+		public void drain()
+		{
+		}
+
+		@Override
+		public void flush()
+		{
+		}
+
+		@Override
+		public void start()
+		{
+		}
+
+		@Override
+		public void stop()
+		{
+		}
+
+		@Override
+		public boolean isRunning()
+		{
+			return false;
+		}
+
+		@Override
+		public boolean isActive()
+		{
+			return false;
+		}
+
+		@Override
+		public AudioFormat getFormat()
+		{
+			return null;
+		}
+
+		@Override
+		public int getBufferSize()
+		{
+			return 0;
+		}
+
+		@Override
+		public int available()
+		{
+			return 0;
+		}
+
+		@Override
+		public int getFramePosition()
+		{
+			return 0;
+		}
+
+		@Override
+		public void setFramePosition(int frames)
+		{
+		}
+
+		@Override
+		public long getLongFramePosition()
+		{
+			return 0;
+		}
+
+		@Override
+		public long getMicrosecondPosition()
+		{
+			return 0;
+		}
+
+		@Override
+		public void setMicrosecondPosition(long microseconds)
+		{
+		}
+
+		@Override
+		public float getLevel()
+		{
+			return 0;
+		}
+
+		@Override
+		public Line.Info getLineInfo()
+		{
+			return null;
+		}
+
+		@Override
+		public void open() throws LineUnavailableException
+		{
+		}
+
+		@Override
+		public void close()
+		{
+		}
+
+		@Override
+		public boolean isOpen()
+		{
+			return false;
+		}
+
+		@Override
+		public Control[] getControls()
+		{
+			return new Control[0];
+		}
+
+		@Override
+		public boolean isControlSupported(Control.Type control)
+		{
+			return false;
+		}
+
+		@Override
+		public Control getControl(Control.Type control)
+		{
+			return null;
+		}
+
+		@Override
+		public void addLineListener(LineListener listener)
+		{
+		}
+
+		@Override
+		public void removeLineListener(LineListener listener)
+		{
+		}
 	}
 }
