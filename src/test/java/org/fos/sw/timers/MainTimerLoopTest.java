@@ -26,7 +26,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.fos.sw.SWMain;
-import org.fos.sw.hooks.BreakHooksConfig;
+import org.fos.sw.hooks.BreakHooks;
 import org.fos.sw.hooks.SingleBreakHooksConfig;
 import org.fos.sw.timers.breaks.BreakConfig;
 import org.fos.sw.timers.breaks.BreakToDo;
@@ -64,7 +64,7 @@ class MainTimerLoopTest
 				.breakTimerSettings(WallClock.from(5))
 				.workTimerSettings(WallClock.from(5))
 				.postponeTimerSettings(WallClock.from(5))
-				.hooksConfig(new BreakHooksConfig(new SingleBreakHooksConfig(
+				.hooksConfig(new BreakHooks(new SingleBreakHooksConfig(
 					false, null, null,
 					null, null, false,
 					false, false, BreakType.STRETCH_BREAK

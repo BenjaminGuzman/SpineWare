@@ -24,7 +24,7 @@ import java.util.logging.Level;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import org.fos.sw.core.Loggers;
-import org.fos.sw.hooks.BreakHooksConfig;
+import org.fos.sw.hooks.BreakHooks;
 import org.fos.sw.hooks.SingleBreakHooksConfig;
 import org.fos.sw.prefs.PrefsIO;
 import org.fos.sw.timers.WallClock;
@@ -114,7 +114,7 @@ public class TimersPrefsIO extends PrefsIO
 			.enabled(is_enabled)
 			.workTimerSettings(WallClock.from(working_time))
 			.postponeTimerSettings(WallClock.from(postpone_time))
-			.hooksConfig(new BreakHooksConfig(notifHooksConf, breakHooksConf))
+			.hooksConfig(new BreakHooks(notifHooksConf, breakHooksConf))
 			.breakType(breakType);
 
 		return breakType == BreakType.DAY_BREAK

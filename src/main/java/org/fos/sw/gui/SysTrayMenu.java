@@ -44,6 +44,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import org.fos.sw.SWMain;
 import org.fos.sw.cv.CVManager;
@@ -70,6 +71,7 @@ public class SysTrayMenu extends JDialog
 	public SysTrayMenu(final JFrame owner, final ActionListener onClickExitButton, final ActionListener onClickOpenButton)
 	{
 		super(owner, "SpineWare");
+		assert SwingUtilities.isEventDispatchThread();
 		this.onClickExitButton = onClickExitButton;
 		this.onClickOpenButton = onClickOpenButton;
 
@@ -342,6 +344,7 @@ public class SysTrayMenu extends JDialog
 	@Override
 	public void dispose()
 	{
+		assert SwingUtilities.isEventDispatchThread();
 		super.dispose();
 		if (this.statusTimer != null)
 			this.statusTimer.stop();

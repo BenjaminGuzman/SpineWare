@@ -258,9 +258,11 @@ public class CountDownDialog extends JDialog
 	@Override
 	public void dispose()
 	{
+		Loggers.getDebugLogger().entering(this.getClass().getName(), "dispose");
+		this.disposeNoHooks();
 		if (this.onDisposed != null)
 			this.onDisposed.run();
-		this.disposeNoHooks();
+		Loggers.getDebugLogger().exiting(this.getClass().getName(), "dispose");
 	}
 
 	/**
@@ -269,10 +271,12 @@ public class CountDownDialog extends JDialog
 	 */
 	public void disposeNoHooks()
 	{
+		Loggers.getDebugLogger().entering(this.getClass().getName(), "disposeNoHooks");
 		super.dispose();
 		timerCountDown.stop();
 		if (countDownLatch != null)
 			countDownLatch.countDown();
+		Loggers.getDebugLogger().exiting(this.getClass().getName(), "disposeNoHooks");
 	}
 
 	@Override

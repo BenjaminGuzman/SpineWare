@@ -19,7 +19,7 @@
 package org.fos.sw.prefs.timers;
 
 import java.util.prefs.Preferences;
-import org.fos.sw.hooks.BreakHooksConfig;
+import org.fos.sw.hooks.BreakHooks;
 import org.fos.sw.hooks.HooksConfig;
 import org.fos.sw.hooks.SingleBreakHooksConfig;
 import org.fos.sw.prefs.PrefsIO;
@@ -134,12 +134,12 @@ public class HooksPrefsIO extends PrefsIO
 		flushPrefs();
 	}
 
-	public void save(@NotNull BreakHooksConfig breakHooksConfig)
+	public void save(@NotNull BreakHooks breakHooks)
 	{
-		if (breakHooksConfig.getBreakHooksConf() != null)
-			this.save(breakHooksConfig.getBreakHooksConf());
+		if (breakHooks.getBreakHooksConf() != null)
+			this.save(breakHooks.getBreakHooksConf());
 
-		this.save(breakHooksConfig.getNotificationHooksConf());
+		this.save(breakHooks.getNotificationHooksConf());
 	}
 
 	/**

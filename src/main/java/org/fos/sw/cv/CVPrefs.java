@@ -29,6 +29,11 @@ public class CVPrefs
 	public final double margin_x;
 	public final double margin_y;
 	public final boolean is_enabled;
+
+	/**
+	 * Refresh rate in milliseconds
+	 */
+	public final int refresh_rate;
 	public final NotificationLocation notifLocation;
 
 	/**
@@ -47,6 +52,7 @@ public class CVPrefs
 		double margin_y,
 		double ideal_f_length,
 		boolean is_enabled,
+		int refresh_rate,
 		NotificationLocation notifLocation
 	)
 	{
@@ -54,6 +60,7 @@ public class CVPrefs
 		this.margin_y = margin_y;
 		this.ideal_f_length = ideal_f_length;
 		this.is_enabled = is_enabled;
+		this.refresh_rate = refresh_rate;
 		this.notifLocation = notifLocation;
 	}
 

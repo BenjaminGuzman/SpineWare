@@ -32,19 +32,23 @@ import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.cv.CVConfigPanel;
 
-public class PosturePanel extends AbstractSection
+/**
+ * Panel containing a "mirror" where the user can see the current status of his/her posture
+ * It also contains all the configuration panels
+ */
+public class CVPanel extends AbstractSection
 {
 	private static boolean instantiated;
 
 	private CVConfigPanel cvConfigPanel;
 	private JCheckBox featureEnabledCheckBox;
 
-	public PosturePanel() throws InstanceAlreadyExistsException
+	public CVPanel() throws InstanceAlreadyExistsException
 	{
 		super();
 		if (instantiated)
 			throw new InstanceAlreadyExistsException(
-				"There must exist a single instance of " + AbstractSection.class.getName()
+				"There must exist a single instance of " + this.getClass().getName()
 			);
 		instantiated = true;
 	}
@@ -152,5 +156,13 @@ public class PosturePanel extends AbstractSection
 	{
 		this.cvConfigPanel.onHide();
 		CVManager.startCVLoop();
+	}
+
+	@Override
+	public void onDispose()
+	{
+		this.cvConfigPanel.onHide();
+		// when the jframe is being disposed is because the application will exit. Therefore, there is
+		// no need to call CVManager.startCVLoop()
 	}
 }

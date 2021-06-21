@@ -47,14 +47,14 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
 import org.fos.sw.gui.notifications.StartUpNotification;
 import org.fos.sw.gui.sections.AbstractSection;
 import org.fos.sw.gui.sections.BreaksPanel;
+import org.fos.sw.gui.sections.CVPanel;
 import org.fos.sw.gui.sections.HelpPanel;
-import org.fos.sw.gui.sections.PosturePanel;
-import org.fos.sw.timers.TimersManager;
 
 public class MainFrame extends JFrame
 {
@@ -70,6 +70,8 @@ public class MainFrame extends JFrame
 	public MainFrame()
 	{
 		super("SpineWare");
+		assert SwingUtilities.isEventDispatchThread();
+
 		this.configSysTray();
 
 		this.setIconImage(SWMain.getSWIcon());
@@ -190,7 +192,7 @@ public class MainFrame extends JFrame
 	 *
 	 * @return the panel that contains both panels
 	 */
-	public JPanel createMainPanel()
+	private JPanel createMainPanel()
 	{
 		JPanel rootContentPanel = new JPanel(new BorderLayout());
 		this.mainContentPanel = new JPanel(new BorderLayout());
@@ -211,7 +213,7 @@ public class MainFrame extends JFrame
 	 *
 	 * @return the JPanel that contains all this element
 	 */
-	public JPanel createMenuPanel()
+	private JPanel createMenuPanel()
 	{
 		final Font buttonFont = new Font(Font.SANS_SERIF, Font.PLAIN, 14);
 
@@ -278,7 +280,7 @@ public class MainFrame extends JFrame
 	 *
 	 * @param evt the event
 	 */
-	public void onClickBreaksMenu(final ActionEvent evt)
+	private void onClickBreaksMenu(final ActionEvent evt)
 	{
 		this.changePanel(BREAKS_PANEL_CACHE_IDX, BreaksPanel.class);
 	}
@@ -289,14 +291,14 @@ public class MainFrame extends JFrame
 	 *
 	 * @param evt the event
 	 */
-	public void onClickHelpMenu(final ActionEvent evt)
+	private void onClickHelpMenu(final ActionEvent evt)
 	{
 		this.changePanel(HELP_PANEL_CACHE_IDX, HelpPanel.class);
 	}
 
-	public void onClickPostureMenu(final ActionEvent evt)
+	private void onClickPostureMenu(final ActionEvent evt)
 	{
-		this.changePanel(POSTURE_PANEL_CACHE_IDX, PosturePanel.class);
+		this.changePanel(POSTURE_PANEL_CACHE_IDX, CVPanel.class);
 	}
 
 	/**
@@ -309,7 +311,7 @@ public class MainFrame extends JFrame
 	 * @param panelClass      the class of the panel
 	 * @param <T>             class of the panel
 	 */
-	public <T extends AbstractSection> void changePanel(final short panel_cache_idx, final Class<T> panelClass)
+	private <T extends AbstractSection> void changePanel(final short panel_cache_idx, final Class<T> panelClass)
 	{
 		if (panel_cache_idx < 0 || panel_cache_idx >= this.mainPanelContentCaches.length)
 			throw new IllegalArgumentException("The panel cache idx should be between [0, "
@@ -319,19 +321,22 @@ public class MainFrame extends JFrame
 		// if the panel is not in the cache, create it
 		if (this.mainPanelContentCaches[panel_cache_idx] == null) {
 			try {
-				this.mainPanelContentCaches[panel_cache_idx] = panelClass.getConstructor().newInstance();
+				this.mainPanelContentCaches[panel_cache_idx] = panelClass.getConstructor()
+				                                                         .newInstance();
 				this.mainPanelContentCaches[panel_cache_idx].setOwner(this);
 				invoke_init_components = true;
 			} catch (InstantiationException | IllegalAccessException
 				| InvocationTargetException | NoSuchMethodException e) {
-				Loggers.getErrorLogger().log(Level.SEVERE, "Error while creating the main content panel", e);
+				Loggers.getErrorLogger()
+				       .log(Level.SEVERE, "Error while creating the main content panel", e);
 			}
-			Loggers.getDebugLogger().log(Level.INFO, "Loaded panel, created instance of: " + panelClass.getName());
+			Loggers.getDebugLogger()
+			       .log(Level.FINER, "Loaded panel, created instance of: " + panelClass.getName());
 		}
 
 		// if the panel is the active one, do nothing
 		if (panelClass.isInstance(this.activeContentPanel)) {
-			Loggers.getDebugLogger().log(Level.INFO, "The panel with class "
+			Loggers.getDebugLogger().log(Level.FINER, "The panel with class "
 				+ panelClass.getName() + " is already shown");
 			return;
 		}
@@ -399,7 +404,7 @@ public class MainFrame extends JFrame
 		{
 			private final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 			private final Dimension menuSize = sysTrayMenu.getSize();
-			private final Dimension menuLocationOffsetDim = new Dimension(5, 5);
+			private final Dimension menuLocationOffsetDim = new Dimension(3, 3);
 
 			@Override
 			public void mouseClicked(MouseEvent e)
@@ -446,9 +451,6 @@ public class MainFrame extends JFrame
 			{
 			}
 		});
-
-		// start the timers
-		TimersManager.startMainLoop();
 	}
 
 	/**
@@ -461,6 +463,7 @@ public class MainFrame extends JFrame
 	@Override
 	public void setVisible(boolean b)
 	{
+		assert SwingUtilities.isEventDispatchThread();
 		super.setVisible(b);
 		if (b && activeContentPanel == null)
 			this.changePanel(BREAKS_PANEL_CACHE_IDX, BreaksPanel.class);
@@ -469,14 +472,15 @@ public class MainFrame extends JFrame
 	@Override
 	public void dispose()
 	{
+		assert SwingUtilities.isEventDispatchThread();
 		super.dispose();
 		if (SystemTray.isSupported()) // remove the systray
 			SystemTray.getSystemTray().remove(this.trayIcon);
 
-		// notify all sections they're being closed
+		// notify all sections the jframe is being disposed
 		for (AbstractSection section : mainPanelContentCaches)
 			if (section != null)
-				section.onHide();
+				section.onDispose();
 	}
 
 

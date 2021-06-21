@@ -62,7 +62,7 @@ public class CVUtils implements AutoCloseable
 
 	/**
 	 * It is recommended to have a distance from the screen greater than 50cm
-	 * That value may vary, but let's suppose 50 is good
+	 * That value may vary, but let's suppose 50cm is good
 	 */
 	public static final double SAFE_DISTANCE_CM = 50;
 

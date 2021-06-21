@@ -34,6 +34,11 @@ public class CVPrefsManager
 	private static final MarginsPrefsIO marginsPrefsIO = new MarginsPrefsIO();
 	private static final Preferences cvPrefs = Preferences.userNodeForPackage(CVPrefsManager.class);
 	private static final String FEATURE_ENABLED_KEY = "cv feature enabled";
+	/**
+	 * Default preferred refresh rate for the CV loop
+	 */
+	public static final int DEFAULT_REFRESH_RATE_MS = 700;
+	private static final String REFRESH_RATE_KEY = "refresh rate";
 
 	private CVPrefsManager() // prevent instantiation
 	{
@@ -123,6 +128,36 @@ public class CVPrefsManager
 	}
 
 	/**
+	 * Saves the refresh rate in the preferences
+	 *
+	 * @param refresh_rate the refresh rate in milliseconds to be saved
+	 */
+	public static void saveRefreshRate(int refresh_rate)
+	{
+		cvPrefs.putInt(REFRESH_RATE_KEY, refresh_rate);
+		try {
+			cvPrefs.flush();
+		} catch (BackingStoreException e) {
+			Loggers.getErrorLogger().log(Level.WARNING, "Error while flushing prefs", e);
+		}
+	}
+
+	/**
+	 * Gets the saved refresh rate in milliseconds
+	 *
+	 * @return the saved refresh rate or the default {@link #DEFAULT_REFRESH_RATE_MS}
+	 */
+	public static int getRefreshRate()
+	{
+		try {
+			cvPrefs.sync();
+		} catch (BackingStoreException e) {
+			Loggers.getErrorLogger().log(Level.WARNING, "Error while syncing prefs", e);
+		}
+		return cvPrefs.getInt(REFRESH_RATE_KEY, DEFAULT_REFRESH_RATE_MS);
+	}
+
+	/**
 	 * @return true if the camera has been calibrated (and the ideal focal length has been calculated)
 	 */
 	public static boolean isCamCalibrated()
@@ -137,6 +172,7 @@ public class CVPrefsManager
 			getMargin(false),
 			getFocalLength(),
 			isFeatureEnabled(),
+			getRefreshRate(),
 			NotificationPrefsIO.getNotificationPrefLocation(
 				NotificationPrefsIO.NotificationPreferenceType.CV_NOTIFICATION
 			)

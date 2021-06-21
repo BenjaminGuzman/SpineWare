@@ -55,6 +55,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	private final ProjectionScreen projectionScreen;
 	private final CamCalibrationPanel camCalibrationPanel;
 	private final CamMarginsPanel marginsPanel;
+	private final RefreshRatePanel refreshRateConfigPanel;
 	private final NotificationLocationComponent notificationLocationSelect;
 
 	private final CVUtils cvUtils;
@@ -81,7 +82,9 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 			this::onShown,
 			() -> setFocalLength(CVPrefsManager.getFocalLength())
 		);
-		marginsPanel = new CamMarginsPanel(this::onMarginXSet, this::onMarginYSet);
+		marginsPanel = new CamMarginsPanel(this::onSetMarginX, this::onSetMarginY);
+		refreshRateConfigPanel = new RefreshRatePanel((Integer i) -> {
+		} /* just ignore the new values */);
 
 		NotificationLocation timersNotificationLocation = NotificationPrefsIO.getNotificationPrefLocation(
 			NotificationPrefsIO.NotificationPreferenceType.TIMER_NOTIFICATION
@@ -114,6 +117,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 
 		camCalibrationPanel.initComponents();
 		marginsPanel.initComponents();
+		refreshRateConfigPanel.initComponents();
 
 		// add the components
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -137,6 +141,9 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		++gbc.gridy;
 		this.add(marginsPanel, gbc);
 
+		++gbc.gridy;
+		this.add(refreshRateConfigPanel, gbc);
+
 		// add dropdown for the notification location
 		++gbc.gridy;
 		this.add(notificationLocationSelect, gbc);
@@ -150,11 +157,12 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 
 		setFocalLength(CVPrefsManager.getFocalLength());
 
-		onMarginXSet(CVPrefsManager.getMargin(true));
-		onMarginYSet(CVPrefsManager.getMargin(false));
+		onSetMarginX(CVPrefsManager.getMargin(true));
+		onSetMarginY(CVPrefsManager.getMargin(false));
 
 		marginsPanel.setMargin(true, this.margin_x);
 		marginsPanel.setMargin(false, this.margin_y);
+		refreshRateConfigPanel.setRefreshRate(CVPrefsManager.getRefreshRate());
 	}
 
 	/**
@@ -162,7 +170,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	 *
 	 * @param percentage the percentage of the X margin
 	 */
-	private void onMarginXSet(int percentage)
+	private void onSetMarginX(int percentage)
 	{
 		this.margin_x = percentage <= 0 ? 10 : percentage;
 		this.computeMargins();
@@ -173,7 +181,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	 *
 	 * @param percentage the percentage of the Y margin
 	 */
-	private void onMarginYSet(int percentage)
+	private void onSetMarginY(int percentage)
 	{
 		this.margin_y = percentage <= 0 ? 10 : percentage;
 		this.computeMargins();
@@ -298,7 +306,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	 */
 	public void setFocalLength(double new_focal_length)
 	{
-		Loggers.getDebugLogger().log(Level.INFO, "The new focal length is: " + new_focal_length);
+		Loggers.getDebugLogger().log(Level.FINE, "The new focal length is: " + new_focal_length);
 		this.ideal_focal_length = new_focal_length;
 	}
 
@@ -333,7 +341,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		grabberService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
 		long period = (long) (1.0 / FPS * 1000);
 		grabberService.scheduleAtFixedRate(this::showMirror, 0, period, TimeUnit.MILLISECONDS);
-		Loggers.getDebugLogger().log(Level.INFO, "Updating the projection screen each " + period + "ms");
+		Loggers.getDebugLogger().log(Level.FINE, "Updating the projection screen each " + period + "ms");
 	}
 
 	/**
@@ -343,7 +351,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	{
 		if (grabberService != null) {
 			grabberService.shutdownNow();
-			Loggers.getDebugLogger().log(Level.INFO, "Stopping the frame capturing service");
+			Loggers.getDebugLogger().log(Level.FINE, "Stopping the \"mirror\"");
 		}
 
 		try {

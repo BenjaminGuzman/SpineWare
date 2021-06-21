@@ -36,11 +36,21 @@ import org.fos.sw.core.Loggers;
 import org.jetbrains.annotations.NotNull;
 import static javax.sound.sampled.LineEvent.Type.STOP;
 
+/**
+ * Class to play a single audio file
+ * Supported audio files are the ones the jvm supports + mp3
+ */
 public class AudioPlayer implements Runnable
 {
-	private Clip audioClip;
+	private final Object mp3Lock = new Object();
 	private Player mp3Player = null;
 	private Consumer<Exception> onError;
+	/**
+	 * Java audio clip to play audio
+	 * This is a "final" field because it is set within the {@link #init()} method and nowhere else, and objects
+	 * from this class should always call the {@link #init()} method before calling any other method
+	 */
+	private Clip audioClip;
 
 	/**
 	 * Executed when an audio stops playing
@@ -84,8 +94,14 @@ public class AudioPlayer implements Runnable
 	public void loadAudio(@NotNull String audioFileAbsPath) throws UnsupportedAudioFileException,
 		LineUnavailableException, IOException, JavaLayerException
 	{
-		this.audioClip.removeLineListener(this::lineListener);
-		this.audioClip.close();
+		synchronized (this.audioClip) {
+			this.audioClip.removeLineListener(this::lineListener);
+			this.audioClip.close();
+		}
+		synchronized (this.mp3Lock) {
+			this.mp3Player = null;
+		}
+
 		Loggers.getDebugLogger().log(
 			Level.INFO,
 			"Loading audio: " + audioFileAbsPath
@@ -97,10 +113,12 @@ public class AudioPlayer implements Runnable
 			return;
 		}
 
-		this.audioClip.open(AudioSystem.getAudioInputStream(
-			new File(audioFileAbsPath).getAbsoluteFile()
-		));
-		this.audioClip.addLineListener(this::lineListener);
+		synchronized (this.audioClip) {
+			this.audioClip.open(AudioSystem.getAudioInputStream(
+				new File(audioFileAbsPath).getAbsoluteFile()
+			));
+			this.audioClip.addLineListener(this::lineListener);
+		}
 	}
 
 	private void lineListener(LineEvent event)
@@ -115,10 +133,14 @@ public class AudioPlayer implements Runnable
 	 */
 	public void stopAudio()
 	{
-		if (this.audioClip != null)
+		synchronized (this.audioClip) {
 			this.audioClip.stop();
-		if (this.mp3Player != null)
-			this.mp3Player.close();
+		}
+
+		synchronized (this.mp3Lock) {
+			if (this.mp3Player != null)
+				this.mp3Player.close();
+		}
 	}
 
 	/**
@@ -126,15 +148,22 @@ public class AudioPlayer implements Runnable
 	 */
 	public void shutdown()
 	{
-		if (this.audioClip != null) {
+		Loggers.getDebugLogger().entering(this.getClass().getName(), "shutdown");
+		synchronized (this.audioClip) {
 			this.audioClip.removeLineListener(this::lineListener);
 			this.audioClip.flush();
 			this.audioClip.stop();
 			this.audioClip.close();
 		}
-		if (this.mp3Player != null) {
-			this.mp3Player.close();
+
+		synchronized (this.mp3Lock) {
+			if (this.mp3Player != null)
+				this.mp3Player.close();
+			else
+				Loggers.getDebugLogger().fine("MP3 player is closed");
+			this.mp3Player = null;
 		}
+		Loggers.getDebugLogger().exiting(this.getClass().getName(), "shutdown");
 	}
 
 	/**
@@ -151,7 +180,9 @@ public class AudioPlayer implements Runnable
 				this.mp3Player.play(); // this is a blocking call
 				if (this.onAudioEnd != null)
 					this.onAudioEnd.run();
-				this.mp3Player = null;
+				synchronized (this.mp3Lock) {
+					this.mp3Player = null;
+				}
 				return;
 			}
 		} catch (JavaLayerException e) {
@@ -199,6 +230,14 @@ public class AudioPlayer implements Runnable
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * @return true if the audio is currently being played
+	 */
+	public boolean isPlaying()
+	{
+		return this.mp3Player != null || this.audioClip.isRunning();
 	}
 
 	/**

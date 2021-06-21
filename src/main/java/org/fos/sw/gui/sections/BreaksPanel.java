@@ -36,7 +36,6 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
@@ -51,7 +50,7 @@ import org.fos.sw.gui.hooksconfig.ActiveHoursHooksConfigDialog;
 import org.fos.sw.gui.hooksconfig.BreakHooksConfigDialog;
 import org.fos.sw.gui.util.NotificationLocationComponent;
 import org.fos.sw.gui.util.TimeInputComponent;
-import org.fos.sw.hooks.BreakHooksConfig;
+import org.fos.sw.hooks.BreakHooks;
 import org.fos.sw.prefs.NotificationPrefsIO;
 import org.fos.sw.prefs.timers.HooksPrefsIO;
 import org.fos.sw.prefs.timers.TimersPrefsIO;
@@ -91,9 +90,6 @@ public class BreaksPanel extends AbstractSection
 	private final WallClock minRequiredPostponeTime = new WallClock((byte) 0, (byte) 0, (byte) 6);
 	private final WallClock maxRequiredPostponeTime = new WallClock((byte) 0, (byte) 30, (byte) 0);
 
-	// configuration stuff
-	private JComboBox<String> notificationLocationCombobox;
-
 	public BreaksPanel() throws InstanceAlreadyExistsException
 	{
 		super();
@@ -109,7 +105,8 @@ public class BreaksPanel extends AbstractSection
 		TimersPrefsIO prefsIO = TimersManager.getPrefsIO();
 		this.preferredBreakSettings = prefsIO.loadBreaksConfig();
 		Optional<ActiveHours> prefActiveHours;
-		if ((prefActiveHours = prefsIO.getActiveHoursPrefsIO().loadActiveHours(prefsIO.getHooksPrefsIO())).isPresent())
+		if ((prefActiveHours = prefsIO.getActiveHoursPrefsIO()
+		                              .loadActiveHours(prefsIO.getHooksPrefsIO())).isPresent())
 			preferredActiveHours = prefActiveHours.get();
 		else
 			preferredActiveHours = new ActiveHours(WallClock.from(0), WallClock.from(0), false);
@@ -620,7 +617,7 @@ public class BreaksPanel extends AbstractSection
 						WallClock.from(end_time),
 						featureEnabledCheckBox.isSelected()
 					).setAfterEndHooks(hooksPrefsIO.loadForActiveHours(true))
-						.setBeforeStartHooks(hooksPrefsIO.loadForActiveHours(false))
+					 .setBeforeStartHooks(hooksPrefsIO.loadForActiveHours(false))
 				);
 				statusLabel.setForeground(Colors.GREEN);
 				statusLabel.setText(SWMain.messagesBundle.getString("changes_saved"));
@@ -879,7 +876,7 @@ public class BreaksPanel extends AbstractSection
 			try {
 				HooksPrefsIO hooksPrefsIO = TimersManager.getPrefsIO().getHooksPrefsIO();
 				breakSettingsBuilder = breakSettingsBuilder
-					.hooksConfig(new BreakHooksConfig(
+					.hooksConfig(new BreakHooks(
 						hooksPrefsIO.loadForBreak(breakType, true),
 						hooksPrefsIO.loadForBreak(breakType, false)
 					));
@@ -1000,12 +997,10 @@ public class BreaksPanel extends AbstractSection
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			AbstractHooksConfigDialog hooksConfigDialog = breakType != null
-				? new BreakHooksConfigDialog(
+			AbstractHooksConfigDialog hooksConfigDialog = breakType != null ? new BreakHooksConfigDialog(
 				parentDialog,
 				breakType
-			)
-				: new ActiveHoursHooksConfigDialog(parentDialog);
+			) : new ActiveHoursHooksConfigDialog(parentDialog);
 
 			hooksConfigDialog.initComponents(); // this call will block
 			save_changes = hooksConfigDialog.shouldSaveChanges();

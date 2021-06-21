@@ -37,6 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
+import org.fos.sw.cv.CVManager;
 import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.cv.CVUtils;
 import org.fos.sw.cv.IdealFocalLengthMeasure;
@@ -169,6 +170,8 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 		// add listeners
 		calibrateBtn.addActionListener(this::onClickCalibrate);
 		resetCalibrationBtn.addActionListener(e -> {
+			CVManager.stopCVLoop(); // stop the loop
+
 			int selected_option = JOptionPane.showConfirmDialog(
 				this,
 				SWMain.messagesBundle.getString("reset_calibration_warning"),
@@ -176,6 +179,7 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 				JOptionPane.YES_NO_OPTION,
 				JOptionPane.WARNING_MESSAGE
 			);
+			CVManager.stopCVLoop();
 
 			if (selected_option != JOptionPane.YES_OPTION)
 				return;
@@ -280,7 +284,7 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 				avg_focal_length /= n_focal_lengths;
 
 				Loggers.getDebugLogger().log(
-					Level.INFO,
+					Level.FINE,
 					"Average IDEAL focal length at distance " + distanceStr + " is: " + avg_focal_length
 				);
 

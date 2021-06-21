@@ -70,7 +70,8 @@ public class TimersManager
 	 * This should be a rare case and almost never be used (it was written to allow test to execute without
 	 * problems)
 	 *
-	 * @param create_main_timer_loop if true the main timer loop will be created
+	 * @param create_main_timer_loop if true the main timer loop will be created BUT it WILL NOT be started, for
+	 *                               that use {@link #startMainLoop()}
 	 * @throws RuntimeException if you call this method more than once with a true parameter
 	 */
 	public static void init(boolean create_main_timer_loop) throws InstantiationException
@@ -122,7 +123,8 @@ public class TimersManager
 	/**
 	 * Sets whether or not the main loop should be stopped
 	 * <p>
-	 * This will not cancel the main loop, it will just indicate that the main loop should do nothing
+	 * This will not cancel the main loop, it will just indicate that the main loop should do nothing if the
+	 * stopped status is true
 	 *
 	 * @param stopped the stopped status of the main loop
 	 */
@@ -144,19 +146,23 @@ public class TimersManager
 	{
 		// create the corresponding break to do according to the break config
 		return prefsIO.loadBreaksConfig()
-			.stream()
-			.map(BreakToDo::from)
-			.collect(Collectors.toList());
+		              .stream()
+		              .map(BreakToDo::from)
+		              .collect(Collectors.toList());
 	}
 
 	/**
 	 * shutdowns all timers and stops the execution of the main timer loop
 	 */
-	public static void killAllTimers()
+	public static void stopMainLoop()
 	{
+		Loggers.getDebugLogger().entering(TimersManager.class.getName(), "stopMainLoop");
+
 		mainTimerLoop.shutdownBreakThread();
 		if (mainLoopExecutor != null)
 			mainLoopExecutor.shutdownNow();
+
+		Loggers.getDebugLogger().entering(TimersManager.class.getName(), "stopMainLoop");
 	}
 
 	/**
