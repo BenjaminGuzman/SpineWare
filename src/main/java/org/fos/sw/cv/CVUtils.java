@@ -26,12 +26,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.logging.Level;
 import javax.management.InstanceAlreadyExistsException;
-import nu.pattern.OpenCV;
+import org.bytedeco.javacpp.Loader;
+import org.bytedeco.opencv.opencv_java;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
 import org.fos.sw.gui.sections.BreaksPanel;
 import org.jetbrains.annotations.Nullable;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
@@ -80,8 +80,9 @@ public class CVUtils implements AutoCloseable
 
 		instantiated = true;
 
-		OpenCV.loadShared();
-		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		Loader.load(opencv_java.class);
+		// OpenCV.loadShared();
+		// System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		camCapture = new VideoCapture();
 		facesClassifier = new CascadeClassifier();
 

@@ -72,6 +72,8 @@ public class CVPrefs
 			", margin_x=" + margin_x +
 			", margin_y=" + margin_y +
 			", is_enabled=" + is_enabled +
+			", refresh_rate=" + refresh_rate +
+			", notifLocation=" + notifLocation +
 			'}';
 	}
 }

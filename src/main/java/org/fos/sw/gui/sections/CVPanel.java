@@ -22,15 +22,14 @@ import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import javax.management.InstanceAlreadyExistsException;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.fos.sw.SWMain;
 import org.fos.sw.cv.CVManager;
-import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.cv.CVConfigPanel;
+import org.fos.sw.prefs.cv.CVPrefsManager;
 
 /**
  * Panel containing a "mirror" where the user can see the current status of his/her posture
@@ -38,19 +37,12 @@ import org.fos.sw.gui.cv.CVConfigPanel;
  */
 public class CVPanel extends AbstractSection
 {
-	private static boolean instantiated;
-
 	private CVConfigPanel cvConfigPanel;
 	private JCheckBox featureEnabledCheckBox;
 
-	public CVPanel() throws InstanceAlreadyExistsException
+	public CVPanel()
 	{
 		super();
-		if (instantiated)
-			throw new InstanceAlreadyExistsException(
-				"There must exist a single instance of " + this.getClass().getName()
-			);
-		instantiated = true;
 	}
 
 	@Override
@@ -155,7 +147,11 @@ public class CVPanel extends AbstractSection
 	public void onHide()
 	{
 		this.cvConfigPanel.onHide();
-		CVManager.startCVLoop();
+
+		// if this method was called because the main frame lost focus and the cause was an inner dialog, the
+		// CV loop must not be started
+		if (!this.cvConfigPanel.hasVisibleDialog())
+			CVManager.startCVLoop();
 	}
 
 	@Override
