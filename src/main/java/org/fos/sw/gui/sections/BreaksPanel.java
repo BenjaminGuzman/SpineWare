@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
-import javax.management.InstanceAlreadyExistsException;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -64,8 +63,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class BreaksPanel extends AbstractSection
 {
-	private static boolean instantiated;
-
 	private final List<BreakConfig> preferredBreakSettings;
 	@NotNull
 	private final ActiveHours preferredActiveHours;
@@ -90,16 +87,9 @@ public class BreaksPanel extends AbstractSection
 	private final WallClock minRequiredPostponeTime = new WallClock((byte) 0, (byte) 0, (byte) 6);
 	private final WallClock maxRequiredPostponeTime = new WallClock((byte) 0, (byte) 30, (byte) 0);
 
-	public BreaksPanel() throws InstanceAlreadyExistsException
+	public BreaksPanel()
 	{
 		super();
-
-		if (BreaksPanel.instantiated)
-			throw new InstanceAlreadyExistsException(
-				"There must exist a single instance of " + BreaksPanel.class.getName()
-			);
-
-		BreaksPanel.instantiated = true;
 
 		// load preferred configurations
 		TimersPrefsIO prefsIO = TimersManager.getPrefsIO();

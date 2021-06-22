@@ -26,9 +26,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import org.fos.sw.SWMain;
-import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.Initializable;
+import org.fos.sw.prefs.cv.CVPrefsManager;
 import org.jetbrains.annotations.NotNull;
 
 public class CamMarginsPanel extends JPanel implements Initializable

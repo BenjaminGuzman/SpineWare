@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.fos.sw.cv;
+package org.fos.sw.prefs.cv;
 
 import java.util.List;
 import java.util.OptionalDouble;
@@ -24,9 +24,10 @@ import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import org.fos.sw.core.Loggers;
+import org.fos.sw.cv.CVPrefs;
+import org.fos.sw.cv.CVUtils;
+import org.fos.sw.cv.IdealFocalLengthMeasure;
 import org.fos.sw.prefs.NotificationPrefsIO;
-import org.fos.sw.prefs.cv.IdealFocalLengthPrefsIO;
-import org.fos.sw.prefs.cv.MarginsPrefsIO;
 
 public class CVPrefsManager
 {
@@ -174,6 +175,7 @@ public class CVPrefsManager
 			isFeatureEnabled(),
 			getRefreshRate(),
 			NotificationPrefsIO.getNotificationPrefLocation(
+				true, // ignore cached values
 				NotificationPrefsIO.NotificationPreferenceType.CV_NOTIFICATION
 			)
 		);

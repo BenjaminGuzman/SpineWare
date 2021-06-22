@@ -56,6 +56,17 @@ public class SWMain
 	private static final String OS = System.getProperty("os.name").toLowerCase();
 	public static boolean IS_WINDOWS = OS.contains("win");
 
+	private static CLI cli;
+
+	/**
+	 * Indicates if the {@link #exit()} method has been called
+	 * This is volatile and it is not synchronized because it can only change it state once (you can only exit
+	 * the application once)
+	 * Let's hope there is no concurrent write to this value (which could be a very small problem). Such case is
+	 * also very unlike to happen
+	 */
+	private static volatile boolean exit_called = false;
+
 	private static MainFrame mainFrame;
 
 	private SWMain() throws InstantiationException
@@ -69,38 +80,44 @@ public class SWMain
 
 		// parse cli options
 		Options opts = new Options();
-		opts.addOption("v", "version", false, "Show the SpineWare version and exit");
+		opts.addOption("v", "version", false, "Show the SpineWare version and exit.");
 		opts.addOption("l", "lang", true, "Specify the GUI language as an ISO ISO 3166-1 alpha-2, e. g. " +
-			"\"en\" to specify english, \"es\" to specify español");
+			"\"en\" to specify english, \"es\" to specify español.");
 		opts.addOption("r", "rm-lock", false, "Remove the SW lock before start. Use this option if " +
 			"SpineWare does not start and says there is already an instance running.");
+		opts.addOption("c", "cache", false, "Use cached panels in the main frame. This may increase (a " +
+			"little) memory footprint.");
 
 		CommandLineParser cliParser = new DefaultParser();
+		CommandLine apacheCli;
 		try {
-			CommandLine cli = cliParser.parse(opts, args);
-			if (cli.hasOption('v')) {
-				System.out.println("SpineWare version: " + SWMain.class.getPackage()
-				                                                       .getImplementationVersion());
-				return;
-			}
-			if (cli.hasOption('l')) {
-				String lang = cli.getOptionValue('l');
-				locale = new Locale(lang.toLowerCase());
-			}
-			if (cli.hasOption('r')) {
-				String tmpDir = System.getProperty("java.io.tmpdir");
-				if (Paths.get(tmpDir, "sw.lock").toFile().delete())
-					System.out.println("Lock removed prior start.");
-				else
-					System.out.println("Lock could not be removed.");
-			}
+			apacheCli = cliParser.parse(opts, args);
 		} catch (ParseException e) {
 			Loggers.getErrorLogger().log(
 				Level.WARNING,
 				"Error while parsing options",
 				e
 			);
+			return;
 		}
+
+		if (apacheCli.hasOption('v')) {
+			System.out.println("SpineWare version: " + SWMain.class.getPackage()
+			                                                       .getImplementationVersion());
+			return;
+		}
+		if (apacheCli.hasOption('l')) {
+			String lang = apacheCli.getOptionValue('l');
+			locale = new Locale(lang.toLowerCase());
+		}
+		if (apacheCli.hasOption('r')) {
+			String tmpDir = System.getProperty("java.io.tmpdir");
+			if (Paths.get(tmpDir, "sw.lock").toFile().delete())
+				System.out.println("Lock removed prior start.");
+			else
+				System.out.println("Lock could not be removed.");
+		}
+		boolean use_cached_panels = apacheCli.hasOption('c');
 
 		if (!ensureSingleJVMInstance())
 			return;
@@ -117,9 +134,15 @@ public class SWMain
 		// kill all timers, java should take care of the gui, you take care of the timers
 		// this is probably not needed as the JVM GC should collect free resources on exit, including threads
 		// but still it is good to have it
+		// Having this will cause the exit method to be invoked twice (one time when the user click exit &
+		// another time when this hook is run), but that is no problem thanks to the exit_called static property
 		Runtime.getRuntime().addShutdownHook(new Thread(SWMain::exit));
 
-		SwingUtilities.invokeLater(() -> mainFrame = new MainFrame());
+		SwingUtilities.invokeLater(() -> {
+			mainFrame = new MainFrame(use_cached_panels);
+			cli = new CLI(mainFrame);
+			cli.start();
+		});
 
 		try {
 			TimersManager.init();
@@ -317,14 +340,20 @@ public class SWMain
 	 */
 	public static void exit()
 	{
+		if (exit_called)
+			return;
+
+		exit_called = true;
 		Loggers.getDebugLogger().log(Level.INFO, "Shutting down...");
+
 		if (mainFrame != null)
 			mainFrame.dispose(); // close the main JFrame
-		TimersManager.shutdownAllThreads(); // shutdown all threads
+		TimersManager.shutdownAllThreads(); // shutdown all timer & hook threads
 		TimersManager.stopMainLoop(); // stop all timers
 		CVManager.stopCVLoop();
+		cli.stop();
 		if (cvUtils != null)
-			cvUtils.close(); // close the web cam
+			cvUtils.close(); // ensure the web cam is closed
 
 		//System.exit(0); // this is not needed, when closing all windows and stopping all threads, the JVM
 		// should exit gracefully. Not calling System.exit is a way of verifying each thread is closing

@@ -43,18 +43,16 @@
 			<!--
              This has Apache 2 license
              It is used for the Computer Vision feature
-            https://mvnrepository.com/artifact/org.openpnp/opencv
             -->
-			<groupId>org.openpnp</groupId>
-			<artifactId>opencv</artifactId>
-			<version>4.3.0-0</version>
+			<groupId>org.bytedeco</groupId>
+			<artifactId>javacv-platform</artifactId>
+			<version>1.5.5</version>
 		</dependency>
 
 		<dependency>
 			<!--
 			LGPL license
 			It is used to play audio files
-			https://mvnrepository.com/artifact/javazoom/jlayer
 			-->
 			<groupId>javazoom</groupId>
 			<artifactId>jlayer</artifactId>

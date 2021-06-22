@@ -31,13 +31,13 @@ import javax.swing.SwingUtilities;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
 import org.fos.sw.core.NotificationLocation;
-import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.cv.CVUtils;
 import org.fos.sw.gui.Hideable;
 import org.fos.sw.gui.Initializable;
 import org.fos.sw.gui.Showable;
 import org.fos.sw.gui.util.NotificationLocationComponent;
 import org.fos.sw.prefs.NotificationPrefsIO;
+import org.fos.sw.prefs.cv.CVPrefsManager;
 import org.fos.sw.utils.DaemonThreadFactory;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -59,9 +59,8 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	private final NotificationLocationComponent notificationLocationSelect;
 
 	private final CVUtils cvUtils;
-
-	private ScheduledExecutorService grabberService;
 	private final Scalar CV_RED = new Scalar(0, 0, 255), CV_BLUE = new Scalar(255, 0, 0); // BGR not RGB
+	private ScheduledExecutorService grabberService;
 	/**
 	 * The ideal focal length
 	 * It may be {@link CVUtils#INVALID_IDEAL_FOCAL_LENGTH}
@@ -71,6 +70,12 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 	private int min_acceptable_x, max_acceptable_x, min_acceptable_y, max_acceptable_y;
 	private int frame_width, frame_height;
 	private int compute_distance_countdown = 15;
+
+	/**
+	 * Indicates if there is a dialog currently visible
+	 * This is not synchronized because it will only be used inside the AWT thread
+	 */
+	private boolean is_dialog_visible = false;
 
 	public CVConfigPanel()
 	{
@@ -91,7 +96,8 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		);
 		notificationLocationSelect = new NotificationLocationComponent(
 			(NotificationLocation selectedLocation) -> {
-				if (selectedLocation == timersNotificationLocation)
+				if (selectedLocation == timersNotificationLocation) {
+					is_dialog_visible = true;
 					SWMain.showErrorAlert(
 						SWMain.messagesBundle.getString(
 							"notification_location_collision_with_timers_alert"
@@ -100,6 +106,20 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 							"notification_location_collision_with_timers_alert_title"
 						)
 					);
+					is_dialog_visible = false;
+				} else if (selectedLocation == NotificationLocation.TOP_RIGHT
+					|| selectedLocation == NotificationLocation.BOTTOM_RIGHT) {
+					is_dialog_visible = true;
+					SWMain.showErrorAlert(
+						SWMain.messagesBundle.getString(
+							"notification_location_not_recommended"
+						),
+						SWMain.messagesBundle.getString(
+							"notification_location_not_recommended_title"
+						)
+					);
+					is_dialog_visible = false;
+				}
 
 				NotificationPrefsIO.saveNotificationPrefLocation(
 					selectedLocation,
@@ -310,21 +330,27 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		this.ideal_focal_length = new_focal_length;
 	}
 
+	/**
+	 * @return true if this panel or any of its children opened a dialog and it is still visible
+	 */
+	public boolean hasVisibleDialog()
+	{
+		return is_dialog_visible || this.camCalibrationPanel.hasVisibleDialog();
+	}
+
 	@Override
 	public void setEnabled(boolean enabled)
 	{
 		super.setEnabled(enabled);
-		if (enabled) {
+		if (enabled)
 			this.startMirror();
-			this.projectionScreen.setEnabled(true);
-			this.marginsPanel.setEnabled(true);
-			this.camCalibrationPanel.setEnabled(true);
-		} else {
+		else
 			this.stopMirror();
-			this.projectionScreen.setEnabled(false);
-			this.marginsPanel.setEnabled(false);
-			this.camCalibrationPanel.setEnabled(false);
-		}
+
+		this.projectionScreen.setEnabled(enabled);
+		this.marginsPanel.setEnabled(enabled);
+		this.camCalibrationPanel.setEnabled(enabled);
+		this.refreshRateConfigPanel.setEnabled(enabled);
 	}
 
 	/**
@@ -338,7 +364,9 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		if (!cvUtils.getCamCapture().isOpened())
 			cvUtils.open();
 
-		grabberService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
+		grabberService = Executors.newSingleThreadScheduledExecutor(
+			new DaemonThreadFactory("CVPanel-Mirror-Thread")
+		);
 		long period = (long) (1.0 / FPS * 1000);
 		grabberService.scheduleAtFixedRate(this::showMirror, 0, period, TimeUnit.MILLISECONDS);
 		Loggers.getDebugLogger().log(Level.FINE, "Updating the projection screen each " + period + "ms");
