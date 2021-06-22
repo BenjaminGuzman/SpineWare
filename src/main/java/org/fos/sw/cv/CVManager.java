@@ -27,6 +27,7 @@ import javax.swing.SwingUtilities;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
 import org.fos.sw.gui.notifications.PostureNotification;
+import org.fos.sw.prefs.cv.CVPrefsManager;
 import org.fos.sw.utils.DaemonThreadFactory;
 import org.jetbrains.annotations.NotNull;
 
@@ -131,26 +132,7 @@ public class CVManager
 			);
 
 			synchronized (notificationLock) {
-				if (postureNotification != null) {
-					postureNotification.setOnDisposed(null); // clear any custom callback. A
-					// this point we don't care about it, we just want to cancel any showing
-					// notification
-
-					if (!SwingUtilities.isEventDispatchThread())
-						try {
-							SwingUtilities.invokeAndWait(postureNotification::dispose);
-						} catch (InterruptedException | InvocationTargetException e) {
-							Loggers.getErrorLogger().log(
-								Level.SEVERE,
-								"Error while disposing cv notification",
-								e
-							);
-						}
-					else
-						postureNotification.dispose();
-				}
-
-
+				disposeNotification();
 				postureNotification = new PostureNotification(cvPrefs.notifLocation);
 			}
 		}
@@ -193,10 +175,8 @@ public class CVManager
 		Loggers.getDebugLogger().entering(CVManager.class.getName(), "stopCVLoop");
 
 		synchronized (cvLoop) {
-			if (dispose_notification && postureNotification != null)
-				// don't synchronize inside swing thread
-				// 🤞 nobody access the notification exactly when it is being disposed
-				SwingUtilities.invokeLater(postureNotification::dispose);
+			if (dispose_notification)
+				disposeNotification();
 
 			if (cvLoopExecutor == null) // cv loop is not running
 				return;
@@ -208,6 +188,35 @@ public class CVManager
 		}
 
 		Loggers.getDebugLogger().exiting(CVManager.class.getName(), "stopCVLoop");
+	}
+
+	/**
+	 * Removes any preconfigured onDispose hooks from the notification and disposes it
+	 * In other words, no dispose hooks will be executed if you call this method.
+	 * This method will block until the notification is disposed
+	 */
+	public static void disposeNotification()
+	{
+		synchronized (notificationLock) {
+			if (postureNotification == null)
+				return;
+
+			postureNotification.setOnDisposed(null); // clear any custom callback. This method does not care
+			// about it, we just want to dispose the notification
+
+			if (!SwingUtilities.isEventDispatchThread())
+				try {
+					SwingUtilities.invokeAndWait(postureNotification::dispose);
+				} catch (InterruptedException | InvocationTargetException e) {
+					Loggers.getErrorLogger().log(
+						Level.SEVERE,
+						"Error while disposing cv notification",
+						e
+					);
+				}
+			else
+				postureNotification.dispose();
+		}
 	}
 
 	/**
@@ -254,13 +263,6 @@ public class CVManager
 	 */
 	private static void processUserPostureState(PostureAnalytics status)
 	{
-		if (status.isPostureOk()) {
-			// don't synchronize inside swing thread
-			// 🤞 nobody access the notification exactly when it is being disposed
-			SwingUtilities.invokeLater(postureNotification::dispose);
-			return;
-		}
-
 		double distance = status.getDistance();
 		synchronized (notificationLock) {
 			if (distance < CVUtils.SAFE_DISTANCE_CM && distance != -1) {
@@ -268,7 +270,10 @@ public class CVManager
 				postureNotification.setPostureStatus(PostureStatus.TOO_CLOSE);
 			} else if (status.isToTheRight() || status.isToTheLeft() || status.isToTheTop() || status.isToTheBottom())
 				postureNotification.setPostureStatus(PostureStatus.NOT_IN_CENTER);
-
+			else { // posture is ok
+				SwingUtilities.invokeLater(postureNotification::dispose);
+				return;
+			}
 			// don't synchronize inside swing thread
 			// 🤞 nobody access the notification exactly when it is being showed
 			SwingUtilities.invokeLater(postureNotification::showNotification);

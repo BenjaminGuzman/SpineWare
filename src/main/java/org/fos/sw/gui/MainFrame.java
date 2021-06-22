@@ -66,6 +66,15 @@ public class MainFrame extends JFrame
 	private AbstractSection activeContentPanel = null;
 	private JPanel mainContentPanel = null;
 	private TrayIcon trayIcon;
+	private SysTrayMenu sysTrayMenu;
+
+	/**
+	 * If true cached panels stored in {@link #mainPanelContentCaches} will be reused. This increase memory
+	 * footprint
+	 * If false, panels will not be cached and they'll be created as needed. This may increase (a little) the CPU
+	 * load
+	 */
+	private boolean use_panel_cache = false;
 
 	public MainFrame()
 	{
@@ -184,6 +193,12 @@ public class MainFrame extends JFrame
 				activeContentPanel.onHide();
 			}
 		});
+	}
+
+	public MainFrame(boolean use_panel_cache)
+	{
+		this();
+		this.use_panel_cache = use_panel_cache;
 	}
 
 	/**
@@ -335,7 +350,7 @@ public class MainFrame extends JFrame
 		}
 
 		// if the panel is the active one, do nothing
-		if (panelClass.isInstance(this.activeContentPanel)) {
+		if (panelClass.isInstance(activeContentPanel)) {
 			Loggers.getDebugLogger().log(Level.FINER, "The panel with class "
 				+ panelClass.getName() + " is already shown");
 			return;
@@ -354,6 +369,14 @@ public class MainFrame extends JFrame
 		mainContentPanel.repaint();
 
 		activeContentPanel.onShown(); // notify the panel it is being shown
+
+		// if we don't want to use cached panels just delete the reference for the panel
+		// this won't break the application because the activeContentPanel maintains the same reference, and
+		// it is the only existing reference.
+		// The panel will be deleted when reassigning the (value) reference of activeContentPanel when
+		// calling this method again
+		if (!use_panel_cache)
+			mainPanelContentCaches[panel_cache_idx] = null;
 	}
 
 	/**
@@ -387,7 +410,7 @@ public class MainFrame extends JFrame
 			Loggers.getErrorLogger().log(Level.SEVERE, "Couldn't add icon to system tray", e);
 		}
 
-		SysTrayMenu sysTrayMenu = new SysTrayMenu(
+		sysTrayMenu = new SysTrayMenu(
 			this,
 			(java.awt.event.ActionEvent evt) -> SWMain.exit(),
 			(java.awt.event.ActionEvent evt) -> {
@@ -414,6 +437,8 @@ public class MainFrame extends JFrame
 			@Override
 			public void mousePressed(MouseEvent e)
 			{
+				Loggers.getDebugLogger().finer("Systray icon clicked");
+
 				/// if the pop up menu is shown, hide it
 				if (sysTrayMenu.isVisible()) {
 					sysTrayMenu.setVisible(false);
@@ -451,6 +476,15 @@ public class MainFrame extends JFrame
 			{
 			}
 		});
+	}
+
+	/**
+	 * Toggles the visibility of the sys tray menu.
+	 * If it is open, it will be close after calling this method, and vice versa.
+	 */
+	public void toggleSysTrayMenu()
+	{
+		SwingUtilities.invokeLater(() -> this.sysTrayMenu.setVisible(!this.sysTrayMenu.isVisible()));
 	}
 
 	/**

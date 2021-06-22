@@ -48,16 +48,20 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import org.fos.sw.SWMain;
 import org.fos.sw.cv.CVManager;
-import org.fos.sw.cv.CVPrefsManager;
+import org.fos.sw.prefs.cv.CVPrefsManager;
 import org.fos.sw.timers.TimersManager;
 import org.fos.sw.timers.WallClock;
 import org.fos.sw.timers.breaks.BreakToDo;
 import org.fos.sw.timers.breaks.BreakType;
+import org.jetbrains.annotations.NotNull;
 
 public class SysTrayMenu extends JDialog
 {
-	private final ActionListener onClickExitButton;
-	private final ActionListener onClickOpenButton;
+	@NotNull
+	private final ActionListener onClickExit;
+
+	@NotNull
+	private final ActionListener onClickOpen;
 
 	private final List<JProgressBar> breaksProgressBars;
 	private Timer statusTimer;
@@ -68,12 +72,12 @@ public class SysTrayMenu extends JDialog
 
 	private String restartCVLoopStr, stopCVLoopStr;
 
-	public SysTrayMenu(final JFrame owner, final ActionListener onClickExitButton, final ActionListener onClickOpenButton)
+	public SysTrayMenu(@NotNull JFrame owner, @NotNull ActionListener onClickExit, @NotNull ActionListener onClickOpen)
 	{
 		super(owner, "SpineWare");
 		assert SwingUtilities.isEventDispatchThread();
-		this.onClickExitButton = onClickExitButton;
-		this.onClickOpenButton = onClickOpenButton;
+		this.onClickExit = onClickExit;
+		this.onClickOpen = onClickOpen;
 
 		this.breaksProgressBars = new LinkedList<>();
 		this.breaksProgressBars.add(new JProgressBar(0, 1)); // for small break
@@ -155,11 +159,11 @@ public class SysTrayMenu extends JDialog
 
 		exitButton.addActionListener((ActionEvent evt) -> {
 			this.dispose();
-			this.onClickExitButton.actionPerformed(evt);
+			this.onClickExit.actionPerformed(evt);
 		});
 		openButton.addActionListener((ActionEvent evt) -> {
 			this.setVisible(false);
-			this.onClickOpenButton.actionPerformed(evt);
+			this.onClickOpen.actionPerformed(evt);
 		});
 		pauseTimersButton.addActionListener((ActionEvent evt) -> {
 			boolean stop_main_loop = !TimersManager.isMainLoopStopped();
@@ -354,8 +358,8 @@ public class SysTrayMenu extends JDialog
 	public String toString()
 	{
 		return "SysTrayMenu{" +
-			"onClickExitButton=" + onClickExitButton +
-			", onClickOpenButton=" + onClickOpenButton +
+			"onClickExitButton=" + onClickExit +
+			", onClickOpenButton=" + onClickOpen +
 			", breaksProgressBars=" + breaksProgressBars +
 			", statusTimer=" + statusTimer +
 			'}';

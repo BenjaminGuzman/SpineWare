@@ -35,12 +35,12 @@ public class CVLoop implements Runnable
 	/**
 	 * The hook {@link #onSeveralNoFaceDetected} will be invoked after this number of tries
 	 */
-	private static final int EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES = 10;
+	private static final int EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES = 20;
 
 	/**
 	 * The hook {@link #onMultipleFacesDetected} will be invoked after this number of tries
 	 */
-	private static final int EXEC_HOOK_MULTIPLE_FACES_DETECTED_AFTER_N_TRIES = 3;
+	private static final int EXEC_HOOK_MULTIPLE_FACES_DETECTED_AFTER_N_TRIES = 5;
 
 	/**
 	 * The hook {@link #onUserPostureStateComputed} will be invoked after this number of iterations (invocations
@@ -52,13 +52,13 @@ public class CVLoop implements Runnable
 	 * Counter for the number of times a face was not detected while performing the algorithm
 	 * Note: this variable does not require synchronization because it SHOULD only be used inside {@link #run()}
 	 */
-	private static int NO_FACE_DETECTED_TIMES = 0;
+	private static int times_no_face_detected = 0;
 
 	/**
 	 * Counter for the number of times multiple faces were detected while executing the loop
 	 * Note: this variable does not require synchronization because it SHOULD only be used inside {@link #run()}
 	 */
-	private static int MULTIPLE_FACES_DETECTED_TIMES = 0;
+	private static int times_multiple_faces_detected = 0;
 
 	/**
 	 * Counter for the number of iterations occurred since the last call to {@link #onUserPostureStateComputed}
@@ -67,7 +67,7 @@ public class CVLoop implements Runnable
 	 * <p>
 	 * Note: this variable does not require synchronization because it SHOULD be used inside {@link #run()}
 	 */
-	private static int POSTURE_UPDATED_ITERATIONS = 0;
+	private static int posture_updated_iterations = 0;
 
 	@NotNull
 	private final Consumer<PostureAnalytics> onUserPostureStateComputed;
@@ -79,14 +79,14 @@ public class CVLoop implements Runnable
 	private final PostureAnalytics postureAnalytics;
 
 	/**
-	 * Runnable to be invoked when {@link #NO_FACE_DETECTED_TIMES} is equal to
+	 * Runnable to be invoked when {@link #times_no_face_detected} is equal to
 	 * {@link #EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES}
 	 */
 	@Nullable
 	private Runnable onSeveralNoFaceDetected;
 
 	/**
-	 * Runnable to be invoked when {@link #MULTIPLE_FACES_DETECTED_TIMES} is equal to
+	 * Runnable to be invoked when {@link #times_multiple_faces_detected} is equal to
 	 * {@link #EXEC_HOOK_MULTIPLE_FACES_DETECTED_AFTER_N_TRIES}
 	 */
 	@Nullable
@@ -160,9 +160,9 @@ public class CVLoop implements Runnable
 		List<Rect> detectedFaces = cvUtils.detectFaces(frame);
 
 		if (detectedFaces.isEmpty()) {
-			++NO_FACE_DETECTED_TIMES;
-			if (NO_FACE_DETECTED_TIMES >= EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES) {
-				NO_FACE_DETECTED_TIMES = 0;
+			++times_no_face_detected;
+			if (times_no_face_detected >= EXEC_HOOK_NO_FACE_DETECTED_AFTER_N_TRIES) {
+				times_no_face_detected = 0;
 				if (this.onSeveralNoFaceDetected != null)
 					this.onSeveralNoFaceDetected.run();
 			}
@@ -172,15 +172,20 @@ public class CVLoop implements Runnable
 
 		// show error message if no face was detected or more than 1 face was detected
 		if (detectedFaces.size() > 1) {
-			++MULTIPLE_FACES_DETECTED_TIMES;
-			if (MULTIPLE_FACES_DETECTED_TIMES >= EXEC_HOOK_MULTIPLE_FACES_DETECTED_AFTER_N_TRIES) {
-				MULTIPLE_FACES_DETECTED_TIMES = 0;
+			++times_multiple_faces_detected;
+			if (times_multiple_faces_detected >= EXEC_HOOK_MULTIPLE_FACES_DETECTED_AFTER_N_TRIES) {
+				times_multiple_faces_detected = 0;
 				if (this.onMultipleFacesDetected != null)
 					this.onMultipleFacesDetected.run();
 			}
 
 			return; // stop processing
 		}
+		// to show the no face detected/multiple faces detected notification
+		// events must happen sequentially without interruption, therefore, once a single face was detected,
+		// restart the counters
+		times_no_face_detected = 0;
+		times_multiple_faces_detected = 0;
 
 		Rect faceRect = detectedFaces.get(0);
 
@@ -198,13 +203,13 @@ public class CVLoop implements Runnable
 			faceRect.y + faceRect.height > max_acceptable_y
 		);
 
-		++POSTURE_UPDATED_ITERATIONS;
-		if (POSTURE_UPDATED_ITERATIONS >= EXEC_POSTURE_UPDATED_AFTER_N_ITERATIONS) {
+		++posture_updated_iterations;
+		if (posture_updated_iterations >= EXEC_POSTURE_UPDATED_AFTER_N_ITERATIONS) {
 			this.onUserPostureStateComputed.accept(this.postureAnalytics);
-			POSTURE_UPDATED_ITERATIONS = 0;
+			posture_updated_iterations = 0;
 		} else if (postureAnalytics.isPostureOk()) {
 			this.onUserPostureStateComputed.accept(this.postureAnalytics);
-			POSTURE_UPDATED_ITERATIONS = 0;
+			posture_updated_iterations = 0;
 		}
 
 		// 3rd checker ratio of the face with respect to the screen size

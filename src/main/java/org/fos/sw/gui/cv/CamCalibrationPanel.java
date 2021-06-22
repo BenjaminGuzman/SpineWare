@@ -37,14 +37,13 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
-import org.fos.sw.cv.CVManager;
-import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.cv.CVUtils;
 import org.fos.sw.cv.IdealFocalLengthMeasure;
 import org.fos.sw.gui.Colors;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.Initializable;
 import org.fos.sw.gui.notifications.CountDownDialog;
+import org.fos.sw.prefs.cv.CVPrefsManager;
 import org.fos.sw.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Mat;
@@ -78,6 +77,12 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 	private final JButton resetCalibrationBtn;
 	private final DecimalFormat distanceFormatter;
 	private JLabel distanceValueLabel;
+
+	/**
+	 * Indicates if there is a dialog currently visible
+	 * This is not synchronized because it will only be used inside the AWT thread
+	 */
+	private boolean is_dialog_visible = false;
 
 	/**
 	 * Stopping/resuming the mirror is required as the calibration algorithm will grab some frames.
@@ -170,8 +175,7 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 		// add listeners
 		calibrateBtn.addActionListener(this::onClickCalibrate);
 		resetCalibrationBtn.addActionListener(e -> {
-			CVManager.stopCVLoop(); // stop the loop
-
+			is_dialog_visible = true;
 			int selected_option = JOptionPane.showConfirmDialog(
 				this,
 				SWMain.messagesBundle.getString("reset_calibration_warning"),
@@ -179,7 +183,7 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 				JOptionPane.YES_NO_OPTION,
 				JOptionPane.WARNING_MESSAGE
 			);
-			CVManager.stopCVLoop();
+			is_dialog_visible = false;
 
 			if (selected_option != JOptionPane.YES_OPTION)
 				return;
@@ -237,12 +241,15 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 		CountDownLatch latch = new CountDownLatch(1);
 
 		// show countdown
-		SwingUtilities.invokeLater(() -> new CountDownDialog(
-			SWMain.messagesBundle.getString("performing_calibration") + " (@ " + distanceStr + ")",
-			new WallClock(0, 0, 3),
-			latch,
-			SwingUtilities.windowForComponent(this)
-		));
+		SwingUtilities.invokeLater(() -> {
+			is_dialog_visible = true; // value will be changed in the background thread (see below)
+			new CountDownDialog(
+				SWMain.messagesBundle.getString("performing_calibration") + " (@ " + distanceStr + ")",
+				new WallClock(0, 0, 3),
+				latch,
+				SwingUtilities.windowForComponent(this)
+			);
+		});
 
 		// start calibration
 		Thread calibrationThread = new Thread(() -> {
@@ -270,6 +277,7 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 				avg_focal_length += tmp_focal_length;
 				++n_focal_lengths;
 			}
+			is_dialog_visible = false;
 
 			// if not enough frames were captured, notify the user
 			if (n_focal_lengths <= 2) {
@@ -293,10 +301,18 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 			}
 
 			// finally, when calibration is done or cancelled, resume the mirror
-			SwingUtilities.invokeLater(this.resumeMirror);
+			// SwingUtilities.invokeLater(this.resumeMirror); (the mirror is never stopped)
 		});
 		calibrationThread.setDaemon(true);
 		calibrationThread.start();
+	}
+
+	/**
+	 * @return true if this panel opened a dialog and it is still visible
+	 */
+	public boolean hasVisibleDialog()
+	{
+		return is_dialog_visible;
 	}
 
 	@Override

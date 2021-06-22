@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import org.fos.sw.prefs.BackupPrefs;
+import org.fos.sw.prefs.cv.CVPrefsManager;
 import org.fos.sw.prefs.cv.IdealFocalLengthPrefsIO;
 import org.fos.sw.prefs.cv.MarginsPrefsIO;
 import org.junit.jupiter.api.AfterAll;

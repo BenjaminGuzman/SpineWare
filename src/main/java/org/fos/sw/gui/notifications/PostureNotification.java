@@ -44,8 +44,11 @@ public class PostureNotification extends AbstractNotification
 	private double distance_to_cam;
 
 	private JLabel messageLabel;
+	private JButton dismissBtn;
+
 	private String message;
 	private Color textColor;
+	private boolean show_dismiss_button = false;
 
 	public PostureNotification(@NotNull NotificationLocation notifLocation)
 	{
@@ -62,14 +65,15 @@ public class PostureNotification extends AbstractNotification
 	public void setPostureStatus(@NotNull PostureStatus postureStatus)
 	{
 		if (postureStatus == PostureStatus.TOO_CLOSE)
-			this.message = MessageFormat.format(
+			message = MessageFormat.format(
 				postureStatus.getMessage(),
 				this.distance_to_cam
 			);
 		else
-			this.message = postureStatus.getMessage();
+			message = postureStatus.getMessage();
 
-		this.textColor = postureStatus == PostureStatus.USER_IS_AWAY ? Colors.WHITE : Colors.RED;
+		show_dismiss_button = postureStatus == PostureStatus.USER_IS_AWAY;
+		textColor = postureStatus == PostureStatus.USER_IS_AWAY ? Colors.WHITE : Colors.RED;
 	}
 
 	/**
@@ -95,8 +99,10 @@ public class PostureNotification extends AbstractNotification
 	public void showNotification()
 	{
 		assert SwingUtilities.isEventDispatchThread();
-		this.messageLabel.setText(this.message);
-		this.messageLabel.setForeground(this.textColor);
+
+		messageLabel.setText(message);
+		messageLabel.setForeground(textColor);
+		dismissBtn.setEnabled(show_dismiss_button);
 		if (this.isShowing()) {
 			// if the notification is already showing, there is no need to call showJDialog again,
 			// just update the values and the ui
@@ -123,7 +129,7 @@ public class PostureNotification extends AbstractNotification
 		this.messageLabel = new JLabel();
 		messageLabel.setFont(Fonts.SANS_SERIF_BOLD_15);
 
-		JButton dismissBtn = new JButton(SWMain.messagesBundle.getString("notification_dismiss"));
+		dismissBtn = new JButton(SWMain.messagesBundle.getString("notification_dismiss"));
 		dismissBtn.addActionListener(closeLambda);
 
 		// add SW icon

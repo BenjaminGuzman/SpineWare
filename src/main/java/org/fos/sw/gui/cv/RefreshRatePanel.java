@@ -18,18 +18,20 @@
 
 package org.fos.sw.gui.cv;
 
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.function.Consumer;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import org.fos.sw.SWMain;
-import org.fos.sw.cv.CVPrefsManager;
 import org.fos.sw.gui.Colors;
 import org.fos.sw.gui.Fonts;
 import org.fos.sw.gui.Initializable;
+import org.fos.sw.prefs.cv.CVPrefsManager;
 import org.jetbrains.annotations.NotNull;
 
 public class RefreshRatePanel extends JPanel implements Initializable
@@ -37,13 +39,15 @@ public class RefreshRatePanel extends JPanel implements Initializable
 	@NotNull
 	private final Consumer<Integer> onSetRefreshRate;
 
-	private final JSlider refreshRateSlider;
+	private final JSpinner refreshRateSpinner;
 
 	public RefreshRatePanel(@NotNull final Consumer<Integer> onSetRefreshRate)
 	{
 		this.onSetRefreshRate = onSetRefreshRate;
 
-		this.refreshRateSlider = new JSlider(100, 5_000);
+		this.refreshRateSpinner = new JSpinner(
+			new SpinnerNumberModel(CVPrefsManager.DEFAULT_REFRESH_RATE_MS, 100, 5_000, 1)
+		);
 	}
 
 	@Override
@@ -80,29 +84,22 @@ public class RefreshRatePanel extends JPanel implements Initializable
 	 */
 	private JPanel createSliderPanel()
 	{
-		JPanel panel = new JPanel();
-		JLabel valueLabel = new JLabel();
+		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
 		JLabel valueWarningLabel = new JLabel();
 		valueWarningLabel.setForeground(Colors.YELLOW);
 
-		refreshRateSlider.setPaintTicks(true);
-		refreshRateSlider.setPaintLabels(true);
-		refreshRateSlider.setPaintTrack(true);
-
 		panel.add(new JLabel(SWMain.messagesBundle.getString("frequency")));
-		panel.add(refreshRateSlider);
-		panel.add(valueLabel);
+		panel.add(refreshRateSpinner);
+		panel.add(new JLabel("ms"));
 		panel.add(valueWarningLabel);
 
 		String warnValueTooLow = SWMain.messagesBundle.getString("refresh_rate_warn_too_low");
 		String warnValueTooHigh = SWMain.messagesBundle.getString("refresh_rate_warn_too_high");
 
 		// add listeners
-		refreshRateSlider.addChangeListener(e -> {
-			int selected_rate = refreshRateSlider.getValue();
+		refreshRateSpinner.addChangeListener(e -> {
+			int selected_rate = (int) refreshRateSpinner.getValue();
 			this.onSetRefreshRate.accept(selected_rate);
-
-			valueLabel.setText(selected_rate + "ms");
 
 			if (selected_rate < 500) // it may slow down the computer
 				valueWarningLabel.setText(warnValueTooLow);
@@ -111,10 +108,7 @@ public class RefreshRatePanel extends JPanel implements Initializable
 			else // inside normal values, don't show warning
 				valueWarningLabel.setText(null);
 
-			// improve performance with this if, dont save values on each change, just when the user has
-			// set a value
-			if (!refreshRateSlider.getValueIsAdjusting()) // if the scroll has been adjusted
-				CVPrefsManager.saveRefreshRate(selected_rate);
+			CVPrefsManager.saveRefreshRate(selected_rate);
 		});
 
 		return panel;
@@ -127,7 +121,7 @@ public class RefreshRatePanel extends JPanel implements Initializable
 	 */
 	public void setRefreshRate(int refresh_rate)
 	{
-		this.refreshRateSlider.setValue(refresh_rate);
+		this.refreshRateSpinner.setValue(refresh_rate);
 	}
 
 	@Override
@@ -135,6 +129,6 @@ public class RefreshRatePanel extends JPanel implements Initializable
 	{
 		super.setEnabled(enabled);
 
-		this.refreshRateSlider.setEnabled(enabled);
+		this.refreshRateSpinner.setEnabled(enabled);
 	}
 }
