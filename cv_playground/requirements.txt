@@ -2,7 +2,7 @@ anyio==2.0.2
 argon2-cffi==20.1.0
 async-generator==1.10
 attrs==20.3.0
-Babel==2.9.0
+Babel==2.9.1
 backcall==0.2.0
 bleach==3.3.0
 certifi==2020.12.5
@@ -25,7 +25,7 @@ jsonschema==3.2.0
 jupyter-client==6.1.11
 jupyter-core==4.7.0
 jupyter-server==1.2.2
-jupyterlab==3.0.5
+jupyterlab==3.0.17
 jupyterlab-pygments==0.1.2
 jupyterlab-server==2.1.2
 jupyterlab-widgets==1.0.0
@@ -38,7 +38,7 @@ nbclient==0.5.1
 nbconvert==6.0.7
 nbformat==5.1.2
 nest-asyncio==1.4.3
-notebook==6.2.0
+notebook==6.4.1
 numpy==1.19.5
 opencv-python==4.5.1.48
 packaging==20.8
@@ -46,7 +46,7 @@ pandocfilters==1.4.3
 parso==0.8.1
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==8.2.0
+Pillow==8.3.2
 prometheus-client==0.9.0
 prompt-toolkit==3.0.10
 ptyprocess==0.7.0
