@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import javax.management.InstanceAlreadyExistsException;
@@ -31,6 +32,7 @@ import org.bytedeco.opencv.opencv_java;
 import org.fos.sw.SWMain;
 import org.fos.sw.core.Loggers;
 import org.fos.sw.gui.sections.BreaksPanel;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -153,10 +155,11 @@ public class CVUtils implements AutoCloseable
 	 *              returned list will be empty)
 	 * @return a list of {@link Rect} describing the rectangles of the detected faces
 	 */
-	public List<Rect> detectFaces(Mat frame)
+	@NotNull
+	public List<Rect> detectFaces(@NotNull Mat frame)
 	{
 		if (frame.empty())
-			return null;
+			return Collections.emptyList();
 
 		if (this.minFaceDetectedSize == null)
 			this.computeThresholds(frame);
@@ -176,6 +179,7 @@ public class CVUtils implements AutoCloseable
 			Objdetect.CASCADE_SCALE_IMAGE,
 			minFaceDetectedSize
 		);
+		grayFrame.release();
 
 		return detectedFaces.toList();
 	}
@@ -192,8 +196,11 @@ public class CVUtils implements AutoCloseable
 	 * @param frame          the captured frame
 	 * @return {@link #INVALID_IDEAL_FOCAL_LENGTH} if no face was detected
 	 */
-	public double getIdealFocalLength(double distance, double face_height_cm, Mat frame)
+	public double getIdealFocalLength(double distance, double face_height_cm, @Nullable Mat frame)
 	{
+		if (frame == null)
+			return INVALID_IDEAL_FOCAL_LENGTH;
+
 		List<Rect> detectedFaces = this.detectFaces(frame);
 		if (detectedFaces.isEmpty())
 			return INVALID_IDEAL_FOCAL_LENGTH;
@@ -235,7 +242,7 @@ public class CVUtils implements AutoCloseable
 	 *
 	 * @param frame the frame used as reference to compute the size
 	 */
-	private void computeThresholds(Mat frame)
+	private void computeThresholds(@NotNull Mat frame)
 	{
 		this.minFaceDetectedSize = new Size(
 			MIN_FACE_DETECTED_RATIO_WIDTH * frame.rows(),

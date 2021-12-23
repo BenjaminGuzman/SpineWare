@@ -271,6 +271,7 @@ public class CamCalibrationPanel extends JPanel implements Initializable
 					CVUtils.ESTIMATED_FACE_HEIGHT_CM,
 					frame
 				);
+				frame.release();
 				if (tmp_focal_length == -1)
 					continue;
 

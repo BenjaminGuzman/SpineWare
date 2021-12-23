@@ -131,10 +131,12 @@ public class CVManager
 				"CV loop started. Executing every " + cvPrefs.refresh_rate + "ms."
 			);
 
-			synchronized (notificationLock) {
-				disposeNotification();
-				postureNotification = new PostureNotification(cvPrefs.notifLocation);
-			}
+			disposeNotification();
+			SwingUtilities.invokeLater(() -> {
+				synchronized (notificationLock) {
+					postureNotification = new PostureNotification(cvPrefs.notifLocation);
+				}
+			});
 		}
 	}
 

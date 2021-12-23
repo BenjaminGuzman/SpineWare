@@ -63,16 +63,20 @@ The status for each break is shown in the system tray.
 
 Please, if you try SpineWare and discover that your SO is not compatible, make a GitHub issue.
 
-### List of exercises you can do while taking a break
-
-**TODO**: Complete these docs & make the feature.
-
 ### Computer Vision program to check if you're in a good posture or not
 
 Haven't you had that sensation of knowing that you're in a bad posture but do not remember how you got it? This feature
 can help you to avoid adopting that bad posture.
 
 **TODO**: SCREENSHOT HERE, complete the feature.
+
+Note: This feature uses OpenCV `Mat#release()` often, even though it is not necessary because C++ destructor
+(called when object is out of scope and marked for deletion) will call release
+([reference](https://docs.opencv.org/4.5.4/d3/d63/classcv_1_1Mat.html#a1b2ae166171f6a7306cf09ff67a2153f)).
+
+Nevertheless, `Mat#release()` is used because Garbage Collection may be late or delayed, but more important because we
+don't want garbage collection happening much often. It could slow down the application, and give the appearance there is
+some kind of memory leak. See Issue #8
 
 ## Contributors
 
@@ -172,8 +176,7 @@ was preferred to do those "expensive" calculations in a separate thread.
 
 I tried to use JavaFX, I think GUI programming would have been easier, but it doesn't have some features required by
 SpineWare. For example, you cannot have an undecorated Stage of type POPUP (which allows not to show the application
-icon in the taskbar)
-at the same time.
+icon in the taskbar).
 
 - Why singleton pattern is implemented differently in some classes?
 
