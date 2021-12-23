@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import org.fos.sw.core.Loggers;
@@ -50,8 +52,12 @@ public class Pipe extends Thread
 	@Override
 	public void run()
 	{
-		final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(this.options.outStream));
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(this.options.inStream))) {
+		final BufferedWriter writer = new BufferedWriter(
+			new OutputStreamWriter(this.options.outStream, this.options.inStreamCharset)
+		);
+		try (BufferedReader reader = new BufferedReader(
+			new InputStreamReader(this.options.inStream, this.options.outStreamCharset)
+		)) {
 			// write prepend string
 			if (this.options.prependStr != null && !this.options.prependStr.isEmpty())
 				writer.write(this.options.prependStr);
@@ -107,6 +113,12 @@ public class Pipe extends Thread
 		@Nullable
 		private Consumer<Exception> onError;
 
+		@NotNull
+		private Charset inStreamCharset = StandardCharsets.UTF_8;
+
+		@NotNull
+		private Charset outStreamCharset = StandardCharsets.UTF_8;
+
 		/**
 		 * @param inStream  Data will be read from this stream
 		 * @param outStream Read data will be written in this stream
@@ -160,6 +172,24 @@ public class Pipe extends Thread
 		public Builder shouldCloseOutStream(boolean should_close)
 		{
 			this.close_out_stream = should_close;
+			return this;
+		}
+
+		/**
+		 * @param inStreamCharset The default character set for the input stream. Default: UTF-8
+		 */
+		public Builder setInStreamCharset(Charset inStreamCharset)
+		{
+			this.inStreamCharset = inStreamCharset;
+			return this;
+		}
+
+		/**
+		 * @param outStreamCharset the default character set for the output stream. Default: UTF-8
+		 */
+		public Builder setOutStreamCharset(Charset outStreamCharset)
+		{
+			this.outStreamCharset = outStreamCharset;
 			return this;
 		}
 
