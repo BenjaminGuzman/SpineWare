@@ -173,6 +173,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 			projectionScreen.initComponents(frame);
 			this.frame_width = frame.width();
 			this.frame_height = frame.height();
+			frame.release();
 		}
 
 		setFocalLength(CVPrefsManager.getFocalLength());
@@ -295,9 +296,10 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 
 		SwingUtilities.invokeLater(() -> {
 			projectionScreen.updateProjectedImage(frame); // update the mirror
+			frame.release();
 
 			// wait compute_distance_countdown iterations to show the distance
-			// this is done to avoid cluttering the screen (and also performing too much calculations)
+			// this is done to avoid cluttering the screen (and also performing too many calculations)
 			if (--compute_distance_countdown > 0)
 				return;
 

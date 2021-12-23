@@ -141,8 +141,8 @@ public class CVLoop implements Runnable
 		CVUtils cvUtils = SWMain.getCVUtils();
 		Mat frame = cvUtils.captureFrame();
 
-		// try 50 times to capture a frame, if it succeeds stop trying and start checking posture
-		int i = 50;
+		// try 10 times to capture a frame, if it succeeds stop trying and start checking posture
+		int i = 10;
 		while ((frame == null || frame.empty()) && --i > 0 && !Thread.currentThread().isInterrupted())
 			frame = cvUtils.captureFrame();
 
@@ -158,6 +158,7 @@ public class CVLoop implements Runnable
 		}
 
 		List<Rect> detectedFaces = cvUtils.detectFaces(frame);
+		frame.release();
 
 		if (detectedFaces.isEmpty()) {
 			++times_no_face_detected;

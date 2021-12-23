@@ -76,6 +76,7 @@ public class SWMain
 
 	public static void main(String[] args)
 	{
+		// remember to enable assertions with -ea or -enableassertions vm option
 		Locale locale = Locale.getDefault();
 
 		// parse cli options
@@ -137,6 +138,18 @@ public class SWMain
 		// Having this will cause the exit method to be invoked twice (one time when the user click exit &
 		// another time when this hook is run), but that is no problem thanks to the exit_called static property
 		Runtime.getRuntime().addShutdownHook(new Thread(SWMain::exit));
+		/*
+		// don't use this code as it depends on sun.misc package (proprietary)
+		try {
+			Signal.handle(new Signal("SIGUSR1"), (Signal signal) -> {
+				Loggers.getDebugLogger().info("SIGUSR1 received. Running System.gc()");
+				System.gc();
+			});
+		} catch (IllegalArgumentException e) {
+			Loggers.getErrorLogger().warning("Your system can't handle SIGUSR1, if you want to run " +
+				"garbage collection, you'd need to enter 'gc'. See the manual.\n" +
+				"You can also wait until your VM does it for you. Exception: " + e.getMessage());
+		}*/
 
 		SwingUtilities.invokeLater(() -> {
 			mainFrame = new MainFrame(use_cached_panels);
@@ -193,6 +206,8 @@ public class SWMain
 				lockFilePath,
 				PosixFilePermissions.asFileAttribute(noPermissionsToAnyone)
 			).toFile().deleteOnExit();
+			// "real" or "actual" locks using FileChannel may be needed but not required really
+			// since the purpose of the "lock" file is just o ensure there is no more than 1 instance of SW
 		} catch (IOException e) {
 			Loggers.getErrorLogger().log(
 				Level.SEVERE,

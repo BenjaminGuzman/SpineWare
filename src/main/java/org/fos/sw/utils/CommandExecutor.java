@@ -128,27 +128,29 @@ public class CommandExecutor extends Thread
 
 		try {
 			this.process = Runtime.getRuntime().exec(executionCmd.toArray(new String[0]));
+			try (FileOutputStream fosStdout = new FileOutputStream(hookSTDOUT, true);
+			     FileOutputStream fosStderr = new FileOutputStream(hookSTDERR, true)) {
+				Pipe stdoutPipe = new Pipe(
+					new Pipe.Builder(
+						this.process.getInputStream(),
+						fosStdout
+					).prependStr("---BEGIN STDOUT @ "
+							+ LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+							+ " for: " + this.cmd + "---\n")
+						.appendStr("---END STDOUT for: " + this.cmd + "---\n\n")
+				);
 
-			Pipe stdoutPipe = new Pipe(
-				new Pipe.Builder(
-					this.process.getInputStream(),
-					new FileOutputStream(hookSTDOUT, true)
-				).prependStr("---BEGIN STDOUT @ "
-					+ LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
-					+ " for: " + this.cmd + "---\n")
-				 .appendStr("---END STDOUT for: " + this.cmd + "---\n\n")
-			);
+				Pipe stderrPipe = new Pipe(
+					new Pipe.Builder(
+						this.process.getErrorStream(),
+						fosStderr
+					).prependStr("---BEGIN STDERR for: " + this.cmd + "---\n")
+						.appendStr("---END STDERR for: " + this.cmd + "---\n\n")
+				);
 
-			Pipe stderrPipe = new Pipe(
-				new Pipe.Builder(
-					this.process.getErrorStream(),
-					new FileOutputStream(hookSTDERR, true)
-				).prependStr("---BEGIN STDERR for: " + this.cmd + "---\n")
-				 .appendStr("---END STDERR for: " + this.cmd + "---\n\n")
-			);
-
-			stdoutPipe.start();
-			stderrPipe.start();
+				stdoutPipe.start();
+				stderrPipe.start();
+			}
 
 			this.process.waitFor();
 		} catch (IOException | SecurityException | IllegalArgumentException | InterruptedException e) {

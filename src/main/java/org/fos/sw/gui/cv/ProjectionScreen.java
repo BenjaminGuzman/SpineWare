@@ -53,7 +53,8 @@ public class ProjectionScreen extends Canvas implements Hideable
 	/**
 	 * Updates the projected image and repaints it on the canvas
 	 *
-	 * @param frame the frame to be projected, it will be automatically converted from {@link Mat} to {@link Image}
+	 * @param frame the frame to be projected, it will be automatically converted from {@link Mat} to {@link Image}.
+	 *              The frame will be released with {@link Mat#release()} so you'd better not use it after this
 	 */
 	public void updateProjectedImage(@Nullable Mat frame)
 	{
