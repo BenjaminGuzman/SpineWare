@@ -76,6 +76,7 @@ public class ProjectionScreen extends Canvas implements Hideable
 
 		Image projectedImage = HighGui.toBufferedImage(frame);
 		graphics.drawImage(projectedImage, 0, 0, this);
+		projectedImage.flush();
 	}
 
 	private Image getErrorImage()

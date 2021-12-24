@@ -370,8 +370,9 @@ public class SWMain
 		if (cvUtils != null)
 			cvUtils.close(); // ensure the web cam is closed
 
-		//System.exit(0); // this is not needed, when closing all windows and stopping all threads, the JVM
-		// should exit gracefully. Not calling System.exit is a way of verifying each thread is closing
+		System.exit(0);
+		// technically this is not needed, when closing all windows and stopping all threads,
+		// the JVM should exit gracefully. Not calling System.exit is a way of verifying each thread is closing
 		// in time and correctly. If not, the application will keep running
 	}
 
