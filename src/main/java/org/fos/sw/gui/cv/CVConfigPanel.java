@@ -39,6 +39,7 @@ import org.fos.sw.gui.util.NotificationLocationComponent;
 import org.fos.sw.prefs.NotificationPrefsIO;
 import org.fos.sw.prefs.cv.CVPrefsManager;
 import org.fos.sw.utils.DaemonThreadFactory;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
@@ -235,7 +236,11 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 			this.frame_height = frame.height();
 		}
 
-		List<Rect> detectedFaces = cvUtils.detectFaces(frame);
+		Mat flippedFrame = new Mat();
+		Core.flip(frame, flippedFrame, 1);
+		frame.release();
+		frame = null;
+		List<Rect> detectedFaces = cvUtils.detectFaces(flippedFrame);
 		boolean faces_were_detected = !detectedFaces.isEmpty();
 
 		// show error message if no face was detected or more than 1 face was detected
@@ -247,7 +252,7 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 
 		if (errorMsg != null)
 			Imgproc.putText(
-				frame,
+				flippedFrame,
 				errorMsg,
 				new Point(10, 30), // top left of the frame
 				Imgproc.FONT_HERSHEY_PLAIN,
@@ -262,32 +267,32 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		Rect faceRect = faces_were_detected ? detectedFaces.get(0) : null;
 
 		if (faces_were_detected) // draw just the first detected face to improve performance
-			Imgproc.rectangle(frame, faceRect, new Scalar(0, 255, 0), 3);
+			Imgproc.rectangle(flippedFrame, faceRect, new Scalar(0, 255, 0), 3);
 
 		// draw margins
 		Imgproc.line( // vertical margin left
-			frame,
+			flippedFrame,
 			new Point(min_acceptable_x, 0),
 			new Point(min_acceptable_x, this.frame_height),
 			faces_were_detected && faceRect.x < min_acceptable_x ? CV_RED : CV_BLUE,
 			2
 		);
 		Imgproc.line( // vertical margin right
-			frame,
+			flippedFrame,
 			new Point(max_acceptable_x, 0),
 			new Point(max_acceptable_x, this.frame_height),
 			faces_were_detected && faceRect.x + faceRect.width > max_acceptable_x ? CV_RED : CV_BLUE,
 			2
 		);
 		Imgproc.line( // horizontal margin top
-			frame,
+			flippedFrame,
 			new Point(0, min_acceptable_y),
 			new Point(this.frame_width, min_acceptable_y),
 			faces_were_detected && faceRect.y < min_acceptable_y ? CV_RED : CV_BLUE,
 			2
 		);
 		Imgproc.line( // horizontal margin bottom
-			frame,
+			flippedFrame,
 			new Point(0, max_acceptable_y),
 			new Point(this.frame_width, max_acceptable_y),
 			faces_were_detected && faceRect.y + faceRect.height > max_acceptable_y ? CV_RED : CV_BLUE,
@@ -295,8 +300,8 @@ public class CVConfigPanel extends JPanel implements Hideable, Showable, Initial
 		);
 
 		SwingUtilities.invokeLater(() -> {
-			projectionScreen.updateProjectedImage(frame); // update the mirror
-			frame.release();
+			projectionScreen.updateProjectedImage(flippedFrame); // update the mirror
+			flippedFrame.release();
 
 			// wait compute_distance_countdown iterations to show the distance
 			// this is done to avoid cluttering the screen (and also performing too many calculations)

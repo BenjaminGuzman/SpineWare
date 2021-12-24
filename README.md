@@ -63,12 +63,32 @@ The status for each break is shown in the system tray.
 
 Please, if you try SpineWare and discover that your SO is not compatible, make a GitHub issue.
 
-### Computer Vision program to check if you're in a good posture or not
+### Computer Vision program to check if you're in a good posture
 
 Haven't you had that sensation of knowing that you're in a bad posture but do not remember how you got it? This feature
 can help you to avoid adopting that bad posture.
 
-**TODO**: SCREENSHOT HERE, complete the feature.
+This is done by "calibrating" the camera with a very naive algorithm, and then a process is run in background to check
+your posture. See bottom of this document for more information about how this process.
+
+As said, the "calibration" algorithm is very naive, and the distance calculations may be wrong, specially if your webcam
+distorts a lot the image. The naive algorithm was chosen instead of a more professional and accurate like
+[Zhang's](https://www.researchgate.net/profile/Wilhelm-Burger/publication/303233579_Zhang's_Camera_Calibration_Algorithm_In-Depth_Tutorial_and_Implementation/links/5eaad8c9a6fdcc70509c3c9b/Zhangs-Camera-Calibration-Algorithm-In-Depth-Tutorial-and-Implementation.pdf)
+famous algorithm because:
+
+1. Not all users have a chessboard (or similar) required to perform calibration
+2. For the user is much easier to do the calibration with the naive algorithm
+3. Zhang's algorithm is more complex, even though OpenCV helps a lot. Check
+   [this](https://opencv-java-tutorials.readthedocs.io/en/latest/09-camera-calibration.html) and
+   [this](https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html)
+4. Zhang's algorithm calculates several parameters that are not so critical for this app
+   (in most cases, let's hope your camera doesn't distort image too much 🤞)
+
+The naive algorithm will ask you to take different pictures of your face at different distances
+
+![Computer Vision](./cv.png)
+Copyright &copy; 2021 Benjamín Antonio Velasco Guzmán. Image NOT under any free license, i.e. you're strictly prohibited
+from modifying, copying, distributing, disseminating, or processing this picture in any way under any circumstances.
 
 Note: This feature uses OpenCV `Mat#release()` often, even though it is not necessary because C++ destructor
 (called when object is out of scope and marked for deletion) will call release
@@ -77,6 +97,12 @@ Note: This feature uses OpenCV `Mat#release()` often, even though it is not nece
 Nevertheless, `Mat#release()` is used because Garbage Collection may be late or delayed, but more important because we
 don't want garbage collection happening much often. It could slow down the application, and give the appearance there is
 some kind of memory leak. See Issue #8
+
+## Privacy
+
+Neither the images, nor the processed data (like posture analytics, hooks configuration, logs, etc...) is saved in any
+way, not in your computer, not in an external server. **SpineWare values your privacy**, you can check the source code
+to be sure.
 
 ## Contributors
 
