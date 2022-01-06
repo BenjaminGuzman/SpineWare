@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,7 @@
 
 package net.benjaminguzman.hooks;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.List;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.logging.Level;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
+import javazoom.jl.decoder.JavaLayerException;
 import net.benjaminguzman.SWMain;
 import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.gui.hooksconfig.HooksConfigPanel;
@@ -46,9 +26,19 @@ import net.benjaminguzman.utils.AudioPlayer;
 import net.benjaminguzman.utils.CommandExecutor;
 import net.benjaminguzman.utils.DaemonAudioThreadFactory;
 import net.benjaminguzman.utils.DaemonThreadFactory;
-import javazoom.jl.decoder.JavaLayerException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.Level;
 
 public class HooksExecutor
 {

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,16 @@
 
 package net.benjaminguzman.gui.hooksconfig;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.LayoutManager;
-import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.util.ResourceBundle;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JPanel;
 import net.benjaminguzman.SWMain;
 import net.benjaminguzman.gui.Initializable;
 import net.benjaminguzman.prefs.timers.HooksPrefsIO;
 import net.benjaminguzman.timers.TimersManager;
 import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ResourceBundle;
 
 public abstract class AbstractHooksConfigDialog extends JDialog implements Initializable
 {

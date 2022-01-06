@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
 
 package net.benjaminguzman.gui.notifications;
 
-import java.awt.GridBagConstraints;
-import java.awt.event.ActionEvent;
-import javax.swing.JLabel;
-
-import net.benjaminguzman.core.NotificationLocation;
 import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.NotificationLocation;
 import net.benjaminguzman.gui.Fonts;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 
 public class StartUpNotification extends AbstractNotification
 {

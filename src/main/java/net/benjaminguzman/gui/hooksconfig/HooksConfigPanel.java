@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,18 @@
 
 package net.benjaminguzman.gui.hooksconfig;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import net.benjaminguzman.SWMain;
+import net.benjaminguzman.gui.Fonts;
+
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioSystem;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import net.benjaminguzman.SWMain;
-import net.benjaminguzman.gui.Fonts;
 
 public class HooksConfigPanel extends JPanel
 {

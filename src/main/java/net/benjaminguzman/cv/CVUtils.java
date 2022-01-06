@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,11 @@
 
 package net.benjaminguzman.cv;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-import javax.management.InstanceAlreadyExistsException;
-
+import net.benjaminguzman.SWMain;
 import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.gui.sections.BreaksPanel;
 import org.bytedeco.javacpp.Loader;
 import org.bytedeco.opencv.opencv_java;
-import net.benjaminguzman.SWMain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.opencv.core.Mat;
@@ -44,12 +34,24 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 import org.opencv.videoio.VideoCapture;
 
+import javax.management.InstanceAlreadyExistsException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+
 public class CVUtils implements AutoCloseable
 {
-	// min ratio for the detected face, any face with width less than this ratio (compared to the width of the frame)
+	// min ratio for the detected face, any face with width less than this ratio (compared to the width of the
+	// frame)
 	// will be ignored
 	private static final float MIN_FACE_DETECTED_RATIO_WIDTH = 0.2f;
-	// min ratio for the detected face, any face with height less than this ratio (compared to the height of the frame)
+	// min ratio for the detected face, any face with height less than this ratio (compared to the height of the
+	// frame)
 	// will be ignored
 	private static final float MIN_FACE_DETECTED_RATIO_HEIGHT = 0.2f;
 	private static boolean instantiated;

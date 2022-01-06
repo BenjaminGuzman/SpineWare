@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,28 +18,20 @@
 
 package net.benjaminguzman.utils;
 
+import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.player.Player;
+import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
+import org.jetbrains.annotations.NotNull;
+
+import javax.sound.sampled.*;
+import javax.swing.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.Control;
-import javax.sound.sampled.Line;
-import javax.sound.sampled.LineEvent;
-import javax.sound.sampled.LineListener;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.swing.SwingUtilities;
 
-import net.benjaminguzman.SWMain;
-import net.benjaminguzman.core.Loggers;
-import javazoom.jl.decoder.JavaLayerException;
-import javazoom.jl.player.Player;
-import org.jetbrains.annotations.NotNull;
 import static javax.sound.sampled.LineEvent.Type.STOP;
 
 /**

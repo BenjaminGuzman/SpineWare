@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,6 @@
 
 package net.benjaminguzman.cv;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.InvalidPreferencesFormatException;
-
 import net.benjaminguzman.prefs.BackupPrefs;
 import net.benjaminguzman.prefs.cv.CVPrefsManager;
 import net.benjaminguzman.prefs.cv.IdealFocalLengthPrefsIO;
@@ -30,9 +25,13 @@ import net.benjaminguzman.prefs.cv.MarginsPrefsIO;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.InvalidPreferencesFormatException;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class CVPrefsManagerTest
 {

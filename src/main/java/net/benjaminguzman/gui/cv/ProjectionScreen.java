@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,20 @@
 
 package net.benjaminguzman.gui.cv;
 
-import java.awt.Canvas;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.logging.Level;
-import javax.imageio.ImageIO;
-import javax.swing.SwingUtilities;
-
-import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.gui.Hideable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.opencv.core.Mat;
 import org.opencv.highgui.HighGui;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.logging.Level;
 
 public class ProjectionScreen extends Canvas implements Hideable
 {
