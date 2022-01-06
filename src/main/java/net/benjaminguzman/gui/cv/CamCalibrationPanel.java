@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,36 +18,26 @@
 
 package net.benjaminguzman.gui.cv;
 
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.text.DecimalFormat;
-import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
-import java.util.stream.IntStream;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import net.benjaminguzman.core.Loggers;
-import net.benjaminguzman.gui.notifications.CountDownDialog;
 import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.cv.CVUtils;
 import net.benjaminguzman.cv.IdealFocalLengthMeasure;
 import net.benjaminguzman.gui.Colors;
 import net.benjaminguzman.gui.Fonts;
 import net.benjaminguzman.gui.Initializable;
+import net.benjaminguzman.gui.notifications.CountDownDialog;
 import net.benjaminguzman.prefs.cv.CVPrefsManager;
 import net.benjaminguzman.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Mat;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.text.DecimalFormat;
+import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
+import java.util.stream.IntStream;
 
 public class CamCalibrationPanel extends JPanel implements Initializable
 {

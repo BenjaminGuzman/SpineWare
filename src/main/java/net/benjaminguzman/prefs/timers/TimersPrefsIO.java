@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,19 @@
 
 package net.benjaminguzman.prefs.timers;
 
+import net.benjaminguzman.core.Loggers;
+import net.benjaminguzman.hooks.BreakHooks;
+import net.benjaminguzman.hooks.SingleBreakHooksConfig;
+import net.benjaminguzman.prefs.PrefsIO;
+import net.benjaminguzman.timers.WallClock;
+import net.benjaminguzman.timers.breaks.BreakConfig;
+import net.benjaminguzman.timers.breaks.BreakType;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
-
-import net.benjaminguzman.core.Loggers;
-import net.benjaminguzman.hooks.BreakHooks;
-import net.benjaminguzman.timers.WallClock;
-import net.benjaminguzman.timers.breaks.BreakConfig;
-import net.benjaminguzman.timers.breaks.BreakType;
-import net.benjaminguzman.hooks.SingleBreakHooksConfig;
-import net.benjaminguzman.prefs.PrefsIO;
 
 public class TimersPrefsIO extends PrefsIO
 {

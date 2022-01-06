@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,15 @@
 
 package net.benjaminguzman.core;
 
+import net.benjaminguzman.SWMain;
+import net.benjaminguzman.timers.TimersManager;
+import net.benjaminguzman.timers.WallClock;
+import net.benjaminguzman.timers.breaks.BreakConfig;
+import net.benjaminguzman.timers.breaks.BreakType;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -28,14 +37,7 @@ import java.util.Locale;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
-import net.benjaminguzman.SWMain;
-import net.benjaminguzman.timers.TimersManager;
-import net.benjaminguzman.timers.WallClock;
-import net.benjaminguzman.timers.breaks.BreakConfig;
-import net.benjaminguzman.timers.breaks.BreakType;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TimersManagerTest

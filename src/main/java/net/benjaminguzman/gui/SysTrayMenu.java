@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,34 +18,6 @@
 
 package net.benjaminguzman.gui;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowFocusListener;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.AbstractMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 import net.benjaminguzman.SWMain;
 import net.benjaminguzman.cv.CVManager;
 import net.benjaminguzman.prefs.cv.CVPrefsManager;
@@ -54,6 +26,19 @@ import net.benjaminguzman.timers.WallClock;
 import net.benjaminguzman.timers.breaks.BreakToDo;
 import net.benjaminguzman.timers.breaks.BreakType;
 import org.jetbrains.annotations.NotNull;
+
+import javax.imageio.ImageIO;
+import javax.swing.Timer;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.*;
 
 public class SysTrayMenu extends JDialog
 {

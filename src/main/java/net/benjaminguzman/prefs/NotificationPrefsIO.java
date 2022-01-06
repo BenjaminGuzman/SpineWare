@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <9benjaminguzman@gmail.com>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,15 @@
 
 package net.benjaminguzman.prefs;
 
+import net.benjaminguzman.core.Loggers;
+import net.benjaminguzman.core.NotificationLocation;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
-import net.benjaminguzman.core.Loggers;
-import net.benjaminguzman.core.NotificationLocation;
-import org.jetbrains.annotations.NotNull;
 
 public class NotificationPrefsIO extends PrefsIO
 {
