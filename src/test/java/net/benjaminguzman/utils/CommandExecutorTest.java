@@ -18,8 +18,6 @@
 
 package net.benjaminguzman.utils;
 
-import java.util.Timer;
-import java.util.TimerTask;
 import org.junit.jupiter.api.Test;
 
 class CommandExecutorTest
@@ -27,29 +25,14 @@ class CommandExecutorTest
 	@Test
 	void run() throws InterruptedException
 	{
-		CommandExecutor cmdExecutor = new CommandExecutor("echo \"hello world\" && echo goodbye && echo " +
+		CommandExecutor cmdExecutor = new CommandExecutor("sleep 1 && echo \"hello world\" && echo goodbye && " +
+			"echo " +
 			"multiple & >&2 echo should go to stderr");
 		Thread t = new Thread(cmdExecutor);
 		t.start();
 
-		Timer timer = new Timer();
-		timer.schedule(new TimerTask()
-		{
-			private int count = 0;
-
-			@Override
-			public void run()
-			{
-				if (count == 4)
-					cmdExecutor.interrupt();
-				else
-					System.out.println("The JVM is not closing because there is a user-thread " +
-						"still active, elapsed time: " + count + "s");
-				++count;
-			}
-		}, 0, 1_000); // terminate the command execution after 1 second
 		// the JVM should not terminate before that second!!
-
-		t.join(); // wait for the thread to stop
+		t.join(); // wait for the thread to finish
+		// now go to the tmp folder and see the log
 	}
 }

@@ -18,6 +18,10 @@
 
 package net.benjaminguzman.utils;
 
+import net.benjaminguzman.Pipe;
+import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,9 +33,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.logging.Level;
-
-import net.benjaminguzman.SWMain;
-import net.benjaminguzman.core.Loggers;
 
 public class CommandExecutor extends Thread
 {
@@ -62,8 +63,8 @@ public class CommandExecutor extends Thread
 	{
 		super();
 		this.cmd = cmd;
-		this.setDaemon(true); // this thread should not be a user thread but a daemon thread
-		this.setName("CommandExecutor-Thread"); // give it a name for easy-debugging
+		setDaemon(true); // this thread should not be a user thread but a daemon thread
+		setName("CommandExecutor-Thread"); // give it a name for easy-debugging
 	}
 
 	public CommandExecutor(String cmd, Consumer<Exception> onError)
@@ -99,8 +100,8 @@ public class CommandExecutor extends Thread
 	public void interrupt()
 	{
 		super.interrupt();
-		if (this.process != null)
-			this.process.destroy();
+		if (process != null)
+			process.destroy();
 	}
 
 
@@ -128,38 +129,38 @@ public class CommandExecutor extends Thread
 		executionCmd.add(cmd);
 
 		try {
-			this.process = Runtime.getRuntime().exec(executionCmd.toArray(new String[0]));
 			try (FileOutputStream fosStdout = new FileOutputStream(hookSTDOUT, true);
 			     FileOutputStream fosStderr = new FileOutputStream(hookSTDERR, true)) {
+				// place this here and not outside the try because opening the files may take some
+				process = Runtime.getRuntime().exec(executionCmd.toArray(new String[0]));
+
 				Pipe stdoutPipe = new Pipe(
-					new Pipe.Builder(
-						this.process.getInputStream(),
-						fosStdout
-					).prependStr("---BEGIN STDOUT @ "
+					new Pipe.Builder(process.getInputStream(), fosStdout)
+						.setHeader("---BEGIN STDOUT @ "
 							+ LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
-							+ " for: " + this.cmd + "---\n")
-						.appendStr("---END STDOUT for: " + this.cmd + "---\n\n")
+							+ " for: " + cmd + "---\n")
+						.setFooter("---END STDOUT for: " + cmd + "---\n\n")
 				);
 
 				Pipe stderrPipe = new Pipe(
-					new Pipe.Builder(
-						this.process.getErrorStream(),
-						fosStderr
-					).prependStr("---BEGIN STDERR for: " + this.cmd + "---\n")
-						.appendStr("---END STDERR for: " + this.cmd + "---\n\n")
+					new Pipe.Builder(process.getErrorStream(), fosStderr)
+						.setHeader("---BEGIN STDERR for: " + cmd + "---\n")
+						.setFooter("---END STDERR for: " + cmd + "---\n\n")
 				);
 
-				stdoutPipe.start();
-				stderrPipe.start();
+				stdoutPipe.initThread("Thread-For-Stdout-Pipe").start();
+				stderrPipe.initThread("Thread-For-Stderr-Pipe").start();
+				process.waitFor();
 			}
 
-			this.process.waitFor();
+			// by now all piping threads will be closed because the process streams should have been closed
+			// also, the file streams should be closed because of the try-with-resources
 		} catch (IOException | SecurityException | IllegalArgumentException | InterruptedException e) {
-			if (this.process != null)
-				this.process.destroyForcibly();
+			if (process != null)
+				process.destroyForcibly();
 
-			if (this.onError != null)
-				this.onError.accept(e);
+			if (onError != null)
+				onError.accept(e);
 		}
 	}
 }
