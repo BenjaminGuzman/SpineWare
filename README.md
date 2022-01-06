@@ -86,11 +86,15 @@ famous algorithm because:
 
 The naive algorithm will ask you to take different pictures of your face at different distances
 
-![Computer Vision](./cv.png)
+![Computer Vision](./media/cv.png)
 Copyright &copy; 2021 Benjamín Antonio Velasco Guzmán. Image NOT under any free license, i.e. you're strictly prohibited
 from modifying, copying, distributing, disseminating, or processing this picture in any way under any circumstances.
 
-Note: This feature uses OpenCV `Mat#release()` often, even though it is not necessary because C++ destructor
+**Note**: This feature is not perfect (it's not easy to check posture by just a webcam), so it may have false negatives,
+so don't take this so seriously and don't get stressed about it, that's the last thing we want. If you encounter any
+problem while using this software, feel free to open a Github Issue.
+
+Note 2: This feature uses OpenCV `Mat#release()` often, even though it is not necessary because C++ destructor
 (called when object is out of scope and marked for deletion) will call release
 ([reference](https://docs.opencv.org/4.5.4/d3/d63/classcv_1_1Mat.html#a1b2ae166171f6a7306cf09ff67a2153f)).
 
