@@ -17,6 +17,8 @@
  */
 package net.benjaminguzman.core;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.TooManyListenersException;
@@ -68,14 +70,22 @@ public class Loggers
 	 */
 	public static void init() throws TooManyListenersException
 	{
+		init(Level.INFO);
+	}
+
+	/**
+	 * Initiates loggers for the app
+	 *
+	 * @param loggingLevel Default logging level for debugging logger
+	 */
+	public static void init(@NotNull Level loggingLevel) throws TooManyListenersException
+	{
 		if (Loggers.getErrorLogger().getHandlers().length >= 1)
 			throw new TooManyListenersException(
 				"The logger "
 					+ Loggers.getErrorLogger().getName()
 					+ " has too many handlers, probably the init() method invoked twice?"
 			);
-
-		Level loggingLevel = Level.INFO;
 
 		Logger rootLogger = Logger.getLogger("");
 		for (Handler handler : rootLogger.getHandlers())

@@ -18,19 +18,19 @@
 
 package net.benjaminguzman.cv;
 
+import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
+import net.benjaminguzman.gui.notifications.PostureNotification;
+import net.benjaminguzman.prefs.cv.CVPrefsManager;
+import net.benjaminguzman.utils.DaemonThreadFactory;
+import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import javax.swing.SwingUtilities;
-
-import net.benjaminguzman.core.Loggers;
-import net.benjaminguzman.gui.notifications.PostureNotification;
-import net.benjaminguzman.SWMain;
-import net.benjaminguzman.prefs.cv.CVPrefsManager;
-import net.benjaminguzman.utils.DaemonThreadFactory;
-import org.jetbrains.annotations.NotNull;
 
 public class CVManager
 {
@@ -48,7 +48,7 @@ public class CVManager
 	private static PostureNotification postureNotification;
 	private static final CVLoop cvLoop = new CVLoop(
 		CVManager::processUserPostureState,
-		CVManager::onUserHasGoneAway,
+		CVManager::onUserIsAway,
 		CVManager::onMultipleFacesDetected
 	);
 
@@ -117,7 +117,7 @@ public class CVManager
 			cvLoop.setCVPrefs(cvPrefs);
 
 			cvLoopExecutor = Executors.newSingleThreadScheduledExecutor(
-				// min priority is used because the computation is expensive an can slow down the
+				// min priority is used because the computation is expensive and can slow down the
 				// user's computer, and the CV features should not interfere with top priority threads
 				new DaemonThreadFactory("CV-Loop-Thread", Thread.MIN_PRIORITY)
 			);
@@ -129,7 +129,7 @@ public class CVManager
 			);
 			Loggers.getDebugLogger().log(
 				Level.INFO,
-				"CV loop started. Executing every " + cvPrefs.refresh_rate + "ms."
+				"CV loop started. Executing every " + cvPrefs.refresh_rate + " ms."
 			);
 
 			disposeNotification();
@@ -177,17 +177,19 @@ public class CVManager
 	{
 		Loggers.getDebugLogger().entering(CVManager.class.getName(), "stopCVLoop");
 
-		synchronized (cvLoop) {
+		try {
+			synchronized (cvLoop) {
+				if (cvLoopExecutor == null) // cv loop is not running
+					return;
+
+				cvLoopExecutor.shutdownNow();
+				cvLoopExecutor = null;
+				if (close_cam)
+					SWMain.getCVUtils().close();
+			}
+		} finally {
 			if (dispose_notification)
 				disposeNotification();
-
-			if (cvLoopExecutor == null) // cv loop is not running
-				return;
-
-			if (close_cam)
-				SWMain.getCVUtils().close();
-			cvLoopExecutor.shutdownNow();
-			cvLoopExecutor = null;
 		}
 
 		Loggers.getDebugLogger().exiting(CVManager.class.getName(), "stopCVLoop");
@@ -225,7 +227,7 @@ public class CVManager
 	/**
 	 * Callback invoked when no face was detected for a long time
 	 */
-	private static void onUserHasGoneAway()
+	private static void onUserIsAway()
 	{
 		// stop the loop but don't dispose the notification as it will be shown later (see below)
 		stopCVLoop(true, false);
