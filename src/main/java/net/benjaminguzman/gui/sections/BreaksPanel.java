@@ -17,40 +17,17 @@
  */
 package net.benjaminguzman.gui.sections;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.logging.Level;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
-
+import net.benjaminguzman.SWMain;
 import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.core.NotificationLocation;
+import net.benjaminguzman.gui.Colors;
+import net.benjaminguzman.gui.Fonts;
 import net.benjaminguzman.gui.hooksconfig.AbstractHooksConfigDialog;
 import net.benjaminguzman.gui.hooksconfig.ActiveHoursHooksConfigDialog;
 import net.benjaminguzman.gui.hooksconfig.BreakHooksConfigDialog;
-import net.benjaminguzman.hooks.BreakHooks;
-import net.benjaminguzman.SWMain;
-import net.benjaminguzman.gui.Colors;
-import net.benjaminguzman.gui.Fonts;
 import net.benjaminguzman.gui.util.NotificationLocationComponent;
 import net.benjaminguzman.gui.util.TimeInputComponent;
+import net.benjaminguzman.hooks.BreakHooks;
 import net.benjaminguzman.prefs.NotificationPrefsIO;
 import net.benjaminguzman.prefs.timers.HooksPrefsIO;
 import net.benjaminguzman.prefs.timers.TimersPrefsIO;
@@ -61,6 +38,14 @@ import net.benjaminguzman.timers.breaks.BreakConfig;
 import net.benjaminguzman.timers.breaks.BreakType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.logging.Level;
 
 public class BreaksPanel extends AbstractSection
 {
@@ -106,6 +91,8 @@ public class BreaksPanel extends AbstractSection
 	@Override
 	public void initComponents()
 	{
+		super.initComponents();
+
 		// load icon images that will be used by the createBreakPanel method
 		ImageIcon hooksConfigIcon = SWMain.readAndScaleIcon("/resources/media/task_white_18dp.png");
 		ImageIcon saveConfigIcon = SWMain.readAndScaleIcon("/resources/media/save_white_18dp.png");

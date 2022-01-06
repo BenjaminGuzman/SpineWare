@@ -17,6 +17,15 @@
  */
 package net.benjaminguzman.timers;
 
+import net.benjaminguzman.core.Loggers;
+import net.benjaminguzman.prefs.timers.TimersPrefsIO;
+import net.benjaminguzman.timers.breaks.ActiveHours;
+import net.benjaminguzman.timers.breaks.BreakConfig;
+import net.benjaminguzman.timers.breaks.BreakToDo;
+import net.benjaminguzman.timers.breaks.BreakType;
+import net.benjaminguzman.utils.DaemonThreadFactory;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,15 +34,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-
-import net.benjaminguzman.core.Loggers;
-import net.benjaminguzman.timers.breaks.ActiveHours;
-import net.benjaminguzman.timers.breaks.BreakConfig;
-import net.benjaminguzman.timers.breaks.BreakToDo;
-import net.benjaminguzman.timers.breaks.BreakType;
-import net.benjaminguzman.prefs.timers.TimersPrefsIO;
-import net.benjaminguzman.utils.DaemonThreadFactory;
-import org.jetbrains.annotations.NotNull;
 
 public class TimersManager
 {
@@ -118,7 +118,8 @@ public class TimersManager
 
 	public static void shutdownAllThreads()
 	{
-		mainTimerLoop.shutdownAllThreads();
+		if (initialized)
+			mainTimerLoop.shutdownAllThreads();
 	}
 
 	/**
@@ -157,13 +158,16 @@ public class TimersManager
 	 */
 	public static void stopMainLoop()
 	{
+		if (!initialized)
+			return;
+
 		Loggers.getDebugLogger().entering(TimersManager.class.getName(), "stopMainLoop");
 
 		mainTimerLoop.shutdownBreakThread();
 		if (mainLoopExecutor != null)
 			mainLoopExecutor.shutdownNow();
 
-		Loggers.getDebugLogger().entering(TimersManager.class.getName(), "stopMainLoop");
+		Loggers.getDebugLogger().exiting(TimersManager.class.getName(), "stopMainLoop");
 	}
 
 	/**

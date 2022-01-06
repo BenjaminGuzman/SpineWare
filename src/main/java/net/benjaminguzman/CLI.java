@@ -18,24 +18,22 @@
 
 package net.benjaminguzman;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import net.benjaminguzman.gui.MainFrame;
 import net.benjaminguzman.utils.DaemonThreadFactory;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 public class CLI implements Runnable
 {
-	private final ExecutorService executor;
 	private final MainFrame mainFrame;
+	private final Thread t;
 
 	public CLI(@NotNull MainFrame mainFrame)
 	{
-		executor = Executors.newSingleThreadExecutor(new DaemonThreadFactory("CLI-Thread"));
+		t = new DaemonThreadFactory("CLI-Thread").newThread(this);
 		this.mainFrame = mainFrame;
 	}
 
@@ -43,12 +41,14 @@ public class CLI implements Runnable
 	 * Starts executing the code that will read commands.
 	 * This call is non-blocking because code will be executed in another thread
 	 * To interrupt the thread see {@link #stop()}
+	 * <p>
+	 * This method should be called just once. Calling it more than once will have no effect
 	 *
 	 * @see #stop()
 	 */
 	public void start()
 	{
-		executor.execute(this);
+		t.start();
 	}
 
 	/**
@@ -56,27 +56,34 @@ public class CLI implements Runnable
 	 */
 	public void stop()
 	{
-		executor.shutdownNow();
+		try {
+			// we need to close the underlying stream so the read() method (called from readLine())
+			// stops (probably throwing an IOException)
+			// we do this because just interrupting the thread is useless
+			System.in.close();
+		} catch (IOException ignored) {
+		}
+		t.interrupt();
 	}
 
 	@Override
 	public void run()
 	{
-		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 		String line;
 		try {
+			BufferedReader stdinBuff = new BufferedReader(new InputStreamReader(System.in));
 			System.out.println("Starting reading commands");
 			System.out.println("\texit | quit:             Exit the application");
 			System.out.println("\tgc | free:               Run System.gc()");
 			System.out.println("\tsystray | tray | menu:   Open the systray menu");
-			while ((line = bufferedReader.readLine()) != null) {
+			while (!Thread.interrupted() && (line = stdinBuff.readLine()) != null) {
 				line = line.toLowerCase().trim();
 
 				switch (line) {
 					case "exit":
 					case "quit":
 						SWMain.exit();
-						return; // this will automatically stop the executor
+						return;
 					case "free":
 					case "gc":
 						System.out.println("Running System.gc()");
@@ -88,9 +95,11 @@ public class CLI implements Runnable
 						System.out.println("Opening systray menu");
 						mainFrame.toggleSysTrayMenu();
 						break;
+					default:
+						System.out.println("Command \"" + line + "\" was not understood");
 				}
 			}
-		} catch (IOException e) {
-		} // yes, don't report errors
+		} catch (IOException ignored) {
+		}
 	}
 }
