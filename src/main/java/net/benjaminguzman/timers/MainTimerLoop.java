@@ -18,20 +18,16 @@
 
 package net.benjaminguzman.timers;
 
+import net.benjaminguzman.prefs.NotificationPrefsIO;
+import net.benjaminguzman.timers.breaks.*;
+import net.benjaminguzman.utils.DaemonThreadFactory;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import net.benjaminguzman.prefs.NotificationPrefsIO;
-import net.benjaminguzman.timers.breaks.ActiveHours;
-import net.benjaminguzman.timers.breaks.ActiveHoursToDo;
-import net.benjaminguzman.timers.breaks.BreakToDo;
-import net.benjaminguzman.timers.breaks.BreakType;
-import net.benjaminguzman.timers.breaks.ExecuteAtToDo;
-import net.benjaminguzman.utils.DaemonThreadFactory;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class MainTimerLoop implements Runnable
 {
@@ -190,7 +186,6 @@ public class MainTimerLoop implements Runnable
 			}
 
 			checkWorkingDuringActiveHours();
-			//checkToDos2Execute();
 			return;
 		}
 
@@ -207,7 +202,6 @@ public class MainTimerLoop implements Runnable
 			}
 
 			checkWorkingDuringActiveHours();
-			//checkToDos2Execute();
 			return;
 		}
 
@@ -227,7 +221,6 @@ public class MainTimerLoop implements Runnable
 		}
 
 		checkWorkingDuringActiveHours();
-		//checkToDos2Execute();
 	}
 
 	private boolean isThreadRunning(@Nullable Thread t)

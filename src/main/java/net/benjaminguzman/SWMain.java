@@ -17,7 +17,17 @@
  */
 package net.benjaminguzman;
 
-import java.awt.Image;
+import net.benjaminguzman.core.Loggers;
+import net.benjaminguzman.cv.CVManager;
+import net.benjaminguzman.cv.CVUtils;
+import net.benjaminguzman.gui.MainFrame;
+import net.benjaminguzman.timers.TimersManager;
+import org.apache.commons.cli.*;
+
+import javax.imageio.ImageIO;
+import javax.management.InstanceAlreadyExistsException;
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -25,38 +35,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.TooManyListenersException;
+import java.util.*;
 import java.util.logging.Level;
-import javax.imageio.ImageIO;
-import javax.management.InstanceAlreadyExistsException;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
-import net.benjaminguzman.core.Loggers;
-import net.benjaminguzman.cv.CVManager;
-import net.benjaminguzman.cv.CVUtils;
-import net.benjaminguzman.gui.MainFrame;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import net.benjaminguzman.timers.TimersManager;
 
 public class SWMain
 {
-	public static ResourceBundle messagesBundle;
-	private static CVUtils cvUtils;
 	private static final Object cvUtilsLock = new Object();
-	private static Image swIcon;
 	private static final String OS = System.getProperty("os.name").toLowerCase();
+	public static ResourceBundle messagesBundle;
 	public static boolean IS_WINDOWS = OS.contains("win");
-
+	private static CVUtils cvUtils;
+	private static Image swIcon;
 	private static CLI cli;
 
 	/**
@@ -77,18 +66,23 @@ public class SWMain
 
 	public static void main(String[] args)
 	{
-		// remember to enable assertions with -ea or -enableassertions vm option
+		// remember to enable assertions with -ea or -enableassertions vm option (on dev mode)
 		Locale locale = Locale.getDefault();
+		Level loggingLevel = Level.INFO;
 
 		// parse cli options
 		Options opts = new Options();
 		opts.addOption("v", "version", false, "Show the SpineWare version and exit.");
-		opts.addOption("l", "lang", true, "Specify the GUI language as an ISO ISO 3166-1 alpha-2, e. g. " +
+		opts.addOption("l", "lang", true, "Specify the GUI language as an ISO 3166-1 alpha-2 code, e. g. " +
 			"\"en\" to specify english, \"es\" to specify español.");
 		opts.addOption("r", "rm-lock", false, "Remove the SW lock before start. Use this option if " +
 			"SpineWare does not start and says there is already an instance running.");
 		opts.addOption("c", "cache", false, "Use cached panels in the main frame. This may increase " +
 			"memory footprint.");
+		opts.addOption("h", "help", false, "Print this help message and exit.");
+		opts.addOption("d", "log-level", true, "Set the logging level. This overrides system property. " +
+			"Valid values are: FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE. " +
+			"Default: " + loggingLevel.getName());
 
 		CommandLineParser cliParser = new DefaultParser();
 		CommandLine apacheCli;
@@ -103,9 +97,15 @@ public class SWMain
 			return;
 		}
 
+		if (apacheCli.hasOption('h')) {
+			// automatically generate the help statement
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("spineware", opts);
+			return;
+		}
 		if (apacheCli.hasOption('v')) {
 			System.out.println("SpineWare version: " + SWMain.class.getPackage()
-			                                                       .getImplementationVersion());
+				.getImplementationVersion());
 			return;
 		}
 		if (apacheCli.hasOption('l')) {
@@ -120,6 +120,12 @@ public class SWMain
 				System.out.println("Lock could not be removed.");
 		}
 		boolean use_cached_panels = apacheCli.hasOption('c');
+		try {
+			loggingLevel = Level.parse(apacheCli.getOptionValue("log-level", "INFO"));
+		} catch (IllegalArgumentException e) {
+			System.out.println("Logging level could not be parsed. " + e.getMessage() +
+				". Using " + loggingLevel.getName());
+		}
 
 		if (!ensureSingleJVMInstance())
 			return;
@@ -130,14 +136,13 @@ public class SWMain
 
 		SWMain.changeMessagesBundle(locale);
 
-		com.formdev.flatlaf.FlatDarkLaf.install();
-
 		// add shutdown hook for a clean shutdown
 		// kill all timers, java should take care of the gui, you take care of the timers
 		// this is probably not needed as the JVM GC should collect free resources on exit, including threads
 		// but still it is good to have it
 		// Having this will cause the exit method to be invoked twice (one time when the user click exit &
-		// another time when this hook is run), but that is no problem thanks to the exit_called static property
+		// another time when this hook is run), but that is no problem thanks to the exit_called static
+		// property
 		Runtime.getRuntime().addShutdownHook(new Thread(SWMain::exit));
 		/*
 		// don't use this code as it depends on sun.misc package (proprietary)
@@ -153,6 +158,7 @@ public class SWMain
 		}*/
 
 		SwingUtilities.invokeLater(() -> {
+			com.formdev.flatlaf.FlatDarkLaf.install();
 			mainFrame = new MainFrame(use_cached_panels);
 			cli = new CLI(mainFrame);
 			cli.start();
@@ -160,7 +166,7 @@ public class SWMain
 
 		try {
 			TimersManager.init();
-			Loggers.init();
+			Loggers.init(loggingLevel);
 			CVManager.init();
 
 			// start the timers
@@ -238,7 +244,8 @@ public class SWMain
 	{
 		InputStream inStream = SWMain.class.getResourceAsStream(filePath);
 		if (inStream == null)
-			Loggers.getErrorLogger().warning("Couldn't read file: " + filePath + " (probably doesn't exists)");
+			Loggers.getErrorLogger()
+				.warning("Couldn't read file: " + filePath + " (probably doesn't exists)");
 		return inStream;
 	}
 
@@ -301,8 +308,8 @@ public class SWMain
 			Loggers.getErrorLogger().log(
 				Level.WARNING,
 				"Could not load messages for locale: "
-					+ locale + " (probably there are no translations yet?). Using default ENGLISH" +
-					" locale",
+					+ locale + " (probably there are no translations yet?). Using default " +
+					"ENGLISH locale",
 				e
 			);
 			newBundle = ResourceBundle.getBundle("resources.bundles.messages", Locale.ENGLISH);
@@ -363,15 +370,15 @@ public class SWMain
 		Loggers.getDebugLogger().log(Level.INFO, "Shutting down...");
 
 		if (mainFrame != null)
-			mainFrame.dispose(); // close the main JFrame
+			SwingUtilities.invokeLater(mainFrame::dispose); // close the main JFrame
+		cli.stop();
 		TimersManager.shutdownAllThreads(); // shutdown all timer & hook threads
 		TimersManager.stopMainLoop(); // stop all timers
 		CVManager.stopCVLoop();
-		cli.stop();
 		if (cvUtils != null)
-			cvUtils.close(); // ensure the web cam is closed
+			cvUtils.close(); // ensure the webcam is closed
 
-		System.exit(0);
+		//System.exit(0);
 		// technically this is not needed, when closing all windows and stopping all threads,
 		// the JVM should exit gracefully. Not calling System.exit is a way of verifying each thread is closing
 		// in time and correctly. If not, the application will keep running

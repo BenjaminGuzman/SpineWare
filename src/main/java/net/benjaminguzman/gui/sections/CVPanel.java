@@ -18,18 +18,15 @@
 
 package net.benjaminguzman.gui.sections;
 
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.cv.CVManager;
 import net.benjaminguzman.gui.Fonts;
 import net.benjaminguzman.gui.cv.CVConfigPanel;
 import net.benjaminguzman.prefs.cv.CVPrefsManager;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * Panel containing a "mirror" where the user can see the current status of his/her posture
@@ -48,6 +45,7 @@ public class CVPanel extends AbstractSection
 	@Override
 	public void initComponents()
 	{
+		super.initComponents();
 		JPanel panel = new JPanel(new BorderLayout());
 
 		// specific CVUtils feature config
@@ -59,8 +57,8 @@ public class CVPanel extends AbstractSection
 		panel.add(generalConfigPanel, BorderLayout.NORTH);
 		panel.add(cvConfigPanel, BorderLayout.CENTER);
 
-		this.setViewportView(panel);
-		this.configScrollBar();
+		setViewportView(panel);
+		configScrollBar();
 	}
 
 	/**
@@ -72,7 +70,7 @@ public class CVPanel extends AbstractSection
 	{
 		JPanel panel = new JPanel();
 		cvConfigPanel = new CVConfigPanel();
-		panel.add(this.cvConfigPanel);
+		panel.add(cvConfigPanel);
 		cvConfigPanel.initComponents();
 		return panel;
 	}
@@ -137,7 +135,7 @@ public class CVPanel extends AbstractSection
 	public void onShown()
 	{
 		CVManager.stopCVLoop(false);
-		this.cvConfigPanel.onShown();
+		cvConfigPanel.onShown();
 	}
 
 	/**
@@ -146,18 +144,26 @@ public class CVPanel extends AbstractSection
 	@Override
 	public void onHide()
 	{
-		this.cvConfigPanel.onHide();
+		if (!initialized) {
+			Loggers.getErrorLogger().warning("onHide() was called even though the panel is " +
+				"uninitialized!");
+			return;
+		}
+
+		cvConfigPanel.onHide();
 
 		// if this method was called because the main frame lost focus and the cause was an inner dialog, the
 		// CV loop must not be started
-		if (!this.cvConfigPanel.hasVisibleDialog())
+		if (!cvConfigPanel.hasVisibleDialog())
 			CVManager.startCVLoop();
 	}
 
 	@Override
 	public void onDispose()
 	{
-		this.cvConfigPanel.onHide();
+		if (!initialized)
+			return;
+		cvConfigPanel.onHide();
 		// when the jframe is being disposed is because the application will exit. Therefore, there is
 		// no need to call CVManager.startCVLoop()
 	}

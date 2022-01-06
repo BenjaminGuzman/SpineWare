@@ -18,16 +18,25 @@
 
 package net.benjaminguzman.gui.sections;
 
-import java.awt.Window;
-import javax.swing.JScrollPane;
 import net.benjaminguzman.gui.Hideable;
 import net.benjaminguzman.gui.Initializable;
 import net.benjaminguzman.gui.Showable;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
+import java.awt.*;
+
 public abstract class AbstractSection extends JScrollPane implements Initializable, Hideable, Showable
 {
 	protected Window owner;
+
+	/**
+	 * Tells if {@link #initComponents()} has been called
+	 * <p>
+	 * When children classes override {@link #initComponents()} they should set this value to true
+	 * (or just call super.initComponents())
+	 */
+	protected boolean initialized = false;
 
 	/**
 	 * Sets the owner window, this may be used by the subclasses. Make sure you set the owner to avoid
@@ -46,7 +55,9 @@ public abstract class AbstractSection extends JScrollPane implements Initializab
 	 * Method to init the internal components of the section
 	 * This method is intended to be called just once
 	 */
-	public abstract void initComponents();
+	public void initComponents() {
+		initialized = true;
+	}
 
 	/**
 	 * Configures general stuff in the scroll bar

@@ -18,26 +18,17 @@
 
 package net.benjaminguzman.gui.sections;
 
-import java.awt.Desktop;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
+import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JEditorPane;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SwingConstants;
-import javax.swing.event.HyperlinkEvent;
-
-import net.benjaminguzman.core.Loggers;
-import net.benjaminguzman.SWMain;
 
 public class HelpPanel extends AbstractSection
 {
@@ -49,6 +40,7 @@ public class HelpPanel extends AbstractSection
 	@Override
 	public void initComponents()
 	{
+		super.initComponents();
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new GridBagLayout());
 
