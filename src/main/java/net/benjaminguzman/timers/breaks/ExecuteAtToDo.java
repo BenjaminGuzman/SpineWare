@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@
 
 package net.benjaminguzman.timers.breaks;
 
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import net.benjaminguzman.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
+
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 public class ExecuteAtToDo extends ToDo
 {

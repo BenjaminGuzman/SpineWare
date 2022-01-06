@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,15 @@
 
 package net.benjaminguzman.timers;
 
+import net.benjaminguzman.SWMain;
+import net.benjaminguzman.hooks.BreakHooks;
+import net.benjaminguzman.hooks.SingleBreakHooksConfig;
+import net.benjaminguzman.timers.breaks.BreakConfig;
+import net.benjaminguzman.timers.breaks.BreakToDo;
+import net.benjaminguzman.timers.breaks.BreakType;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -26,15 +35,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import net.benjaminguzman.SWMain;
-import net.benjaminguzman.hooks.BreakHooks;
-import net.benjaminguzman.timers.breaks.BreakConfig;
-import net.benjaminguzman.timers.breaks.BreakToDo;
-import net.benjaminguzman.timers.breaks.BreakType;
-import net.benjaminguzman.hooks.SingleBreakHooksConfig;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,16 @@
 
 package net.benjaminguzman.gui.notifications;
 
-import java.awt.GridBagConstraints;
-import java.awt.event.ActionEvent;
-import java.util.ResourceBundle;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-
-import net.benjaminguzman.core.NotificationLocation;
 import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.NotificationLocation;
 import net.benjaminguzman.gui.Fonts;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ResourceBundle;
 
 public class OutsideActiveHoursNotification extends AbstractNotification
 {

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,20 @@
 
 package net.benjaminguzman.prefs.cv;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.InvalidPreferencesFormatException;
-import java.util.stream.IntStream;
 import net.benjaminguzman.cv.IdealFocalLengthMeasure;
 import net.benjaminguzman.prefs.BackupPrefs;
 import net.benjaminguzman.prefs.timers.HooksPrefsIO;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.InvalidPreferencesFormatException;
+import java.util.stream.IntStream;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class IdealFocalLengthPrefsIOTest

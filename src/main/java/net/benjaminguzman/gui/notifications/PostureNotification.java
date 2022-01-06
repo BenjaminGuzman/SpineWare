@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,18 @@
 
 package net.benjaminguzman.gui.notifications;
 
-import java.awt.Color;
-import java.awt.GridBagConstraints;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.text.MessageFormat;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.SwingUtilities;
-
-import net.benjaminguzman.core.NotificationLocation;
 import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.NotificationLocation;
 import net.benjaminguzman.cv.PostureStatus;
 import net.benjaminguzman.gui.Colors;
 import net.benjaminguzman.gui.Fonts;
 import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.MessageFormat;
 
 /**
  * Notification to tell the user she/he is in a bad posture.

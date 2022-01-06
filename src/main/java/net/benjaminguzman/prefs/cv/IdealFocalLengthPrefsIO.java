@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,18 @@
 
 package net.benjaminguzman.prefs.cv;
 
+import net.benjaminguzman.core.Loggers;
+import net.benjaminguzman.cv.CVUtils;
+import net.benjaminguzman.cv.IdealFocalLengthMeasure;
+import net.benjaminguzman.prefs.PrefsIO;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
-import net.benjaminguzman.core.Loggers;
-import net.benjaminguzman.cv.CVUtils;
-import net.benjaminguzman.cv.IdealFocalLengthMeasure;
-import net.benjaminguzman.prefs.PrefsIO;
-import org.jetbrains.annotations.NotNull;
 
 public class IdealFocalLengthPrefsIO extends PrefsIO
 {

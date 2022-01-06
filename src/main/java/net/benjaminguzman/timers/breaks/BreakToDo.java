@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,6 @@
 
 package net.benjaminguzman.timers.breaks;
 
-import java.text.MessageFormat;
-import java.util.ResourceBundle;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import net.benjaminguzman.SWMain;
 import net.benjaminguzman.gui.notifications.CountDownDialog;
 import net.benjaminguzman.gui.notifications.TakeABreakNotification;
@@ -32,6 +25,12 @@ import net.benjaminguzman.hooks.BreakHooks;
 import net.benjaminguzman.prefs.NotificationPrefsIO;
 import net.benjaminguzman.timers.WallClock;
 import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
+import java.text.MessageFormat;
+import java.util.ResourceBundle;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class BreakToDo extends ToDo
 {

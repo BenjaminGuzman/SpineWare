@@ -1,6 +1,6 @@
 <!--
 Copyright (c) 2020. Benjamín Antonio Velasco Guzmán
-Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ The following files
 
 Are licensed under
 the [Creative Commons Attribution-ShareAlike license (CC BY-SA) 4.0](https://creativecommons.org/licenses/by-sa/4.0/),
-and were made by Benjamín Guzmán <bg@benjaminguzman.dev>, therefore they ALL have the following copyright notice
+and were made by Benjamín Guzmán <bg@benjaminguzman.net>, therefore they ALL have the following copyright notice
 
 `Copyright (C) 2020, Benjamín Guzmán `
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
 
 package net.benjaminguzman.prefs.timers;
 
-import java.util.Optional;
-import java.util.prefs.Preferences;
-
+import net.benjaminguzman.prefs.PrefsIO;
 import net.benjaminguzman.timers.WallClock;
 import net.benjaminguzman.timers.breaks.ActiveHours;
-import net.benjaminguzman.prefs.PrefsIO;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Optional;
+import java.util.prefs.Preferences;
 
 public class ActiveHoursPrefsIO extends PrefsIO
 {

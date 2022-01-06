@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@
 
 package net.benjaminguzman.cv;
 
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.logging.Level;
-
-import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
+
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.logging.Level;
 
 public class CVLoop implements Runnable
 {

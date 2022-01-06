@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,17 @@
 
 package net.benjaminguzman.gui.hooksconfig;
 
-import java.awt.BorderLayout;
-import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.util.ResourceBundle;
-import java.util.logging.Level;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-
-import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
 import net.benjaminguzman.hooks.SingleBreakHooksConfig;
 import net.benjaminguzman.timers.breaks.BreakType;
 import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ResourceBundle;
+import java.util.logging.Level;
 
 /**
  * Use this class to show a JDialog with all the options & elements for the user to configure

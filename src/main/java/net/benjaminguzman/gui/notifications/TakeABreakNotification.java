@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,22 @@
 
 package net.benjaminguzman.gui.notifications;
 
-import java.awt.GridBagConstraints;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ResourceBundle;
-import java.util.concurrent.CountDownLatch;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
-
-import net.benjaminguzman.core.NotificationLocation;
 import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.NotificationLocation;
 import net.benjaminguzman.gui.Colors;
 import net.benjaminguzman.gui.Fonts;
 import net.benjaminguzman.timers.WallClock;
 import net.benjaminguzman.timers.breaks.BreakDecision;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ResourceBundle;
+import java.util.concurrent.CountDownLatch;
 
 public class TakeABreakNotification extends AbstractNotification
 {

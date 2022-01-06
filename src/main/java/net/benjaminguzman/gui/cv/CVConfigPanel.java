@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021. Benjamín Antonio Velasco Guzmán
- * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.dev>
+ * Author: Benjamín Antonio Velasco Guzmán <bg@benjaminguzman.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,34 +18,28 @@
 
 package net.benjaminguzman.gui.cv;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import net.benjaminguzman.SWMain;
+import net.benjaminguzman.core.Loggers;
+import net.benjaminguzman.core.NotificationLocation;
+import net.benjaminguzman.cv.CVUtils;
+import net.benjaminguzman.gui.Hideable;
+import net.benjaminguzman.gui.Initializable;
+import net.benjaminguzman.gui.Showable;
+import net.benjaminguzman.gui.util.NotificationLocationComponent;
+import net.benjaminguzman.prefs.NotificationPrefsIO;
+import net.benjaminguzman.prefs.cv.CVPrefsManager;
+import net.benjaminguzman.utils.DaemonThreadFactory;
+import org.opencv.core.Point;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
+
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import net.benjaminguzman.core.Loggers;
-import net.benjaminguzman.core.NotificationLocation;
-import net.benjaminguzman.gui.util.NotificationLocationComponent;
-import net.benjaminguzman.SWMain;
-import net.benjaminguzman.cv.CVUtils;
-import net.benjaminguzman.gui.Hideable;
-import net.benjaminguzman.gui.Initializable;
-import net.benjaminguzman.gui.Showable;
-import net.benjaminguzman.prefs.NotificationPrefsIO;
-import net.benjaminguzman.prefs.cv.CVPrefsManager;
-import net.benjaminguzman.utils.DaemonThreadFactory;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 
 public class CVConfigPanel extends JPanel implements Hideable, Showable, Initializable
 {
