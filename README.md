@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ![SpineWare image](media/SpineWare.png)
 
-A Java application to take care of your health while you're using the computer.
+Java application to take care of your health while using the computer
 
 ## Main features
 
