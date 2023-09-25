@@ -25,11 +25,16 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>8</maven.compiler.source>
-		<maven.compiler.target>8</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-graphics</artifactId>
+			<version>17</version>
+		</dependency>
 		<dependency>
 			<!--
             This dependency has the Apache 2 license
@@ -37,7 +42,7 @@
              -->
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
-			<version>1.6.5</version>
+			<version>3.0</version>
 		</dependency>
 		<dependency>
 			<!--
@@ -72,25 +77,25 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.8.2</version>
+			<version>5.9.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.8.2</version>
+			<version>5.9.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<version>5.8.2</version>
+			<version>5.9.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains</groupId>
 			<artifactId>annotations</artifactId>
-			<version>22.0.0</version>
+			<version>24.0.1</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -119,7 +124,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>net.benjaminguzman.SWMain</mainClass>
+							<mainClass>dev.benjaminguzman.SpineWare</mainClass>
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 						</manifest>
@@ -151,6 +156,19 @@
 						<exclude>**/PostureCheckerTest.java</exclude>
 						<exclude>**/MainTimerLoopTest.java</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jlink-plugin</artifactId>
+				<version>3.1.0</version>
+				<configuration>
+					<addOptions>
+						<addOption>-Xmx512M</addOption>
+					</addOptions>
+					<noManPages>true</noManPages>
+					<compress>2</compress>
+					<verbose>true</verbose>
 				</configuration>
 			</plugin>
 		</plugins>
